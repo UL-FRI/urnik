@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}URNIK - nastavitve - izbira značke{% endblock %}
+{% block body %}
+<h1>Nastavitve po značkah (tagih)</h1>
+<p>
+    {% for tag in object_list %}
+    <a href={% url "tag_time_preferences" tag_id=tag.id timetable_slug=timetable_slug %}>{{tag}}</a></br>
+    {% endfor %}
+</p>
+{% endblock %}

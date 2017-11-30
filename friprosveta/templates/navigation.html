@@ -1,0 +1,48 @@
+{% load i18n %}
+{% load timetable_extras %}
+{% load cookielaw_tags %}
+
+  <header id="header">
+    <div class="wrap">
+      <div id="site-name">
+        <a class="ir-fixed" rel="home" title="Home" href="http://www.fri.uni-lj.si">FRI website</a>
+      </div>
+      <div id="header-primary" class="cf">
+        <div class="l-main">
+          <div class="region region-headermain">
+	        <div id="block-views-custom-menus-block-1" class="block block-views">
+              <div class="content">
+		        <div class="view view-custom-menus view-id-custom_menus view-display-id-block_1 l-secondary view-dom-id-76a60622d75e2ea2cb6e4e372611c894">
+            	  <div class="view-content">
+		            <ul class="menu">
+                      <li class="leaf">{% if timetable_slug %}<a href={% url "results" timetable_slug=timetable_slug %}>{% trans "Timetable" %}</a>{% endif %}</li>
+                      <li class="leaf"><a href={% url "faq" %}>{% trans "FAQ" %}</a></li>
+                      <li class="leaf"><a href={% url "timetables" %}>{% trans "Choose timetable" %}</a></li>
+                      {% if user.is_authenticated %}
+                        <li class="leaf"><a href="https://rezervacije.fri.uni-lj.si" target=_blank>{% trans "Reservations" %}</a></li>
+                        {% if timetable_slug %}
+                      <li class="leaf"><a href={% url "my_preferences" timetable_slug=timetable_slug %}>{% trans "Settings" %}</a></li>
+                      <li class="leaf"><a href={% url "subject_list" timetable_slug=timetable_slug %}>{% trans "Subjects" %}</a></li>
+                          {% if user.is_staff %}
+                      <li class="leaf"><a href={% url "teacher_hours" timetable_slug=timetable_slug %}>{% trans "Obremenitve" %}</a></li>
+                      <li class="leaf"><a href={% url "teacher_preference_list" timetable_slug=timetable_slug %}>{% trans "Others settings" %}</a></li>
+                      <li class="leaf"><a href={% url "group_preference_list" timetable_slug=timetable_slug %}>{% trans "Group settings" %}</a></li>
+                      <li class="leaf"><a href={% url "tag_preference_list" timetable_slug=timetable_slug %}>{% trans "Tags" %}</a></li>
+                          {% endif %}
+                        {% endif %}
+                      <li class="leaf"><a href={% value_from_settings LOGOUT_URL %}>{% trans "Logout" %}</a></li>
+                      {% else %}
+                      <li class="leaf"><a href={% value_from_settings LOGIN_URL %}>{% trans "Login" %}</a></li>
+                      {% endif %}
+		            </ul>
+                  </div>
+		        </div>
+	          </div>
+            </div>
+            <div id="block-views-custom-menus-block-2" class="block block-views"></div>
+          </div>
+        </div>
+        <div class="l-aside"> </div>
+      </div>
+    </div>
+  </header>

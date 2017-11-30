@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% load timetable_extras %}
+<html>
+<head>
+{% block title %}URNIK - nastavitve{% endblock %}
+{% block body %}
+{{activity_requirement_formset.media}}
+{{activity_formset.media}}
+{{form.media}}
+<style type="text/css">
+    div.realization {
+        display: inline;
+    }
+    div.extra_realization {
+        display: inline;
+        color: red;
+    }
+</style>
+
+<script language="JavaScript"> 
+<!-- Hide the script from old browsers -- 
+// jquery requirement goodness
+// old-school non-jquery clickety preferences.
+var colorTab = new Array("#FFFFFF","#FFFF00","#FF0000");
+var hideTab = new Array(true, false, true);
+
+function showOrHide(cell){
+    cell.levelField.style.display ='none';
+    if (hideTab[cell.levelField.selectedIndex]){
+        cell.weightField.style.display = 'none';
+    } else {
+        cell.weightField.style.display = 'inline';
+    }
+    cell.bgColor = colorTab[cell.levelField.selectedIndex];
+}
+
+function clickme(event)
+{
+    var cell = event.currentTarget;
+    //if(cell.bgColor=='#009900'){cell.bgColor='#00CC00'}else{cell.bgColor='#009900'}
+    var si = cell.levelField.selectedIndex;
+    si = (si + 1) % cell.levelField.options.length;
+    cell.levelField.selectedIndex = si;
+    if ((si == 1) && (cell.weightField.value == '')){
+        cell.weightField.value = "1.0"
+    }
+    showOrHide(cell)
+}
+
+
+function makePrettyPreference(index, inElt){
+    var p = inElt.parentNode;
+    p.weightField = inElt;
+    p.levelField = p.getElementsByTagName("select")[0];
+    showOrHide(p);
+    p.weightField.onclick = function(event){event.stopPropagation ();};
+    p.onclick = clickme;
+}
+
+
+function next_id(s){
+    var e2 = s.lastIndexOf('-')
+    var s2 = s.substring(e2, s.length)
+    var s1 = s.substring(0, e2-1)
+    var e1 = s1.lastIndexOf('-')
+    var v = s.substring(e1+1, e2)// (parseInt(v, 10)+1)
+    return s1 + (parseInt(v, 10)+1)  + s2
+}
+
+function showCorrectGroups(p){
+    p.find("select.realization_group_select").each(function (idx, elt){
+        e = $(elt)
+        var pe = p.get(0)
+        if (e.parent().get(0) != pe.extraForm){
+            $(e).find('option').remove();
+            $(pe.extraForm).find('select.realization_group_select>option').each(function(j, o){
+                var v = $(o).val()
+                if (v in pe.setOptions){
+                    if (pe.setOptions[v] == elt){
+                        n = $(o).clone(true)
+                        n.attr('selected', 'selected')
+                        e.append(n)
+                    }
+                } else {
+                    e.append($(o).clone(true))
+                }
+            })
+        }
+    })
+}
+
+function addRealization(event){
+    var delButton = $(event.currentTarget)
+    delButton.checked = true
+    var p = delButton.parent()
+    var n = $(p.get(0).extraForm).clone(true)
+    var nf = p.children('[name$="TOTAL_FORMS"]').first()
+    nf.val(1 + parseInt(nf.val(), 10))
+    n.removeClass("extra_realization")
+    n.addClass("realization")
+    n.children(".realization_delete").attr("checked", false)
+    var pr = $(event.currentTarget).prev()
+    n.insertAfter(pr)
+    showCorrectGroups(n.parent())
+    n.show()
+    var inputs = Array("id", "groups", "teachers", "activity", "DELETE") 
+    for (i in inputs){
+        var t = '[name$="'+ inputs[i] + '"]'
+        var arg_in = pr.children(t).first()
+        var arg_out = n.children(t).first()
+        var s = next_id(arg_in.attr("id"))
+        arg_out.attr("id", s)
+        s = next_id(arg_in.attr("name"))
+        arg_out.attr("name", s)
+    }
+}
+
+function removeRealization(event){
+    var button = $(event.currentTarget)
+    var realization = button.parent()
+    realization.find("select.realization_group_select option").each(function(i, elt){
+        e = $(elt)
+        e.attr("selected", "")
+        realization.parent().get(0).setOptions.splice(e.val())
+    })
+    button.attr('checked', true)
+    realization.hide()
+    showCorrectGroups(realization.parent())
+}
+
+function groupSelect(event) {
+    var oopt = $(event.currentTarget) 
+    var sel = oopt.parent()
+    var r = sel.parent()
+    var p = r.parent()
+    var pe = p.get(0)
+    selt = sel.get(0)
+    if (oopt.attr('selected')){
+        pe.setOptions[oopt.val()] = selt;
+    } else {
+        pe.setOptions.splice(oopt.val())
+    }
+    showCorrectGroups(p)
+}
+
+
+$(document).ready(function(){
+    $(".TTablePrefWeight").each(makePrettyPreference);
+    $(".realization_delete").click(removeRealization)
+    $(".extra_realization").each(function(i, elt){
+        var p = $(elt).parent()
+        var ep = p.get(0)
+        ep.setOptions = Array();
+        ep.extraForm = elt;
+    })
+    $(".realization>select.realization_group_select").each(function(i, elt){
+        var e = $(elt)
+        var p = e.parent().parent().get(0)
+        e.find("option").each(function(j, o){
+            o = $(o)
+            if (o.attr('selected')){
+                p.setOptions[o.val()] = elt
+            }
+        })
+    })
+    $(".extra_realization").hide();
+    $("div.realization:parent").each(function(i, elt){
+        showCorrectGroups($(elt).parent())
+    })
+    /* For the first newly created realization form to have the correct name and id, */
+    /* the hidden extra form also needs to have "realization" as it's class. */
+    $(".extra_realization").addClass("realization");
+    $(".extra_realization>.realization_delete").attr("checked", true); 
+    $(".extra_realization").val(true);
+    $(".realization_group_select>option").click(groupSelect)
+    $(".add_realization").click(addRealization)
+})
+
+//--> 
+</script> 
+<body>
+
+<h1>Vnos časovnih omejitev</h1>
+<h2>{{form.teacher}}</h2>
+<p>
+V spodnji tabeli s klikom označite časovne termine, v katerih ne želite učiti 
+(polja se bodo obarvala rumeno). V kvadratek v označenem polju vnesite utež - višja, ko bo utež, 
+več možnosti bo, da se vaša želja upošteva. Dejanska utež, ki se bo upoštevala ob izgradnji urnika,
+bo razmerje uteži v posameznem terminu z vsoto vseh vaših uteži. 
+</p>
+<p>
+Če na primer označite en sam termin, bo dejanska utež v tem terminu enaka 1 (ne
+glede na to, kakšno utež vpišete), če označite dva termina, enega z utežjo 1 in
+drugega z utežjo 4, bo dejanska utež v prvem enaka 0.2, v drugem pa 0.8. Če označite
+20 terminov (na primer vsak popoldan od 4h dalje) z utežjo 10, pa bo program v
+vsakem od njih upošteval utež 0.05 in boste zelo verjetno imeli na urniku pouk v kar
+nekaj označenih termin. Več kot je označenih polj, manjša bo utež, s katero bo
+program vaše želje upošteval.
+</p>
+<p>
+V primeru, da ste ob določenih terminih zasedeni z obveznostmi, nujnimi za fakulteto
+(kot so na primer seje senata ali sestanki v odborih UL, kamor vas je imenovala FRI)
+označite te termine rdeče (če imate vklopljen JavaScript, lahko to naredite z
+dvojnim klikom na polje). Tako izbrani termini se bodo obvezno upoštevali. 
+</p>
+<p>
+Upoštevale se bodo želje, oddane do 1. januarja 2012.
+</p>
+{% if gotPost %}
+<p id="postConfirmation">
+Želje uspešno vnešene.
+</p>
+{% endif %}
+<p>
+<form action="" method="POST">{% csrf_token %}
+    {{form.timePreferences.teacher}}
+    {{form.timePreferences.preferenceset}}
+    <table class="time_preferences">
+        {{form.timePreferences.as_table}}
+    </table>
+<h2>Zahteve predmetov</h2>
+<p>
+V primeru, da za izvajanje predmetov potrebujete posebno opremo, ki je praviloma
+ni v učilnicah, jo izberite spodaj. Poleg zahtev tudi razdelite učitelje in skupine
+študentov. To ročno razdeljevanje je nujno, saj podatka, kdo uči katere skupine,
+ni v najavah.
+
+Če vaše opreme še ni na seznamu, to <a href="mailto:urnik@fri.uni-lj.si">sporočite urničarjema</a></p>
+{{activity_formset.management_form}}
+{% for activity in activity_formset.forms %}
+<div>
+    <h3>{{activity.instance.name}} (
+    {{ activity.instance.locations.all|join:", " }};
+    {{ activity.instance.groups.all|join:", " }})
+    </h3>
+    Zahteve:
+    <div class="requirements">
+    {% for f in activity %}
+       {{f}}
+    {% endfor %}
+    </div>
+</div>
+{% endfor %}
+<h2>Komentarji, pripombe:</h2>
+<p>
+V primeru, da imate še kakšno pripombo v zvezi z urnikom, jo dodajte spodaj.
+</p>
+    <table>
+        {{form.descriptivePreferences.as_table}}
+    </table>
+    <input type="submit" value="Submit" />
+</form>
+</p></body>
+</html>
+{% endblock %}

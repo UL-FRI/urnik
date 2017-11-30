@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load timetable_extras %}
+{% load i18n %}
+
+{% block title %}{% trans "TIMETABLE" %} - {% trans "settings" %} {% endblock %}
+{% block media %}
+{{activity_requirement_formset.media}}
+{{form.media}}
+{% endblock %}
+{% block body %}
+<h1>{% trans "Group time preferences" %}</h1>
+<h2>{{form.group}}</h2>
+<p>
+{% blocktrans %}Mark group not available times with red colour.{% endblocktrans %}
+</p>
+{% if gotPost %}
+<p id="postConfirmation">
+{%trans "Preferences saved." %}
+</p>
+{% endif %}
+<p>
+<form action="" method="POST">{% csrf_token %}
+    {{form.timePreferences.owner}}
+    {{form.timePreferences.preferenceset}}
+    <table class="time_preferences">
+        {{form.timePreferences.as_table}}
+    </table>
+    <input type="submit" value={% trans "Submit" %} />
+</form>
+</p>
+{% endblock %}

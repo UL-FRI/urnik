@@ -1,0 +1,60 @@
+<html>
+<head>
+<title>URNIK</title>
+<meta name="GENERATOR" content="Urnik">
+<meta http-equiv="Content-Type" content="text/html; charset=utf8">
+</head>
+<body>
+<script language="JavaScript"> 
+<!-- Hide the script from old browsers -- 
+function showItem(form) {
+    var myindex=form.selectedItem.selectedIndex 
+    timetableSelect = document.getElementById("id_timetable")
+    i = timetableSelect.value
+    timetableParam = ""
+    if (i != "")
+        timetableParam = '&timetable='+i;
+    location=form.selectedItem.options[myindex].value + timetableParam
+    
+}
+//--> 
+</script> 
+<h1>Urnik</h1>
+<p>
+{{timetable}}
+<table><tr>
+    <td width = 200>
+        <h2>Izvajalci</h2>
+        <form name= izvMenu>
+            <select name="selectedItem" size = 40 onChange="showItem(this.form);">
+    {% for teacher in teachers %}
+            <option value= "allocations?teacher={{teacher.id}}">{{teacher}}</option>
+    {% endfor %}
+            </select>
+        </form>
+    </td>
+    <td width = 150>
+        <h2>Prostori</h2><p>
+        <form name= prostMenu>
+            <select name="selectedItem" size = 40 onChange="showItem(this.form);">
+    {% for classroom in classrooms %}
+            <option value= "allocations?classroom={{classroom.id}}">{{classroom}}</option>
+    {% endfor %}
+            </select>
+        </form>
+        </p>
+    </td>
+    <td width = 150>
+        <h2>Studenti</h2>
+        <form name= studMenu>
+            <select name="selectedItem" size = 40 onChange="showItem(this.form);">
+    {% for group in studyGroups %}
+            <option value="allocations?group={{group.id}}">{{group}}</option>
+    {% endfor %}
+            </select>
+        </form>
+    </td>
+</table>
+</p>
+</body>
+</html>

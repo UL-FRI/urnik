@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load l10n %}
+{% load i18n %}
+{% load timetable_extras %}
+{% block title %}URNIK - {% trans "settings" %}{% endblock %}
+
+{% block media %}
+{{own_activity_formset.media}}
+{{others_activity_formset.media}}
+{{preference_form.media}}
+{% endblock %}
+
+{% block body %}
+<h1>{{preference_form.teacher}}: {{ preference_preference_set.name }}
+{% if preference_set.locked %}
+<br/><br/>
+<span style="color:red"> {% trans "Settings are locked." %}</span>
+<br/>
+{% endif %}
+</h1>
+<p></p>
+
+{% with "TODO DATUM" as final_date %}
+{% blocktrans %}
+<p>
+S kliki na polja v spodnji tabeli jih ustrezno obarvajte. Pomen barv je sledeč.
+<ul>
+<li><span style="background-color: #FFFF00">Rumena:</span> v označenih terminih ne želite učiti.</li>
+<li><span style="background-color: #FF0000">Rdeča:</span> v označenih terminih ne morete učiti. 
+    <strong>Izberite le, če ste ob ustreznem terminu zasedeni z nujnimi fakultetnimi obveznostmi (seje, sestanki v odborih, ...).</strong>  
+</li>
+<li><span style="background-color: #00FF00">Zelena:</span> v označenih terminih želite učiti.</li>
+</ul>
+</p>
+<p>
+V rumeno in zeleno polje lahko vnesite utež - višja ko bo, bolj verjetno bo vaša želja upoštevana. 
+Upoštevana utež za termin bo razmerje med utežjo v tem terminu in vsoto vseh vaših uteži. 
+</p>
+<p>
+ Zadnji rok za oddajo želja je {{ final_date }}.
+</p>
+{% endblocktrans %}
+
+{% endwith %}
+
+{% if gotPostMsg %}
+<p id="postConfirmation">
+{{ gotPostMsg }}
+</p>
+{% endif %}
+<p>
+<form action="" method="POST">{% csrf_token %}
+    {{preference_form.timePreferences.owner}}
+    {{preference_form.timePreferences.preferenceset}}
+    <table class="time_preferences">
+        {{preference_form.timePreferences.as_table}}
+    </table>
+
+{% blocktrans %}
+<h2>Zahteve predmetov</h2>
+<p>
+V primeru, da za izvajanje predmetov potrebujete posebno opremo, ki je praviloma
+ni v učilnicah, jo izberite spodaj.
+ 
+Če vaše opreme še ni na seznamu, to <a href="mailto:urnik@fri.uni-lj.si">sporočite urničarjema</a>
+</p>
+{% endblocktrans %}
+{{own_activity_formset.management_form}}
+{% for activity in own_activity_formset.forms %}
+<div class="own_activity">
+    <h3>{{activity.instance.name}}</h3>
+    <h4>{{ activity.instance.locations.all|join:", " }}</h4>
+    <h4>{{ activity.instance.groups.all|join:", " }}</h4>
+    {%trans Zahteve %}:
+    <div class="requirements">
+    {% for f in activity %}
+       {{f}}
+    {% endfor %}
+    </div> 
+</div>
+{% endfor %}
+
+{{others_activity_formset.management_form}}
+{% for activity in others_activity_formset.forms %}
+<div class="others_activity">
+    <h3>{{activity.instance.name}}</h3>
+    <h4>{{ activity.instance.locations.all|join:", " }}</h4>
+    <h4>{{ activity.instance.groups.all|join:", " }}</h4>
+    {%trans Zahteve %}:
+    <div class="requirements">
+    {% for f in activity %}
+       {{f}}
+    {% endfor %}
+    </div>
+</div>
+{% endfor %}
+
+<div class="requirements">
+
+<h2>{% trans "Komentarji, pripombe" %}:</h2>
+<p>
+{% trans "V primeru, da imate še kakšno pripombo v zvezi z urnikom, jo dodajte spodaj." %}
+</p>
+    <table>
+        {{preference_form.descriptivePreferences.as_table}}
+    </table>
+    <input type="submit" value="Submit" />
+</form>
+</div>
+{% endblock %}

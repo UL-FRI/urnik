@@ -1,0 +1,183 @@
+<html>
+<head>
+<title>URNIK</title>
+<meta name="GENERATOR" CONTENT="Urnik">
+<meta http-equiv="Content-Type" content="text/html; charset=utf8">
+<!-- link rel="stylesheet" type="text/css" href="{{STATIC_URL}}/css/teacher_preferences.css" -->
+<style type="text/css">
+    table.timetable {
+        width: 100%;
+        border: solid black 2px;
+        border-collapse: collapse;
+    }
+    table.timetable tr {
+        border: solid black 1px;
+    }
+    table.timetable td {
+        border: solid black 1px;
+    }
+    td.hour {
+        vertical-align: top;
+    }
+    td.MON{
+        background-color: #F7F7FF;
+    }
+    td.MON.allocated{
+        background-color: #CACAFF;
+    }
+    td.TUE{
+    }
+    td.TUE.allocated{
+        background-color: #DBDBFF;
+    }
+    td.WED{
+        background-color: #F7F7FF;
+    }
+    td.WED.allocated{
+        background-color: #CACAFF;
+    }
+    td.THU{
+    }
+    td.THU.allocated{
+        background-color: #DBDBFF;
+    }
+    td.FRI{
+        background-color: #F7F7FF;
+    }
+    td.FRI.allocated{
+        background-color: #CACAFF;
+    }
+    a.activity{
+        color:#800000;
+    }
+    a.teacher{
+        color:#000080;
+        font-size: 60%;
+    }
+    a.group{
+        color:#000000;
+        font-size: 70%;
+    }
+    a.classroom{
+        color:#008000;
+    }
+    input.place_button{
+        padding: 0px;
+    }
+    input.bad_place_button{
+        background: red;
+    }
+    td.allocated div {position: relative;}
+    td.allocated div span {display: none;}
+    td.allocated div:hover span {display: block;
+        position: absolute; top: 5px; left: 6em; width: 180px;
+        padding: 5px; margin: 10px; z-index: 100;
+        opacity: .8;
+        color: black; background: #FFFFAA;
+        font: 10px Verdana, sans-serif; text-align: center;}
+    
+    span.CANT { color: #d00000; }
+    span.HATE { color: #F0b000;}
+    span.WANT { color: #00F000;}
+    div.busy_classroom {
+        font-size: 8px;
+    }
+    form.place_form {
+        margin: 0px;
+        display: inline;
+    }
+    div.semifree_classroom {
+        font-size: 8px;
+    }
+    div.busy_group {
+        font-size: 8px;
+    }
+    div.busy_activity {
+        font-size: 8px;
+    }
+</style>
+</head>
+<body>
+<h1 id="id_timetable">ZASEDENOST TERMINOV za <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug%}?activity={{realization.activity.id}}>{{realization.activity.name}}</a></h1>
+<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}{% for t in realization.teachers.all %}{% if forloop.first %}?{% else %}&{% endif %}teacher={{t.id}}{% endfor %}>Izvajalci</a>: {% for t in realization.teachers.all %}<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?teacher={{t.id}}>{{t}}</a> {% endfor %}
+<br/>
+{% for allocation in allocations %}
+{{allocation.day}}, {{allocation.start}}<br/>
+<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?classroom={{allocation.classroom_id}}>{{allocation.classroom.shortName}}</a><br/>
+{% endfor %}
+Studentov: {{realization.size}}<br/>
+<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}{% for g in realization.groups.all %}{% if forloop.first %}?{% else %}&{% endif %}group={{g.id}}{% endfor %}>Skupine</a>: {% for g in realization.groups.all %}<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?group={{g.id}}>{{g.shortName}}</a> {% endfor %}<br/>
+
+<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}{% for c in preferred_rooms %}{% if forloop.first %}?{% else %}&{% endif %}classroom={{c.id}}{% endfor %}>Učilnice</a>: {% for c in rooms %} <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?classroom={{c.id}}>{{c.shortName}}</a> {% endfor %}</br>
+
+<table class="timetable">
+    <th>Ura</th>
+    {% for day in days %}<th>{{day}}</th>{% endfor %}
+    {% for hour, day_cell_list in busy %}
+    <tr class="timetable">
+        <td class="hour">{{hour}}</td>
+        {% for day, cell in day_cell_list %}
+            <td>
+                <div>
+                    <div class=total_overlaps>
+                        {{cell.good_students_overlap}}{% if cell.total_overlap != cell.good_students_overlap %}({{cell.total_overlap}}){% endif %}<br/>
+                    </div>
+                    <div>{% for c in cell.classrooms_free %}
+                        <form class="place_form" action="{% url 'place_realization' timetable_slug=timetable_slug realization_id=realization.id %}" method="POST">
+                            {% csrf_token %}
+                            <input type=hidden id="id_start" name="start" value="{{hour}}"/>
+                            <input type=hidden id="id_day" name="day" value="{{day}}"/>
+                            <input type=hidden id="id_classroom" name="classroom" value="{{c.id}}"/>
+                            <input type=submit value="{{c.shortName}}" class="place_button"/>
+                        </form>
+                    {%endfor%}</div>
+                    <div>{% for pref, l in cell.teacher_preferences.items %}{% for t in l%}<span class="{{pref}}">{{t}}</span><br/>
+    {% endfor %}{% endfor %}
+                    </div>
+                    <div>{% for t, l in cell.busy_teachers.items %}<span class="CANT">{{t}}:
+    {% for a in l %}<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?subject={{a.activityRealization.activity.activity.subject_id}}>{{a.activityRealization.activity.shortName}}</a> {% endfor %}</span><br/>
+                    {% endfor %}
+                    </div>
+                    <div>{% for g in cell.group_preference_dict %}<span class="CANT">{{g.shortName}} ({{g.size}})</span><br/>{% endfor %}
+                    </div>
+                    <div class=busy_activity>{% for a, n in cell.activities.items %}
+                        <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?activity={{a.activityRealization.activity.id}}>{{a.activityRealization.activity.shortName}}</a>: {{n}}<br/>
+          {%endfor%}</div>
+                    <div class="busy_group">{% for g, n in cell.groups.items %}
+                        <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?group={{g.id}}>{{g.shortName}}</a>: {{n}}/{{g.size}}<br/>
+          {%endfor%}</div>
+                    <div class="semifree_classroom">{% for c in cell.classrooms_semifree %}
+                        {% if allow_bad_place %}
+                        <form class="place_form" action="{% url 'place_realization' timetable_slug=timetable_slug realization_id=realization.id %}" method="POST">
+                            {% csrf_token %}
+                            <input type=hidden id="id_start" name="start" value="{{hour}}"/>
+                            <input type=hidden id="id_day" name="day" value="{{day}}"/>
+                            <input type=hidden id="id_classroom" name="classroom" value="{{c.id}}"/>
+                            <input type=submit value="{{c.shortName}}" class="bad_place_button"/>
+                        </form>
+                        {% else %}
+                        <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?classroom={{c.id}}>{{c.shortName}}</a><br/>
+                        {% endif %}
+                    {%endfor%}</div>
+                    <div class=busy_classroom>{% for c, l in cell.classrooms_busy.items %}
+                        {% if allow_bad_place %}
+                        <form class="place_form" action="{% url 'place_realization' timetable_slug=timetable_slug realization_id=realization.id %}" method="POST">
+                            {% csrf_token %}
+                            <input type=hidden id="id_start" name="start" value="{{hour}}"/>
+                            <input type=hidden id="id_day" name="day" value="{{day}}"/>
+                            <input type=hidden id="id_classroom" name="classroom" value="{{c.id}}"/>
+                            <input type=submit class="bad_place_button" value="{{c.shortName}}"/>:
+                            {% for a in l %}<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?subject={{a.activityRealization.activity.activity.subject.code}}>{{a.activityRealization.activity.shortName}}</a> {% endfor %}
+                        </form>
+                        {% else %}
+                        <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?classroom={{c.id}}>{{c.shortName}}</a>: {% for a in l %}<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?subject={{a.activityRealization.activity.activity.subject.code}}>{{a.activityRealization.activity.shortName}}</a> {% endfor %}<br/>
+                        {% endif %}
+          {%endfor%}</div>
+                </div>
+           </td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+</body>
+</html>

@@ -1,0 +1,54 @@
+@CHARSET "UTF-8";
+
+
+table.subjects_cycles_overview
+
+table.subjects_cycles_overview th {
+	font-weight:bold;
+}
+
+table.subjects_cycles_overview td {
+	padding: 10px;
+}
+
+table.subjects_cycles_overview tr:nth-child(odd) {
+     background-color: #eee; 
+}
+
+
+table.people_cycles_overview tr.sum {
+	font-weight:bold;
+}
+
+table.people_cycles_overview th {
+	font-weight:bold;
+	text-align: left;
+}
+
+table.people_cycles_overview td {
+	padding-top: 3px;
+	padding-bottom: 3px;
+}
+
+
+table.people_cycles_overview td.subject {
+	width: 20em;
+	padding-left: 10px;
+}
+
+table.people_cycles_overview td.type {
+	width: 4em;
+}
+
+table.people_cycles_overview td.num {
+	width: 9em;
+	text-align: center;
+}
+
+
+
+table.people_cycles_overview tr:nth-child(odd) {
+     background-color: #eee; 
+}
+
+

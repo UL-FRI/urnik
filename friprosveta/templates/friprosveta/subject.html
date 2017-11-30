@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load timetable_extras %}
+{% block title %}URNIK - {{subject.name}} {% endblock %}
+{% block body %}
+{{media}}
+{{gotPostMsg}}
+<h1>{{subject.name}} ({{subject.code}})</h1>
+
+<div>
+<h2>Študiji</h2>
+<ul class="subject_studies">
+{% for study in studies %}
+  <li>{{study}}</li>
+{% endfor %}
+</ul>
+</div>
+
+<form method="post">{% csrf_token %}
+<div id="percentage_summary">
+{{teachers_formset.management_form}}
+{% for tip, form_group in percentage_forms.items %}
+  <h2>{{tip}}</h2>
+  <div>
+    <table class="assistantteacher_cycles">
+      <tr>
+      	<th>Izvajalec</th>
+      	<th>Tip</th>
+      	<th>Predvideni cikli</th>
+      	<th>Izvajani cikli</th>
+      	<th>Obremenitev</th>
+      	<th>Način izvajanja</th>
+      	<th>Komentar</th>
+      </tr>
+    {% for teacher, activity_percentages in form_group.items %}
+      {% for form, nrealizations in activity_percentages %}
+      <tr id="type_{{ form.instance.lecture_type.short_name }}_teacher_{{ teacher.id }}">
+        {% if forloop.first %}
+        <td rowspan={{ activity_percentages|length }}>{{ teacher }}</td>
+        {% endif %}
+        <td> {{  form.id  }} {{  form.instance.lecture_type.short_name  }}</td>
+        <td><span class="ncycles"> {{ form.cycles }} </span></td>
+        <td><span class="nrealizations"> {{ nrealizations }} </span></td>
+        <td>
+          <span class="work_percentage">
+             {{ form.percentage }}
+          </span>
+          {{form.non_field_errors}}{{form.cycles.errors}}{{form.percentage.errors}}
+        </td>
+        <td><span class="instruction_type"> {{ form.instruction_type }} </span></td>
+        <td>{{ form.comment }}</td>
+      </tr>
+      {% endfor %}
+    {% endfor %}
+    </table>
+  </div>
+{% endfor %}
+<input type="submit" value="Shrani" />
+</div>
+
+<div {% if not request.user.is_superuser %} hidden {% endif %}>
+{% for f in realization_formsets %}
+<h2>{{  f.instance.displayName  }}</h2>
+<a href={% url "assignments" timetable_slug=timetable_slug subject_code=subject.code %}>{{f.instance.name}}</a>
+    <div class="realizations">
+    {{f.management_form}}
+    {{f.non_field_errors}}
+    {% for realization in f.initial_forms %}
+        <div class="realization {{  realization.instance.activity.activity.lecture_type.short_name }}">
+            <h3>{% for a in realization.allocations%}{{a.day}}, {{a.start}} - {{a.end}}, {{a.classroom.name}} {% endfor %}</h3>
+            <p>Intended size: {{ realization.intended_size.value }}</p>
+            <p>Group size: {{ realization.instance.group_size }}</p>
+            {{realization.id.errors}}{{realization.id}}
+            {{realization.activity.errors}}{{realization.activity}}
+            {{realization.teachers.errors}}{{realization.teachers}}
+            {{realization.groups.errors}}{{realization.groups}}
+            {{realization.locations.errors}}{{realization.locations}}
+briši:{{realization.DELETE|add_class:"realization_delete"}}        
+        </div>
+    {% endfor %}
+    {% for realization in f.extra_forms %}
+        <div class="extra_realization">
+            {{realization.id.errors}}{{realization.id}}
+            {{realization.activity.errors}}{{realization.activity}}
+            {{realization.teachers.errors}}{{realization.teachers}}
+            {{realization.groups.errors}}{{realization.groups}}
+            {{realization.locations.errors}}{{realization.locations}}
+briši:{{realization.DELETE|add_class:"realization_delete"}}
+        </div>
+    {% endfor %}
+        <img src="{{STATIC_URL}}/icon_addlink.gif" class="add_realization" />
+    </div>
+{% endfor %}
+<input type="submit" value="Shrani" />
+</form>
+</div>
+<script type="text/javascript">
+$('a.newpage').click(
+    function(){
+        return confirm("Neshranjeni podatki bodo izgubljeni. Želite nadaljevati?");
+    }
+);
+</script>
+{% endblock %}

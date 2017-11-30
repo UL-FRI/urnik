@@ -1,0 +1,53 @@
+<html>
+<head>
+<title>URNIK</title>
+<meta name="GENERATOR" content="Urnik">
+<meta http-equiv="Content-Type" content="text/html; charset=utf8">
+</head>
+<body>
+<script language="JavaScript"> 
+<!-- Hide the script from old browsers -- 
+//--> 
+</script> 
+<h1>Vnos preferenc</h1>
+<p>
+<form action="" method="POST">{% csrf_token %}
+    {{management_form}}
+    {% for period, teacher_preference_forms in period_preference_forms %}
+    <p>
+    <h2>{{period}}</h2>
+        {% for teacher, preferences in teacher_preference_forms.iteritems %}
+    <h3>{{teacher}}</h3>
+    {{preferences.teacher}}
+    {{preferences.preferenceset}}
+    <table>
+        <tr bgcolor="#F0F0F0" ><th>Ura</th><th>Ponedeljek</th><th>Torek</th><th>Sreda</th><th>Cetrtek</th><th>Petek</th>
+            {% for hour, hour_preferences in preferences.fieldsByHourDay.iteritems %}
+        <tr>
+            <td BGCOLOR="#F0F0F0" WIDTH = 50 >{{hour}}</td>
+                {% for day, field in hour_preferences.iteritems %}
+                    {% if field == Null %}
+            <td width = 150>
+                WTF?!?
+            </td>
+                    {% else %}
+            <td bgcolor="#FFFFCC"  width = 150>
+                        {{field.label}}{{field}}<br/>
+            </td>
+                    {% endif %}
+                {% endfor %}
+        </tr>
+            {% endfor %}
+    </table>
+    </p>
+        {% endfor %}
+    {% endfor %}
+    <table>
+    </table>
+    {% for i in restored_preferences %}
+        {{i}}
+    {% endfor %} 
+    <input type="submit" value="Submit" />
+</form>
+</p></body>
+</html>

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Prijava{% endblock %}
+{% block body %}
+
+{% if form.errors %}
+<p>Napačno ime in/ali geslo</p>
+{% endif %}
+Vnesite uporabniško ime, kakršno uporabljate na učilnici (npr. janezn@fri1.uni-lj.si) in geslo.
+<form method="post" action="{% url 'django.contrib.auth.views.login' %}">
+{% csrf_token %}
+<table>
+<tr>
+    <td>Uporabniško ime:</td>
+    <td>{{ form.username }}</td>
+</tr>
+<tr>
+    <td>Geslo:</td>
+    <td>{{ form.password }}</td>
+</tr>
+</table>
+
+<input type="submit" value="login" />
+<input type="hidden" name="next" value="{{ next }}" />
+</form>
+
+{% endblock %}

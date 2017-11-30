@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}URNIK - premik alokacije{% endblock %}
+{% block body %}
+<h1>Premik realizacije {{form.instance.realization_id}}</h1>
+<p>
+<form method=POST>
+<table>
+{% csrf_token %}
+{{form}}
+</table>
+<input type="submit" value="Submit"/>
+</form>
+</p>
+{% endblock %}

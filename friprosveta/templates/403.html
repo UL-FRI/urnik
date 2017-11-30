@@ -1,0 +1,2256 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="robots" content="NONE,NOARCHIVE">
+  <title>OperationalError at /</title>
+  <style type="text/css">
+    html * { padding:0; margin:0; }
+    body * { padding:10px 20px; }
+    body * * { padding:0; }
+    body { font:small sans-serif; }
+    body>div { border-bottom:1px solid #ddd; }
+    h1 { font-weight:normal; }
+    h2 { margin-bottom:.8em; }
+    h2 span { font-size:80%; color:#666; font-weight:normal; }
+    h3 { margin:1em 0 .5em 0; }
+    h4 { margin:0 0 .5em 0; font-weight: normal; }
+    code, pre { font-size: 100%; white-space: pre-wrap; }
+    table { border:1px solid #ccc; border-collapse: collapse; width:100%; background:white; }
+    tbody td, tbody th { vertical-align:top; padding:2px 3px; }
+    thead th { padding:1px 6px 1px 3px; background:#fefefe; text-align:left; font-weight:normal; font-size:11px; border:1px solid #ddd; }
+    tbody th { width:12em; text-align:right; color:#666; padding-right:.5em; }
+    table.vars { margin:5px 0 2px 40px; }
+    table.vars td, table.req td { font-family:monospace; }
+    table td.code { width:100%; }
+    table td.code pre { overflow:hidden; }
+    table.source th { color:#666; }
+    table.source td { font-family:monospace; white-space:pre; border-bottom:1px solid #eee; }
+    ul.traceback { list-style-type:none; color: #222; }
+    ul.traceback li.frame { padding-bottom:1em; color:#666; }
+    ul.traceback li.user { background-color:#e0e0e0; color:#000 }
+    div.context { padding:10px 0; overflow:hidden; }
+    div.context ol { padding-left:30px; margin:0 10px; list-style-position: inside; }
+    div.context ol li { font-family:monospace; white-space:pre; color:#777; cursor:pointer; }
+    div.context ol li pre { display:inline; }
+    div.context ol.context-line li { color:#505050; background-color:#dfdfdf; }
+    div.context ol.context-line li span { position:absolute; right:32px; }
+    .user div.context ol.context-line li { background-color:#bbb; color:#000; }
+    .user div.context ol li { color:#666; }
+    div.commands { margin-left: 40px; }
+    div.commands a { color:#555; text-decoration:none; }
+    .user div.commands a { color: black; }
+    #summary { background: #ffc; }
+    #summary h2 { font-weight: normal; color: #666; }
+    #explanation { background:#eee; }
+    #template, #template-not-exist { background:#f6f6f6; }
+    #template-not-exist ul { margin: 0 0 0 20px; }
+    #unicode-hint { background:#eee; }
+    #traceback { background:#eee; }
+    #requestinfo { background:#f6f6f6; padding-left:120px; }
+    #summary table { border:none; background:transparent; }
+    #requestinfo h2, #requestinfo h3 { position:relative; margin-left:-100px; }
+    #requestinfo h3 { margin-bottom:-1em; }
+    .error { background: #ffc; }
+    .specific { color:#cc3300; font-weight:bold; }
+    h2 span.commands { font-size:.7em;}
+    span.commands a:link {color:#5E5694;}
+    pre.exception_value { font-family: sans-serif; color: #666; font-size: 1.5em; margin: 10px 0 10px 0; }
+  </style>
+  
+  <script type="text/javascript">
+  //<!--
+    function getElementsByClassName(oElm, strTagName, strClassName){
+        // Written by Jonathan Snook, http://www.snook.ca/jon; Add-ons by Robert Nyman, http://www.robertnyman.com
+        var arrElements = (strTagName == "*" && document.all)? document.all :
+        oElm.getElementsByTagName(strTagName);
+        var arrReturnElements = new Array();
+        strClassName = strClassName.replace(/\-/g, "\-");
+        var oRegExp = new RegExp("(^|\s)" + strClassName + "(\s|$)");
+        var oElement;
+        for(var i=0; i<arrElements.length; i++){
+            oElement = arrElements[i];
+            if(oRegExp.test(oElement.className)){
+                arrReturnElements.push(oElement);
+            }
+        }
+        return (arrReturnElements)
+    }
+    function hideAll(elems) {
+      for (var e = 0; e < elems.length; e++) {
+        elems[e].style.display = 'none';
+      }
+    }
+    window.onload = function() {
+      hideAll(getElementsByClassName(document, 'table', 'vars'));
+      hideAll(getElementsByClassName(document, 'ol', 'pre-context'));
+      hideAll(getElementsByClassName(document, 'ol', 'post-context'));
+      hideAll(getElementsByClassName(document, 'div', 'pastebin'));
+    }
+    function toggle() {
+      for (var i = 0; i < arguments.length; i++) {
+        var e = document.getElementById(arguments[i]);
+        if (e) {
+          e.style.display = e.style.display == 'none' ? 'block' : 'none';
+        }
+      }
+      return false;
+    }
+    function varToggle(link, id) {
+      toggle('v' + id);
+      var s = link.getElementsByTagName('span')[0];
+      var uarr = String.fromCharCode(0x25b6);
+      var darr = String.fromCharCode(0x25bc);
+      s.innerHTML = s.innerHTML == uarr ? darr : uarr;
+      return false;
+    }
+    function switchPastebinFriendly(link) {
+      s1 = "Switch to copy-and-paste view";
+      s2 = "Switch back to interactive view";
+      link.innerHTML = link.innerHTML == s1 ? s2 : s1;
+      toggle('browserTraceback', 'pastebinTraceback');
+      return false;
+    }
+    //-->
+  </script>
+  
+</head>
+<body>
+<div id="summary">
+  <h1>OperationalError at /</h1>
+  <pre class="exception_value">Thou shalt not pass!
+</pre>
+  <table class="meta">
+
+    <tbody><tr>
+      <th>Request Method:</th>
+      <td>GET</td>
+    </tr>
+    <tr>
+      <th>Request URL:</th>
+      <td>http://urnik.fri.uni-lj.si/</td>
+    </tr>
+
+    <tr>
+      <th>Django Version:</th>
+      <td>1.4</td>
+    </tr>
+
+    <tr>
+      <th>Exception Type:</th>
+      <td>OperationalError</td>
+    </tr>
+
+
+    <tr>
+      <th>Exception Value:</th>
+      <td><pre>could not connect to server: Connection refused
+	Is the server running on host "127.0.0.1" and accepting
+	TCP/IP connections on port 5432?
+</pre></td>
+    </tr>
+
+
+    <tr>
+      <th>Exception Location:</th>
+      <td>/usr/lib/python2.7/dist-packages/psycopg2/__init__.py in connect, line 179</td>
+    </tr>
+
+    <tr>
+      <th>Python Executable:</th>
+      <td>/usr/bin/python</td>
+    </tr>
+    <tr>
+      <th>Python Version:</th>
+      <td>2.7.3</td>
+    </tr>
+    <tr>
+      <th>Python Path:</th>
+      <td><pre>['/usr/lib/python2.7',
+ '/usr/lib/python2.7/plat-linux2',
+ '/usr/lib/python2.7/lib-tk',
+ '/usr/lib/python2.7/lib-old',
+ '/usr/lib/python2.7/lib-dynload',
+ '/usr/local/lib/python2.7/dist-packages',
+ '/usr/lib/python2.7/dist-packages',
+ '/usr/lib/pymodules/python2.7',
+ '/home/urnik/urnik/django',
+ '/home/urnik/urnik/django/urnik',
+ '/home/urnik/urnik/django/externalApps']</pre></td>
+    </tr>
+    <tr>
+      <th>Server time:</th>
+      <td>Mon, 2 Jul 2012 12:21:43 +0200</td>
+    </tr>
+  </tbody></table>
+</div>
+
+
+
+
+<div id="traceback">
+  <h2>Traceback <span class="commands"><a href="#" onclick="return switchPastebinFriendly(this);">Switch to copy-and-paste view</a></span></h2>
+  
+  <div id="browserTraceback">
+    <ul class="traceback">
+      
+        <li class="frame django">
+          <code>/usr/lib/python2.7/dist-packages/django/core/handlers/base.py</code> in <code>get_response</code>
+
+          
+            <div class="context" id="c140099093966360">
+              
+                <ol style="display: none;" start="104" class="pre-context" id="pre140099093966360"><li onclick="toggle('pre140099093966360', 'post140099093966360')"><pre>                    for middleware_method in self._view_middleware:</pre></li><li onclick="toggle('pre140099093966360', 'post140099093966360')"><pre>                        response = middleware_method(request, callback, callback_args, callback_kwargs)</pre></li><li onclick="toggle('pre140099093966360', 'post140099093966360')"><pre>                        if response:</pre></li><li onclick="toggle('pre140099093966360', 'post140099093966360')"><pre>                            break</pre></li><li onclick="toggle('pre140099093966360', 'post140099093966360')"><pre></pre></li><li onclick="toggle('pre140099093966360', 'post140099093966360')"><pre>                if response is None:</pre></li><li onclick="toggle('pre140099093966360', 'post140099093966360')"><pre>                    try:</pre></li></ol>
+              
+              <ol start="111" class="context-line"><li onclick="toggle('pre140099093966360', 'post140099093966360')"><pre>                        response = callback(request, *callback_args, **callback_kwargs)</pre> <span>...</span></li></ol>
+              
+                <ol style="display: none;" start="112" class="post-context" id="post140099093966360"><li onclick="toggle('pre140099093966360', 'post140099093966360')"><pre>                    except Exception, e:</pre></li><li onclick="toggle('pre140099093966360', 'post140099093966360')"><pre>                        # If the view raised an exception, run it through exception</pre></li><li onclick="toggle('pre140099093966360', 'post140099093966360')"><pre>                        # middleware, and if the exception middleware returns a</pre></li><li onclick="toggle('pre140099093966360', 'post140099093966360')"><pre>                        # response, use that. Otherwise, reraise the exception.</pre></li><li onclick="toggle('pre140099093966360', 'post140099093966360')"><pre>                        for middleware_method in self._exception_middleware:</pre></li><li onclick="toggle('pre140099093966360', 'post140099093966360')"><pre>                            response = middleware_method(request, e)</pre></li></ol>
+              
+            </div>
+          
+
+          
+            <div class="commands">
+                
+                    <a href="#" onclick="return varToggle(this, '140099093966360')"><span>▶</span> Local vars</a>
+                
+            </div>
+            <table style="display: none;" class="vars" id="v140099093966360">
+              <thead>
+                <tr>
+                  <th>Variable</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>exceptions</td>
+                    <td class="code"><pre>&lt;module 'django.core.exceptions' from '/usr/lib/python2.7/dist-packages/django/core/exceptions.pyc'&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>e</td>
+                    <td class="code"><pre>OperationalError('could not connect to server: Connection refused\n\tIs the server running on host "127.0.0.1" and accepting\n\tTCP/IP connections on port 5432?\n',)</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>callback_args</td>
+                    <td class="code"><pre>()</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>settings</td>
+                    <td class="code"><pre>&lt;django.conf.LazySettings object at 0x7f6b5b961150&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>middleware_method</td>
+                    <td class="code"><pre>&lt;bound method CsrfViewMiddleware.process_view of &lt;django.middleware.csrf.CsrfViewMiddleware object at 0x7f6b5c00ff90&gt;&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;django.core.handlers.wsgi.WSGIHandler object at 0x7f6b5bf65c50&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>request</td>
+                    <td class="code"><pre>"&lt;WSGIRequest\npath:/,\nGET:&lt;QueryDict: {}&gt;,\nPOST:&lt;QueryDict: {}&gt;,\nCOOKIES:{'__utma': '184059249.913694516.1288182604.1339762310.1340011419.64',\n '__utmz': '184059249.1340011419.64.48.utmcsr=google|utmccn=(organic)|utmcmd=organic|utmctr=(not%20provided)',\n 'csrftoken': 'ni3VoDHKvqgbmNEiXZII6MRxCuaSHfJt',\n 'sessionid': '9ff8be54ca13b304d0987bf8be16b04e'},\nMETA:{'CSRF_COOKIE': 'ni3VoDHKvqgbmNEiXZII6MRxCuaSHfJt',\n 'DOCUMENT_ROOT': '/var/www',\n 'GATEWAY_INTERFACE': 'CGI/1.1',\n 'HTTP_ACCEPT': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',\n 'HTTP_ACCEPT_ENCODING': 'gzip, deflate',\n 'HTTP_ACCEPT_LANGUAGE': 'en-us,en;q=0.5',\n 'HTTP_CONNECTION': 'keep-alive',\n 'HTTP_COOKIE': '__utma=184059249.913694516.1288182604.1339762310.1340011419.64; __utmz=184059249.1340011419.64.48.utmcsr=google|utmccn=(organic)|utmcmd=organic|utmctr=(not%20provided); sessionid=9ff8be54ca13b304d0987bf8be16b04e; csrftoken=ni3VoDHKvqgbmNEiXZII6MRxCuaSHfJt',\n 'HTTP_HOST': 'urnik.fri.uni-lj.si',\n 'HTTP_USER_AGENT': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:13.0) Gecko/20100101 Firefox/13.0',\n 'PATH_INFO': u'/',\n 'PATH_TRANSLATED': '/home/urnik/urnik/django/urnik/apache.wsgi/',\n 'QUERY_STRING': '',\n 'REMOTE_ADDR': '212.235.189.164',\n 'REMOTE_PORT': '35066',\n 'REQUEST_METHOD': 'GET',\n 'REQUEST_URI': '/',\n 'SCRIPT_FILENAME': '/home/urnik/urnik/django/urnik/apache.wsgi',\n 'SCRIPT_NAME': u'',\n 'SERVER_ADDR': '212.235.188.102',\n 'SERVER_ADMIN': 'gregor.jerse@fri.uni-lj.si',\n 'SERVER_NAME': 'urnik.fri.uni-lj.si',\n 'SERVER_PORT': '80',\n 'SERVER_PROTOCOL': 'HTTP/1.1',\n 'SERVER_SIGNATURE': '&lt;address&gt;Apache/2.2.22 (Debian) Server at urnik.fri.uni-lj.si Port 80&lt;/address&gt;\\n',\n 'SERVER_SOFTWARE': 'Apache/2.2.22 (Debian)',\n 'mod_wsgi.application_group': 'urnik.fri.uni-lj.si|',\n 'mod_wsgi.callable_object': 'application',\n 'mod_wsgi.handler_script': '',\n 'mod_wsgi.input_chunked': '0',\n 'mod_wsgi.listener_host': '',\n 'mod_wsgi.listener_port': '80',\n 'mod_wsgi.process_group': '',\n 'mod_wsgi.request_handler': 'wsgi-script',\n 'mod_wsgi.script_reloading': '1',\n 'mod_wsgi.version': (3, 3),\n 'wsgi.errors': &lt;mod_wsgi.Log object at 0x7f6b5bf65cf0&gt;,\n 'wsgi.file_wrapper': &lt;built-in method file_wrapper of mod_wsgi.Adapter object at 0x7f6b5bf6e648&gt;,\n 'wsgi.input': &lt;mod_wsgi.Input object at 0x7f6b5bf65cb0&gt;,\n 'wsgi.multiprocess': True,\n 'wsgi.multithread': False,\n 'wsgi.run_once': False,\n 'wsgi.url_scheme': 'http',\n 'wsgi.version': (1, 1)}&gt;"</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>callback</td>
+                    <td class="code"><pre>&lt;function results at 0x7f6b5cb97f50&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>resolver</td>
+                    <td class="code"><pre>&lt;RegexURLResolver urnik.urls (None:None) ^/&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>urlresolvers</td>
+                    <td class="code"><pre>&lt;module 'django.core.urlresolvers' from '/usr/lib/python2.7/dist-packages/django/core/urlresolvers.pyc'&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>callback_kwargs</td>
+                    <td class="code"><pre>{}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>response</td>
+                    <td class="code"><pre>None</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>urlconf</td>
+                    <td class="code"><pre>'urnik.urls'</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+          
+        </li>
+      
+        <li class="frame user">
+          <code>/home/urnik/urnik/django/urnik/friprosveta/views.py</code> in <code>results</code>
+
+          
+            <div class="context" id="c140099093940848">
+              
+                <ol style="display: none;" start="46" class="pre-context" id="pre140099093940848"><li onclick="toggle('pre140099093940848', 'post140099093940848')"><pre>def __default_timetables():</pre></li><li onclick="toggle('pre140099093940848', 'post140099093940848')"><pre>    return Timetable.objects.filter(public=True,</pre></li><li onclick="toggle('pre140099093940848', 'post140099093940848')"><pre>            start__lte = datetime.datetime.now(),</pre></li><li onclick="toggle('pre140099093940848', 'post140099093940848')"><pre>            end__gte = datetime.datetime.now()).all()</pre></li><li onclick="toggle('pre140099093940848', 'post140099093940848')"><pre></pre></li><li onclick="toggle('pre140099093940848', 'post140099093940848')"><pre>    </pre></li><li onclick="toggle('pre140099093940848', 'post140099093940848')"><pre>def results(request):</pre></li></ol>
+              
+              <ol start="53" class="context-line"><li onclick="toggle('pre140099093940848', 'post140099093940848')"><pre>    selected_timetables = request.session.get('timetables', __default_timetables())</pre> <span>...</span></li></ol>
+              
+                <ol style="display: none;" start="54" class="post-context" id="post140099093940848"><li onclick="toggle('pre140099093940848', 'post140099093940848')"><pre>    class studentForm(django.forms.Form):</pre></li><li onclick="toggle('pre140099093940848', 'post140099093940848')"><pre>        student = forms.CharField(label='vpisna', max_length=8)</pre></li><li onclick="toggle('pre140099093940848', 'post140099093940848')"><pre>    # groups = Group.objects.filter(parent=None, activities__activityset__timetable__in=selected_timetables).distinct()</pre></li><li onclick="toggle('pre140099093940848', 'post140099093940848')"><pre>    groups = Group.objects.filter(parent=None, groupset__timetables__in=selected_timetables).distinct()</pre></li><li onclick="toggle('pre140099093940848', 'post140099093940848')"><pre>    teachers = friprosveta.models.Teacher.objects.filter(activities__activityset__timetable__in=selected_timetables).distinct()</pre></li><li onclick="toggle('pre140099093940848', 'post140099093940848')"><pre>    subjects = friprosveta.models.Subject.objects.filter(activities__activityset__timetable__in=selected_timetables).distinct()</pre></li></ol>
+              
+            </div>
+          
+
+          
+            <div class="commands">
+                
+                    <a href="#" onclick="return varToggle(this, '140099093940848')"><span>▶</span> Local vars</a>
+                
+            </div>
+            <table style="display: none;" class="vars" id="v140099093940848">
+              <thead>
+                <tr>
+                  <th>Variable</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>request</td>
+                    <td class="code"><pre>"&lt;WSGIRequest\npath:/,\nGET:&lt;QueryDict: {}&gt;,\nPOST:&lt;QueryDict: {}&gt;,\nCOOKIES:{'__utma': '184059249.913694516.1288182604.1339762310.1340011419.64',\n '__utmz': '184059249.1340011419.64.48.utmcsr=google|utmccn=(organic)|utmcmd=organic|utmctr=(not%20provided)',\n 'csrftoken': 'ni3VoDHKvqgbmNEiXZII6MRxCuaSHfJt',\n 'sessionid': '9ff8be54ca13b304d0987bf8be16b04e'},\nMETA:{'CSRF_COOKIE': 'ni3VoDHKvqgbmNEiXZII6MRxCuaSHfJt',\n 'DOCUMENT_ROOT': '/var/www',\n 'GATEWAY_INTERFACE': 'CGI/1.1',\n 'HTTP_ACCEPT': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',\n 'HTTP_ACCEPT_ENCODING': 'gzip, deflate',\n 'HTTP_ACCEPT_LANGUAGE': 'en-us,en;q=0.5',\n 'HTTP_CONNECTION': 'keep-alive',\n 'HTTP_COOKIE': '__utma=184059249.913694516.1288182604.1339762310.1340011419.64; __utmz=184059249.1340011419.64.48.utmcsr=google|utmccn=(organic)|utmcmd=organic|utmctr=(not%20provided); sessionid=9ff8be54ca13b304d0987bf8be16b04e; csrftoken=ni3VoDHKvqgbmNEiXZII6MRxCuaSHfJt',\n 'HTTP_HOST': 'urnik.fri.uni-lj.si',\n 'HTTP_USER_AGENT': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:13.0) Gecko/20100101 Firefox/13.0',\n 'PATH_INFO': u'/',\n 'PATH_TRANSLATED': '/home/urnik/urnik/django/urnik/apache.wsgi/',\n 'QUERY_STRING': '',\n 'REMOTE_ADDR': '212.235.189.164',\n 'REMOTE_PORT': '35066',\n 'REQUEST_METHOD': 'GET',\n 'REQUEST_URI': '/',\n 'SCRIPT_FILENAME': '/home/urnik/urnik/django/urnik/apache.wsgi',\n 'SCRIPT_NAME': u'',\n 'SERVER_ADDR': '212.235.188.102',\n 'SERVER_ADMIN': 'gregor.jerse@fri.uni-lj.si',\n 'SERVER_NAME': 'urnik.fri.uni-lj.si',\n 'SERVER_PORT': '80',\n 'SERVER_PROTOCOL': 'HTTP/1.1',\n 'SERVER_SIGNATURE': '&lt;address&gt;Apache/2.2.22 (Debian) Server at urnik.fri.uni-lj.si Port 80&lt;/address&gt;\\n',\n 'SERVER_SOFTWARE': 'Apache/2.2.22 (Debian)',\n 'mod_wsgi.application_group': 'urnik.fri.uni-lj.si|',\n 'mod_wsgi.callable_object': 'application',\n 'mod_wsgi.handler_script': '',\n 'mod_wsgi.input_chunked': '0',\n 'mod_wsgi.listener_host': '',\n 'mod_wsgi.listener_port': '80',\n 'mod_wsgi.process_group': '',\n 'mod_wsgi.request_handler': 'wsgi-script',\n 'mod_wsgi.script_reloading': '1',\n 'mod_wsgi.version': (3, 3),\n 'wsgi.errors': &lt;mod_wsgi.Log object at 0x7f6b5bf65cf0&gt;,\n 'wsgi.file_wrapper': &lt;built-in method file_wrapper of mod_wsgi.Adapter object at 0x7f6b5bf6e648&gt;,\n 'wsgi.input': &lt;mod_wsgi.Input object at 0x7f6b5bf65cb0&gt;,\n 'wsgi.multiprocess': True,\n 'wsgi.multithread': False,\n 'wsgi.run_once': False,\n 'wsgi.url_scheme': 'http',\n 'wsgi.version': (1, 1)}&gt;"</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+          
+        </li>
+      
+        <li class="frame django">
+          <code>/usr/lib/python2.7/dist-packages/django/contrib/sessions/backends/base.py</code> in <code>get</code>
+
+          
+            <div class="context" id="c140099093939984">
+              
+                <ol style="display: none;" start="43" class="pre-context" id="pre140099093939984"><li onclick="toggle('pre140099093939984', 'post140099093939984')"><pre>        self.modified = True</pre></li><li onclick="toggle('pre140099093939984', 'post140099093939984')"><pre></pre></li><li onclick="toggle('pre140099093939984', 'post140099093939984')"><pre>    def __delitem__(self, key):</pre></li><li onclick="toggle('pre140099093939984', 'post140099093939984')"><pre>        del self._session[key]</pre></li><li onclick="toggle('pre140099093939984', 'post140099093939984')"><pre>        self.modified = True</pre></li><li onclick="toggle('pre140099093939984', 'post140099093939984')"><pre></pre></li><li onclick="toggle('pre140099093939984', 'post140099093939984')"><pre>    def get(self, key, default=None):</pre></li></ol>
+              
+              <ol start="50" class="context-line"><li onclick="toggle('pre140099093939984', 'post140099093939984')"><pre>        return self._session.get(key, default)</pre> <span>...</span></li></ol>
+              
+                <ol style="display: none;" start="51" class="post-context" id="post140099093939984"><li onclick="toggle('pre140099093939984', 'post140099093939984')"><pre></pre></li><li onclick="toggle('pre140099093939984', 'post140099093939984')"><pre>    def pop(self, key, *args):</pre></li><li onclick="toggle('pre140099093939984', 'post140099093939984')"><pre>        self.modified = self.modified or key in self._session</pre></li><li onclick="toggle('pre140099093939984', 'post140099093939984')"><pre>        return self._session.pop(key, *args)</pre></li><li onclick="toggle('pre140099093939984', 'post140099093939984')"><pre></pre></li><li onclick="toggle('pre140099093939984', 'post140099093939984')"><pre>    def setdefault(self, key, value):</pre></li></ol>
+              
+            </div>
+          
+
+          
+            <div class="commands">
+                
+                    <a href="#" onclick="return varToggle(this, '140099093939984')"><span>▶</span> Local vars</a>
+                
+            </div>
+            <table style="display: none;" class="vars" id="v140099093939984">
+              <thead>
+                <tr>
+                  <th>Variable</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>default</td>
+                    <td class="code"><pre>Error in formatting: could not connect to server: Connection refused
+	Is the server running on host "127.0.0.1" and accepting
+	TCP/IP connections on port 5432?
+</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;django.contrib.sessions.backends.db.SessionStore object at 0x7f6b5c3578d0&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>key</td>
+                    <td class="code"><pre>'timetables'</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+          
+        </li>
+      
+        <li class="frame django">
+          <code>/usr/lib/python2.6/dist-packages/django/contrib/sessions/backends/base.py</code> in <code>_get_session</code>
+
+          
+            <div class="context" id="c140099093966288">
+              
+                <ol style="display: none;" start="158" class="pre-context" id="pre140099093966288"><li onclick="toggle('pre140099093966288', 'post140099093966288')"><pre>        self.accessed = True</pre></li><li onclick="toggle('pre140099093966288', 'post140099093966288')"><pre>        try:</pre></li><li onclick="toggle('pre140099093966288', 'post140099093966288')"><pre>            return self._session_cache</pre></li><li onclick="toggle('pre140099093966288', 'post140099093966288')"><pre>        except AttributeError:</pre></li><li onclick="toggle('pre140099093966288', 'post140099093966288')"><pre>            if self.session_key is None or no_load:</pre></li><li onclick="toggle('pre140099093966288', 'post140099093966288')"><pre>                self._session_cache = {}</pre></li><li onclick="toggle('pre140099093966288', 'post140099093966288')"><pre>            else:</pre></li></ol>
+              
+              <ol start="165" class="context-line"><li onclick="toggle('pre140099093966288', 'post140099093966288')"><pre>                self._session_cache = self.load()</pre> <span>...</span></li></ol>
+              
+                <ol style="display: none;" start="166" class="post-context" id="post140099093966288"><li onclick="toggle('pre140099093966288', 'post140099093966288')"><pre>        return self._session_cache</pre></li><li onclick="toggle('pre140099093966288', 'post140099093966288')"><pre></pre></li><li onclick="toggle('pre140099093966288', 'post140099093966288')"><pre>    _session = property(_get_session)</pre></li><li onclick="toggle('pre140099093966288', 'post140099093966288')"><pre></pre></li><li onclick="toggle('pre140099093966288', 'post140099093966288')"><pre>    def get_expiry_age(self):</pre></li><li onclick="toggle('pre140099093966288', 'post140099093966288')"><pre>        """Get the number of seconds until the session expires."""</pre></li></ol>
+              
+            </div>
+          
+
+          
+            <div class="commands">
+                
+                    <a href="#" onclick="return varToggle(this, '140099093966288')"><span>▶</span> Local vars</a>
+                
+            </div>
+            <table style="display: none;" class="vars" id="v140099093966288">
+              <thead>
+                <tr>
+                  <th>Variable</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;django.contrib.sessions.backends.db.SessionStore object at 0x7f6b5c3578d0&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>no_load</td>
+                    <td class="code"><pre>False</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+          
+        </li>
+      
+        <li class="frame django">
+          <code>/usr/lib/python2.7/dist-packages/django/contrib/sessions/backends/db.py</code> in <code>load</code>
+
+          
+            <div class="context" id="c140099093966216">
+              
+                <ol style="display: none;" start="12" class="pre-context" id="pre140099093966216"><li onclick="toggle('pre140099093966216', 'post140099093966216')"><pre>    def __init__(self, session_key=None):</pre></li><li onclick="toggle('pre140099093966216', 'post140099093966216')"><pre>        super(SessionStore, self).__init__(session_key)</pre></li><li onclick="toggle('pre140099093966216', 'post140099093966216')"><pre></pre></li><li onclick="toggle('pre140099093966216', 'post140099093966216')"><pre>    def load(self):</pre></li><li onclick="toggle('pre140099093966216', 'post140099093966216')"><pre>        try:</pre></li><li onclick="toggle('pre140099093966216', 'post140099093966216')"><pre>            s = Session.objects.get(</pre></li><li onclick="toggle('pre140099093966216', 'post140099093966216')"><pre>                session_key = self.session_key,</pre></li></ol>
+              
+              <ol start="19" class="context-line"><li onclick="toggle('pre140099093966216', 'post140099093966216')"><pre>                expire_date__gt=timezone.now()</pre> <span>...</span></li></ol>
+              
+                <ol style="display: none;" start="20" class="post-context" id="post140099093966216"><li onclick="toggle('pre140099093966216', 'post140099093966216')"><pre>            )</pre></li><li onclick="toggle('pre140099093966216', 'post140099093966216')"><pre>            return self.decode(force_unicode(s.session_data))</pre></li><li onclick="toggle('pre140099093966216', 'post140099093966216')"><pre>        except (Session.DoesNotExist, SuspiciousOperation):</pre></li><li onclick="toggle('pre140099093966216', 'post140099093966216')"><pre>            self.create()</pre></li><li onclick="toggle('pre140099093966216', 'post140099093966216')"><pre>            return {}</pre></li><li onclick="toggle('pre140099093966216', 'post140099093966216')"><pre></pre></li></ol>
+              
+            </div>
+          
+
+          
+            <div class="commands">
+                
+                    <a href="#" onclick="return varToggle(this, '140099093966216')"><span>▶</span> Local vars</a>
+                
+            </div>
+            <table style="display: none;" class="vars" id="v140099093966216">
+              <thead>
+                <tr>
+                  <th>Variable</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;django.contrib.sessions.backends.db.SessionStore object at 0x7f6b5c3578d0&gt;</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+          
+        </li>
+      
+        <li class="frame django">
+          <code>/usr/lib/python2.7/dist-packages/django/db/models/manager.py</code> in <code>get</code>
+
+          
+            <div class="context" id="c140099093966144">
+              
+                <ol style="display: none;" start="124" class="pre-context" id="pre140099093966144"><li onclick="toggle('pre140099093966144', 'post140099093966144')"><pre>    def distinct(self, *args, **kwargs):</pre></li><li onclick="toggle('pre140099093966144', 'post140099093966144')"><pre>        return self.get_query_set().distinct(*args, **kwargs)</pre></li><li onclick="toggle('pre140099093966144', 'post140099093966144')"><pre></pre></li><li onclick="toggle('pre140099093966144', 'post140099093966144')"><pre>    def extra(self, *args, **kwargs):</pre></li><li onclick="toggle('pre140099093966144', 'post140099093966144')"><pre>        return self.get_query_set().extra(*args, **kwargs)</pre></li><li onclick="toggle('pre140099093966144', 'post140099093966144')"><pre></pre></li><li onclick="toggle('pre140099093966144', 'post140099093966144')"><pre>    def get(self, *args, **kwargs):</pre></li></ol>
+              
+              <ol start="131" class="context-line"><li onclick="toggle('pre140099093966144', 'post140099093966144')"><pre>        return self.get_query_set().get(*args, **kwargs)</pre> <span>...</span></li></ol>
+              
+                <ol style="display: none;" start="132" class="post-context" id="post140099093966144"><li onclick="toggle('pre140099093966144', 'post140099093966144')"><pre></pre></li><li onclick="toggle('pre140099093966144', 'post140099093966144')"><pre>    def get_or_create(self, **kwargs):</pre></li><li onclick="toggle('pre140099093966144', 'post140099093966144')"><pre>        return self.get_query_set().get_or_create(**kwargs)</pre></li><li onclick="toggle('pre140099093966144', 'post140099093966144')"><pre></pre></li><li onclick="toggle('pre140099093966144', 'post140099093966144')"><pre>    def create(self, **kwargs):</pre></li><li onclick="toggle('pre140099093966144', 'post140099093966144')"><pre>        return self.get_query_set().create(**kwargs)</pre></li></ol>
+              
+            </div>
+          
+
+          
+            <div class="commands">
+                
+                    <a href="#" onclick="return varToggle(this, '140099093966144')"><span>▶</span> Local vars</a>
+                
+            </div>
+            <table style="display: none;" class="vars" id="v140099093966144">
+              <thead>
+                <tr>
+                  <th>Variable</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;django.contrib.sessions.models.SessionManager object at 0x7f6b5c34ebd0&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>args</td>
+                    <td class="code"><pre>()</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>kwargs</td>
+                    <td class="code"><pre>{'expire_date__gt': datetime.datetime(2012, 7, 2, 12, 21, 43, 606186),
+ 'session_key': '9ff8be54ca13b304d0987bf8be16b04e'}</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+          
+        </li>
+      
+        <li class="frame django">
+          <code>/usr/lib/python2.7/dist-packages/django/db/models/query.py</code> in <code>get</code>
+
+          
+            <div class="context" id="c140099093966072">
+              
+                <ol style="display: none;" start="354" class="pre-context" id="pre140099093966072"><li onclick="toggle('pre140099093966072', 'post140099093966072')"><pre>        """</pre></li><li onclick="toggle('pre140099093966072', 'post140099093966072')"><pre>        Performs the query and returns a single object matching the given</pre></li><li onclick="toggle('pre140099093966072', 'post140099093966072')"><pre>        keyword arguments.</pre></li><li onclick="toggle('pre140099093966072', 'post140099093966072')"><pre>        """</pre></li><li onclick="toggle('pre140099093966072', 'post140099093966072')"><pre>        clone = self.filter(*args, **kwargs)</pre></li><li onclick="toggle('pre140099093966072', 'post140099093966072')"><pre>        if self.query.can_filter():</pre></li><li onclick="toggle('pre140099093966072', 'post140099093966072')"><pre>            clone = clone.order_by()</pre></li></ol>
+              
+              <ol start="361" class="context-line"><li onclick="toggle('pre140099093966072', 'post140099093966072')"><pre>        num = len(clone)</pre> <span>...</span></li></ol>
+              
+                <ol style="display: none;" start="362" class="post-context" id="post140099093966072"><li onclick="toggle('pre140099093966072', 'post140099093966072')"><pre>        if num == 1:</pre></li><li onclick="toggle('pre140099093966072', 'post140099093966072')"><pre>            return clone._result_cache[0]</pre></li><li onclick="toggle('pre140099093966072', 'post140099093966072')"><pre>        if not num:</pre></li><li onclick="toggle('pre140099093966072', 'post140099093966072')"><pre>            raise self.model.DoesNotExist("%s matching query does not exist."</pre></li><li onclick="toggle('pre140099093966072', 'post140099093966072')"><pre>                    % self.model._meta.object_name)</pre></li><li onclick="toggle('pre140099093966072', 'post140099093966072')"><pre>        raise self.model.MultipleObjectsReturned("get() returned more than one %s -- it returned %s! Lookup parameters were %s"</pre></li></ol>
+              
+            </div>
+          
+
+          
+            <div class="commands">
+                
+                    <a href="#" onclick="return varToggle(this, '140099093966072')"><span>▶</span> Local vars</a>
+                
+            </div>
+            <table style="display: none;" class="vars" id="v140099093966072">
+              <thead>
+                <tr>
+                  <th>Variable</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>clone</td>
+                    <td class="code"><pre>Error in formatting: could not connect to server: Connection refused
+	Is the server running on host "127.0.0.1" and accepting
+	TCP/IP connections on port 5432?
+</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>args</td>
+                    <td class="code"><pre>()</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>Error in formatting: could not connect to server: Connection refused
+	Is the server running on host "127.0.0.1" and accepting
+	TCP/IP connections on port 5432?
+</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>kwargs</td>
+                    <td class="code"><pre>{'expire_date__gt': datetime.datetime(2012, 7, 2, 12, 21, 43, 606186),
+ 'session_key': '9ff8admiralakbarsaysitsatrap004e'}</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+          
+        </li>
+      
+        <li class="frame django">
+          <code>/usr/lib/python2.7/dist-packages/django/db/models/query.py</code> in <code>__len__</code>
+
+          
+            <div class="context" id="c140099093966000">
+              
+                <ol style="display: none;" start="78" class="pre-context" id="pre140099093966000"><li onclick="toggle('pre140099093966000', 'post140099093966000')"><pre>        # Since __len__ is called quite frequently (for example, as part of</pre></li><li onclick="toggle('pre140099093966000', 'post140099093966000')"><pre>        # list(qs), we make some effort here to be as efficient as possible</pre></li><li onclick="toggle('pre140099093966000', 'post140099093966000')"><pre>        # whilst not messing up any existing iterators against the QuerySet.</pre></li><li onclick="toggle('pre140099093966000', 'post140099093966000')"><pre>        if self._result_cache is None:</pre></li><li onclick="toggle('pre140099093966000', 'post140099093966000')"><pre>            if self._iter:</pre></li><li onclick="toggle('pre140099093966000', 'post140099093966000')"><pre>                self._result_cache = list(self._iter)</pre></li><li onclick="toggle('pre140099093966000', 'post140099093966000')"><pre>            else:</pre></li></ol>
+              
+              <ol start="85" class="context-line"><li onclick="toggle('pre140099093966000', 'post140099093966000')"><pre>                self._result_cache = list(self.iterator())</pre> <span>...</span></li></ol>
+              
+                <ol style="display: none;" start="86" class="post-context" id="post140099093966000"><li onclick="toggle('pre140099093966000', 'post140099093966000')"><pre>        elif self._iter:</pre></li><li onclick="toggle('pre140099093966000', 'post140099093966000')"><pre>            self._result_cache.extend(self._iter)</pre></li><li onclick="toggle('pre140099093966000', 'post140099093966000')"><pre>        if self._prefetch_related_lookups and not self._prefetch_done:</pre></li><li onclick="toggle('pre140099093966000', 'post140099093966000')"><pre>            self._prefetch_related_objects()</pre></li><li onclick="toggle('pre140099093966000', 'post140099093966000')"><pre>        return len(self._result_cache)</pre></li><li onclick="toggle('pre140099093966000', 'post140099093966000')"><pre></pre></li></ol>
+              
+            </div>
+          
+
+          
+            <div class="commands">
+                
+                    <a href="#" onclick="return varToggle(this, '140099093966000')"><span>▶</span> Local vars</a>
+                
+            </div>
+            <table style="display: none;" class="vars" id="v140099093966000">
+              <thead>
+                <tr>
+                  <th>Variable</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>Error in formatting: could not connect to server: Connection refused
+	Is the server running on host "127.0.0.1" and accepting
+	TCP/IP connections on port 5432?
+</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+          
+        </li>
+      
+        <li class="frame django">
+          <code>/usr/lib/python2.7/dist-packages/django/db/models/query.py</code> in <code>iterator</code>
+
+          
+            <div class="context" id="c140099093965928">
+              
+                <ol style="display: none;" start="284" class="pre-context" id="pre140099093965928"><li onclick="toggle('pre140099093965928', 'post140099093965928')"><pre>        # Cache db and model outside the loop</pre></li><li onclick="toggle('pre140099093965928', 'post140099093965928')"><pre>        db = self.db</pre></li><li onclick="toggle('pre140099093965928', 'post140099093965928')"><pre>        model = self.model</pre></li><li onclick="toggle('pre140099093965928', 'post140099093965928')"><pre>        compiler = self.query.get_compiler(using=db)</pre></li><li onclick="toggle('pre140099093965928', 'post140099093965928')"><pre>        if fill_cache:</pre></li><li onclick="toggle('pre140099093965928', 'post140099093965928')"><pre>            klass_info = get_klass_info(model, max_depth=max_depth,</pre></li><li onclick="toggle('pre140099093965928', 'post140099093965928')"><pre>                                        requested=requested, only_load=only_load)</pre></li></ol>
+              
+              <ol start="291" class="context-line"><li onclick="toggle('pre140099093965928', 'post140099093965928')"><pre>        for row in compiler.results_iter():</pre> <span>...</span></li></ol>
+              
+                <ol style="display: none;" start="292" class="post-context" id="post140099093965928"><li onclick="toggle('pre140099093965928', 'post140099093965928')"><pre>            if fill_cache:</pre></li><li onclick="toggle('pre140099093965928', 'post140099093965928')"><pre>                obj, _ = get_cached_row(row, index_start, db, klass_info,</pre></li><li onclick="toggle('pre140099093965928', 'post140099093965928')"><pre>                                        offset=len(aggregate_select))</pre></li><li onclick="toggle('pre140099093965928', 'post140099093965928')"><pre>            else:</pre></li><li onclick="toggle('pre140099093965928', 'post140099093965928')"><pre>                if skip:</pre></li><li onclick="toggle('pre140099093965928', 'post140099093965928')"><pre>                    row_data = row[index_start:aggregate_start]</pre></li></ol>
+              
+            </div>
+          
+
+          
+            <div class="commands">
+                
+                    <a href="#" onclick="return varToggle(this, '140099093965928')"><span>▶</span> Local vars</a>
+                
+            </div>
+            <table style="display: none;" class="vars" id="v140099093965928">
+              <thead>
+                <tr>
+                  <th>Variable</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>requested</td>
+                    <td class="code"><pre>None</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>fill_cache</td>
+                    <td class="code"><pre>False</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>aggregate_select</td>
+                    <td class="code"><pre>[]</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>fields</td>
+                    <td class="code"><pre>[&lt;django.db.models.fields.CharField: session_key&gt;,
+ &lt;django.db.models.fields.TextField: session_data&gt;,
+ &lt;django.db.models.fields.DateTimeField: expire_date&gt;]</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>skip</td>
+                    <td class="code"><pre>None</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>Error in formatting: could not connect to server: Connection refused
+	Is the server running on host "127.0.0.1" and accepting
+	TCP/IP connections on port 5432?
+</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>load_fields</td>
+                    <td class="code"><pre>[]</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>db</td>
+                    <td class="code"><pre>'default'</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>index_start</td>
+                    <td class="code"><pre>0</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>extra_select</td>
+                    <td class="code"><pre>[]</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>aggregate_start</td>
+                    <td class="code"><pre>3</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>model</td>
+                    <td class="code"><pre>&lt;class 'django.contrib.sessions.models.Session'&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>only_load</td>
+                    <td class="code"><pre>{}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>max_depth</td>
+                    <td class="code"><pre>5</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>compiler</td>
+                    <td class="code"><pre>&lt;django.db.models.sql.compiler.SQLCompiler object at 0x7f6b5cba2e50&gt;</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+          
+        </li>
+      
+        <li class="frame django">
+          <code>/usr/lib/python2.7/dist-packages/django/db/models/sql/compiler.py</code> in <code>results_iter</code>
+
+          
+            <div class="context" id="c140099093965856">
+              
+                <ol style="display: none;" start="756" class="pre-context" id="pre140099093965856"><li onclick="toggle('pre140099093965856', 'post140099093965856')"><pre>        fields = None</pre></li><li onclick="toggle('pre140099093965856', 'post140099093965856')"><pre>        has_aggregate_select = bool(self.query.aggregate_select)</pre></li><li onclick="toggle('pre140099093965856', 'post140099093965856')"><pre>        # Set transaction dirty if we're using SELECT FOR UPDATE to ensure</pre></li><li onclick="toggle('pre140099093965856', 'post140099093965856')"><pre>        # a subsequent commit/rollback is executed, so any database locks</pre></li><li onclick="toggle('pre140099093965856', 'post140099093965856')"><pre>        # are released.</pre></li><li onclick="toggle('pre140099093965856', 'post140099093965856')"><pre>        if self.query.select_for_update and transaction.is_managed(self.using):</pre></li><li onclick="toggle('pre140099093965856', 'post140099093965856')"><pre>            transaction.set_dirty(self.using)</pre></li></ol>
+              
+              <ol start="763" class="context-line"><li onclick="toggle('pre140099093965856', 'post140099093965856')"><pre>        for rows in self.execute_sql(MULTI):</pre> <span>...</span></li></ol>
+              
+                <ol style="display: none;" start="764" class="post-context" id="post140099093965856"><li onclick="toggle('pre140099093965856', 'post140099093965856')"><pre>            for row in rows:</pre></li><li onclick="toggle('pre140099093965856', 'post140099093965856')"><pre>                if resolve_columns:</pre></li><li onclick="toggle('pre140099093965856', 'post140099093965856')"><pre>                    if fields is None:</pre></li><li onclick="toggle('pre140099093965856', 'post140099093965856')"><pre>                        # We only set this up here because</pre></li><li onclick="toggle('pre140099093965856', 'post140099093965856')"><pre>                        # related_select_fields isn't populated until</pre></li><li onclick="toggle('pre140099093965856', 'post140099093965856')"><pre>                        # execute_sql() has been called.</pre></li></ol>
+              
+            </div>
+          
+
+          
+            <div class="commands">
+                
+                    <a href="#" onclick="return varToggle(this, '140099093965856')"><span>▶</span> Local vars</a>
+                
+            </div>
+            <table style="display: none;" class="vars" id="v140099093965856">
+              <thead>
+                <tr>
+                  <th>Variable</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>fields</td>
+                    <td class="code"><pre>None</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;django.db.models.sql.compiler.SQLCompiler object at 0x7f6b5cba2e50&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>has_aggregate_select</td>
+                    <td class="code"><pre>False</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>resolve_columns</td>
+                    <td class="code"><pre>False</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+          
+        </li>
+      
+        <li class="frame django">
+          <code>/usr/lib/python2.7/dist-packages/django/db/models/sql/compiler.py</code> in <code>execute_sql</code>
+
+          
+            <div class="context" id="c140099093965784">
+              
+                <ol style="display: none;" start="810" class="pre-context" id="pre140099093965784"><li onclick="toggle('pre140099093965784', 'post140099093965784')"><pre>                raise EmptyResultSet</pre></li><li onclick="toggle('pre140099093965784', 'post140099093965784')"><pre>        except EmptyResultSet:</pre></li><li onclick="toggle('pre140099093965784', 'post140099093965784')"><pre>            if result_type == MULTI:</pre></li><li onclick="toggle('pre140099093965784', 'post140099093965784')"><pre>                return empty_iter()</pre></li><li onclick="toggle('pre140099093965784', 'post140099093965784')"><pre>            else:</pre></li><li onclick="toggle('pre140099093965784', 'post140099093965784')"><pre>                return</pre></li><li onclick="toggle('pre140099093965784', 'post140099093965784')"><pre></pre></li></ol>
+              
+              <ol start="817" class="context-line"><li onclick="toggle('pre140099093965784', 'post140099093965784')"><pre>        cursor = self.connection.cursor()</pre> <span>...</span></li></ol>
+              
+                <ol style="display: none;" start="818" class="post-context" id="post140099093965784"><li onclick="toggle('pre140099093965784', 'post140099093965784')"><pre>        cursor.execute(sql, params)</pre></li><li onclick="toggle('pre140099093965784', 'post140099093965784')"><pre></pre></li><li onclick="toggle('pre140099093965784', 'post140099093965784')"><pre>        if not result_type:</pre></li><li onclick="toggle('pre140099093965784', 'post140099093965784')"><pre>            return cursor</pre></li><li onclick="toggle('pre140099093965784', 'post140099093965784')"><pre>        if result_type == SINGLE:</pre></li><li onclick="toggle('pre140099093965784', 'post140099093965784')"><pre>            if self.query.ordering_aliases:</pre></li></ol>
+              
+            </div>
+          
+
+          
+            <div class="commands">
+                
+                    <a href="#" onclick="return varToggle(this, '140099093965784')"><span>▶</span> Local vars</a>
+                
+            </div>
+            <table style="display: none;" class="vars" id="v140099093965784">
+              <thead>
+                <tr>
+                  <th>Variable</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;django.db.models.sql.compiler.SQLCompiler object at 0x7f6b5cba2e50&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>params</td>
+                    <td class="code"><pre>('9ff8be54ca13b304d0987bf8be16b04e', u'2012-07-02 12:21:43.606186')</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>result_type</td>
+                    <td class="code"><pre>'multi'</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>sql</td>
+                    <td class="code"><pre>'SELECT "django_session"."session_key", "django_session"."session_data", "django_session"."expire_date" FROM "django_session" WHERE ("django_session"."session_key" = %s  AND "django_session"."expire_date" &gt; %s )'</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+          
+        </li>
+      
+        <li class="frame django">
+          <code>/usr/lib/python2.7/dist-packages/django/db/backends/__init__.py</code> in <code>cursor</code>
+
+          
+            <div class="context" id="c140099093965712">
+              
+                <ol style="display: none;" start="299" class="pre-context" id="pre140099093965712"><li onclick="toggle('pre140099093965712', 'post140099093965712')"><pre>            self.connection.close()</pre></li><li onclick="toggle('pre140099093965712', 'post140099093965712')"><pre>            self.connection = None</pre></li><li onclick="toggle('pre140099093965712', 'post140099093965712')"><pre></pre></li><li onclick="toggle('pre140099093965712', 'post140099093965712')"><pre>    def cursor(self):</pre></li><li onclick="toggle('pre140099093965712', 'post140099093965712')"><pre>        self.validate_thread_sharing()</pre></li><li onclick="toggle('pre140099093965712', 'post140099093965712')"><pre>        if (self.use_debug_cursor or</pre></li><li onclick="toggle('pre140099093965712', 'post140099093965712')"><pre>            (self.use_debug_cursor is None and settings.DEBUG)):</pre></li></ol>
+              
+              <ol start="306" class="context-line"><li onclick="toggle('pre140099093965712', 'post140099093965712')"><pre>            cursor = self.make_debug_cursor(self._cursor())</pre> <span>...</span></li></ol>
+              
+                <ol style="display: none;" start="307" class="post-context" id="post140099093965712"><li onclick="toggle('pre140099093965712', 'post140099093965712')"><pre>        else:</pre></li><li onclick="toggle('pre140099093965712', 'post140099093965712')"><pre>            cursor = util.CursorWrapper(self._cursor(), self)</pre></li><li onclick="toggle('pre140099093965712', 'post140099093965712')"><pre>        return cursor</pre></li><li onclick="toggle('pre140099093965712', 'post140099093965712')"><pre></pre></li><li onclick="toggle('pre140099093965712', 'post140099093965712')"><pre>    def make_debug_cursor(self, cursor):</pre></li><li onclick="toggle('pre140099093965712', 'post140099093965712')"><pre>        return util.CursorDebugWrapper(cursor, self)</pre></li></ol>
+              
+            </div>
+          
+
+          
+            <div class="commands">
+                
+                    <a href="#" onclick="return varToggle(this, '140099093965712')"><span>▶</span> Local vars</a>
+                
+            </div>
+            <table style="display: none;" class="vars" id="v140099093965712">
+              <thead>
+                <tr>
+                  <th>Variable</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;django.db.backends.postgresql_psycopg2.base.DatabaseWrapper object at 0x7f6b5c0bb190&gt;</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+          
+        </li>
+      
+        <li class="frame django">
+          <code>/usr/lib/python2.7/dist-packages/django/db/backends/postgresql_psycopg2/base.py</code> in <code>_cursor</code>
+
+          
+            <div class="context" id="c140099093965640">
+              
+                <ol style="display: none;" start="170" class="pre-context" id="pre140099093965640"><li onclick="toggle('pre140099093965640', 'post140099093965640')"><pre>                conn_params['user'] = settings_dict['USER']</pre></li><li onclick="toggle('pre140099093965640', 'post140099093965640')"><pre>            if settings_dict['PASSWORD']:</pre></li><li onclick="toggle('pre140099093965640', 'post140099093965640')"><pre>                conn_params['password'] = settings_dict['PASSWORD']</pre></li><li onclick="toggle('pre140099093965640', 'post140099093965640')"><pre>            if settings_dict['HOST']:</pre></li><li onclick="toggle('pre140099093965640', 'post140099093965640')"><pre>                conn_params['host'] = settings_dict['HOST']</pre></li><li onclick="toggle('pre140099093965640', 'post140099093965640')"><pre>            if settings_dict['PORT']:</pre></li><li onclick="toggle('pre140099093965640', 'post140099093965640')"><pre>                conn_params['port'] = settings_dict['PORT']</pre></li></ol>
+              
+              <ol start="177" class="context-line"><li onclick="toggle('pre140099093965640', 'post140099093965640')"><pre>            self.connection = Database.connect(**conn_params)</pre> <span>...</span></li></ol>
+              
+                <ol style="display: none;" start="178" class="post-context" id="post140099093965640"><li onclick="toggle('pre140099093965640', 'post140099093965640')"><pre>            self.connection.set_client_encoding('UTF8')</pre></li><li onclick="toggle('pre140099093965640', 'post140099093965640')"><pre>            tz = 'UTC' if settings.USE_TZ else settings_dict.get('TIME_ZONE')</pre></li><li onclick="toggle('pre140099093965640', 'post140099093965640')"><pre>            if tz:</pre></li><li onclick="toggle('pre140099093965640', 'post140099093965640')"><pre>                try:</pre></li><li onclick="toggle('pre140099093965640', 'post140099093965640')"><pre>                    get_parameter_status = self.connection.get_parameter_status</pre></li><li onclick="toggle('pre140099093965640', 'post140099093965640')"><pre>                except AttributeError:</pre></li></ol>
+              
+            </div>
+          
+
+          
+            <div class="commands">
+                
+                    <a href="#" onclick="return varToggle(this, '140099093965640')"><span>▶</span> Local vars</a>
+                
+            </div>
+            <table style="display: none;" class="vars" id="v140099093965640">
+              <thead>
+                <tr>
+                  <th>Variable</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>conn_params</td>
+                    <td class="code"><pre>{'database': 'urnik',
+ 'host': '127.0.0.1',
+ 'password': 'UrnihNogDelaSploh',
+ 'user': 'urnik'}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>self</td>
+                    <td class="code"><pre>&lt;django.db.backends.postgresql_psycopg2.base.DatabaseWrapper object at 0x7f6b5c0bb190&gt;</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>settings_dict</td>
+                    <td class="code"><pre>{'ENGINE': 'django.db.backends.postgresql_psycopg2',
+ 'HOST': '127.0.0.1',
+ 'NAME': 'urnik',
+ 'OPTIONS': {},
+ 'PASSWORD': 'UrnihNogDelaSploh',
+ 'PORT': '',
+ 'TEST_CHARSET': None,
+ 'TEST_COLLATION': None,
+ 'TEST_MIRROR': None,
+ 'TEST_NAME': None,
+ 'TIME_ZONE': 'Europe/Ljubljana',
+ 'USER': 'urnik'}</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+          
+        </li>
+      
+        <li class="frame user">
+          <code>/usr/lib/python2.7/dist-packages/psycopg2/__init__.py</code> in <code>connect</code>
+
+          
+            <div class="context" id="c140099093965568">
+              
+                <ol style="display: none;" start="172" class="pre-context" id="pre140099093965568"><li onclick="toggle('pre140099093965568', 'post140099093965568')"><pre>        dsn = " ".join(["%s=%s" % (k, _param_escape(str(v)))</pre></li><li onclick="toggle('pre140099093965568', 'post140099093965568')"><pre>            for (k, v) in items])</pre></li><li onclick="toggle('pre140099093965568', 'post140099093965568')"><pre></pre></li><li onclick="toggle('pre140099093965568', 'post140099093965568')"><pre>        if not dsn:</pre></li><li onclick="toggle('pre140099093965568', 'post140099093965568')"><pre>            raise InterfaceError('missing dsn and no parameters')</pre></li><li onclick="toggle('pre140099093965568', 'post140099093965568')"><pre></pre></li><li onclick="toggle('pre140099093965568', 'post140099093965568')"><pre>    return _connect(dsn,</pre></li></ol>
+              
+              <ol start="179" class="context-line"><li onclick="toggle('pre140099093965568', 'post140099093965568')"><pre>        connection_factory=connection_factory, async=async)</pre> <span>...</span></li></ol>
+              
+                <ol style="display: none;" start="180" class="post-context" id="post140099093965568"><li onclick="toggle('pre140099093965568', 'post140099093965568')"><pre></pre></li><li onclick="toggle('pre140099093965568', 'post140099093965568')"><pre></pre></li><li onclick="toggle('pre140099093965568', 'post140099093965568')"><pre>__all__ = filter(lambda k: not k.startswith('_'), locals().keys())</pre></li><li onclick="toggle('pre140099093965568', 'post140099093965568')"><pre></pre></li></ol>
+              
+            </div>
+          
+
+          
+            <div class="commands">
+                
+                    <a href="#" onclick="return varToggle(this, '140099093965568')"><span>▶</span> Local vars</a>
+                
+            </div>
+            <table style="display: none;" class="vars" id="v140099093965568">
+              <thead>
+                <tr>
+                  <th>Variable</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                
+                  <tr>
+                    <td>database</td>
+                    <td class="code"><pre>'urnik'</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>items</td>
+                    <td class="code"><pre>[('dbname', 'urnik'),
+ ('user', 'urnik'),
+ ('password', 'UrnihNogDelaSploh'),
+ ('host', '127.0.0.1')]</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>k</td>
+                    <td class="code"><pre>'host'</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>v</td>
+                    <td class="code"><pre>'127.0.0.1'</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>port</td>
+                    <td class="code"><pre>None</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>dsn</td>
+                    <td class="code"><pre>'dbname=urnik user=urnik password=UrnihNogDelaSploh host=127.0.0.1'</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>host</td>
+                    <td class="code"><pre>'127.0.0.1'</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>user</td>
+                    <td class="code"><pre>'urnik'</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>kwargs</td>
+                    <td class="code"><pre>{}</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>async</td>
+                    <td class="code"><pre>False</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>password</td>
+                    <td class="code"><pre>'UrnihNogDelaSploh'</pre></td>
+                  </tr>
+                
+                  <tr>
+                    <td>connection_factory</td>
+                    <td class="code"><pre>None</pre></td>
+                  </tr>
+                
+              </tbody>
+            </table>
+          
+        </li>
+      
+    </ul>
+  </div>
+  
+  <form action="http://dpaste.com/" name="pasteform" id="pasteform" method="post">
+
+  <div style="display: none;" id="pastebinTraceback" class="pastebin">
+    <input name="language" value="PythonConsole" type="hidden">
+    <input name="title" value="OperationalError at /" type="hidden">
+    <input name="source" value="Django Dpaste Agent" type="hidden">
+    <input name="poster" value="Django" type="hidden">
+    <textarea name="content" id="traceback_area" cols="140" rows="25">Environment:
+
+
+Request Method: GET
+Request URL: http://urnik.fri.uni-lj.si/
+
+Django Version: 1.4
+Python Version: 2.7.3
+Installed Applications:
+('auth_userlen_app',
+ 'django.contrib.auth',
+ 'django.contrib.contenttypes',
+ 'django.contrib.sessions',
+ 'django.contrib.sites',
+ 'django.contrib.messages',
+ 'django.contrib.staticfiles',
+ 'timetable',
+ 'friprosveta',
+ 'najavefri',
+ 'django.contrib.admin')
+Installed Middleware:
+('django.middleware.common.CommonMiddleware',
+ 'django.contrib.sessions.middleware.SessionMiddleware',
+ 'django.middleware.csrf.CsrfViewMiddleware',
+ 'django.contrib.auth.middleware.AuthenticationMiddleware',
+ 'django.contrib.messages.middleware.MessageMiddleware',
+ 'django.contrib.sessions.middleware.SessionMiddleware')
+
+
+Traceback:
+File "/usr/lib/python2.7/dist-packages/django/core/handlers/base.py" in get_response
+  111.                         response = callback(request, *callback_args, **callback_kwargs)
+File "/home/urnik/urnik/django/urnik/friprosveta/views.py" in results
+  53.     selected_timetables = request.session.get('timetables', __default_timetables())
+File "/usr/lib/python2.7/dist-packages/django/contrib/sessions/backends/base.py" in get
+  50.         return self._session.get(key, default)
+File "/usr/lib/python2.7/dist-packages/django/contrib/sessions/backends/base.py" in _get_session
+  165.                 self._session_cache = self.load()
+File "/usr/lib/python2.7/dist-packages/django/contrib/sessions/backends/db.py" in load
+  19.                 expire_date__gt=timezone.now()
+File "/usr/lib/python2.7/dist-packages/django/db/models/manager.py" in get
+  131.         return self.get_query_set().get(*args, **kwargs)
+File "/usr/lib/python2.7/dist-packages/django/db/models/query.py" in get
+  361.         num = len(clone)
+File "/usr/lib/python2.7/dist-packages/django/db/models/query.py" in __len__
+  85.                 self._result_cache = list(self.iterator())
+File "/usr/lib/python2.7/dist-packages/django/db/models/query.py" in iterator
+  291.         for row in compiler.results_iter():
+File "/usr/lib/python2.7/dist-packages/django/db/models/sql/compiler.py" in results_iter
+  763.         for rows in self.execute_sql(MULTI):
+File "/usr/lib/python2.7/dist-packages/django/db/models/sql/compiler.py" in execute_sql
+  817.         cursor = self.connection.cursor()
+File "/usr/lib/python2.7/dist-packages/django/db/backends/__init__.py" in cursor
+  306.             cursor = self.make_debug_cursor(self._cursor())
+File "/usr/lib/python2.7/dist-packages/django/db/backends/postgresql_psycopg2/base.py" in _cursor
+  177.             self.connection = Database.connect(**conn_params)
+File "/usr/lib/python2.7/dist-packages/psycopg2/__init__.py" in connect
+  179.         connection_factory=connection_factory, async=async)
+
+Exception Type: OperationalError at /
+Exception Value: could not connect to server: Connection refused
+	Is the server running on host "127.0.0.1" and accepting
+	TCP/IP connections on port 5432?
+
+</textarea>
+  <br><br>
+  <input value="Share this traceback on a public Web site" type="submit">
+  </div>
+</form>
+</div>
+
+
+
+<div id="requestinfo">
+  <h2>Request information</h2>
+
+
+  <h3 id="get-info">GET</h3>
+  
+    <p>No GET data</p>
+  
+
+  <h3 id="post-info">POST</h3>
+  
+    <p>No POST data</p>
+  
+  <h3 id="files-info">FILES</h3>
+  
+    <p>No FILES data</p>
+  
+
+
+  <h3 id="cookie-info">COOKIES</h3>
+  
+    <table class="req">
+      <thead>
+        <tr>
+          <th>Variable</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+          <tr>
+            <td>csrftoken</td>
+            <td class="code"><pre>'ni3VoDHKvqgbmNEiXZII6MRxCuaSHfJt'</pre></td>
+          </tr>
+        
+          <tr>
+            <td>__utma</td>
+            <td class="code"><pre>'184059249.913694516.1288182604.1339762310.1340011419.64'</pre></td>
+          </tr>
+        
+          <tr>
+            <td>__utmz</td>
+            <td class="code"><pre>'184059249.1340011419.64.48.utmcsr=google|utmccn=(organic)|utmcmd=organic|utmctr=(not%20provided)'</pre></td>
+          </tr>
+        
+          <tr>
+            <td>sessionid</td>
+            <td class="code"><pre>'9ff8be54ca13b304d0987bf8be16b04e'</pre></td>
+          </tr>
+        
+      </tbody>
+    </table>
+  
+
+  <h3 id="meta-info">META</h3>
+  <table class="req">
+    <thead>
+      <tr>
+        <th>Variable</th>
+        <th>Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      
+        <tr>
+          <td>mod_wsgi.listener_port</td>
+          <td class="code"><pre>'80'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_COOKIE</td>
+          <td class="code"><pre>'__utma=184059249.913694516.1288182604.1339762310.1340011419.64; __utmz=184059249.1340011419.64.48.utmcsr=google|utmccn=(organic)|utmcmd=organic|utmctr=(not%20provided); sessionid=9ff8be54ca13b304d0987bf8be16b04e; csrftoken=ni3VoDHKvqgbmNEiXZII6MRxCuaSHfJt'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>mod_wsgi.listener_host</td>
+          <td class="code"><pre>''</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SERVER_SOFTWARE</td>
+          <td class="code"><pre>'Apache/2.2.22 (Debian)'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SCRIPT_NAME</td>
+          <td class="code"><pre>u''</pre></td>
+        </tr>
+      
+        <tr>
+          <td>mod_wsgi.handler_script</td>
+          <td class="code"><pre>''</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SERVER_SIGNATURE</td>
+          <td class="code"><pre>'&lt;address&gt;Apache/2.2.22 (Debian) Server at urnik.fri.uni-lj.si Port 80&lt;/address&gt;\n'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REQUEST_METHOD</td>
+          <td class="code"><pre>'GET'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PATH_INFO</td>
+          <td class="code"><pre>u'/'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SERVER_PROTOCOL</td>
+          <td class="code"><pre>'HTTP/1.1'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>QUERY_STRING</td>
+          <td class="code"><pre>''</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_USER_AGENT</td>
+          <td class="code"><pre>'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:13.0) Gecko/20100101 Firefox/13.0'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_CONNECTION</td>
+          <td class="code"><pre>'keep-alive'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SERVER_NAME</td>
+          <td class="code"><pre>'urnik.fri.uni-lj.si'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REMOTE_ADDR</td>
+          <td class="code"><pre>'212.235.189.164'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>mod_wsgi.request_handler</td>
+          <td class="code"><pre>'wsgi-script'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>wsgi.url_scheme</td>
+          <td class="code"><pre>'http'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PATH_TRANSLATED</td>
+          <td class="code"><pre>'/home/urnik/urnik/django/urnik/apache.wsgi/'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SERVER_PORT</td>
+          <td class="code"><pre>'80'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>wsgi.multiprocess</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>mod_wsgi.input_chunked</td>
+          <td class="code"><pre>'0'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SERVER_ADDR</td>
+          <td class="code"><pre>'212.235.188.102'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DOCUMENT_ROOT</td>
+          <td class="code"><pre>'/var/www'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>mod_wsgi.process_group</td>
+          <td class="code"><pre>''</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SCRIPT_FILENAME</td>
+          <td class="code"><pre>'/home/urnik/urnik/django/urnik/apache.wsgi'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SERVER_ADMIN</td>
+          <td class="code"><pre>'gregor.jerse@fri.uni-lj.si'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>wsgi.input</td>
+          <td class="code"><pre>&lt;mod_wsgi.Input object at 0x7f6b5bf65cb0&gt;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_HOST</td>
+          <td class="code"><pre>'urnik.fri.uni-lj.si'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>wsgi.multithread</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>mod_wsgi.callable_object</td>
+          <td class="code"><pre>'application'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REQUEST_URI</td>
+          <td class="code"><pre>'/'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_ACCEPT</td>
+          <td class="code"><pre>'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>wsgi.version</td>
+          <td class="code"><pre>(1, 1)</pre></td>
+        </tr>
+      
+        <tr>
+          <td>GATEWAY_INTERFACE</td>
+          <td class="code"><pre>'CGI/1.1'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>wsgi.run_once</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>wsgi.errors</td>
+          <td class="code"><pre>&lt;mod_wsgi.Log object at 0x7f6b5bf65cf0&gt;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>REMOTE_PORT</td>
+          <td class="code"><pre>'35066'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_ACCEPT_LANGUAGE</td>
+          <td class="code"><pre>'en-us,en;q=0.5'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>mod_wsgi.version</td>
+          <td class="code"><pre>(3, 3)</pre></td>
+        </tr>
+      
+        <tr>
+          <td>mod_wsgi.application_group</td>
+          <td class="code"><pre>'urnik.fri.uni-lj.si|'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>mod_wsgi.script_reloading</td>
+          <td class="code"><pre>'1'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>wsgi.file_wrapper</td>
+          <td class="code"><pre>''</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CSRF_COOKIE</td>
+          <td class="code"><pre>'ni3VoDHKvqgbmNEiXZII6MRxCuaSHfJt'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>HTTP_ACCEPT_ENCODING</td>
+          <td class="code"><pre>'gzip, deflate'</pre></td>
+        </tr>
+      
+    </tbody>
+  </table>
+
+
+  <h3 id="settings-info">Settings</h3>
+  <h4>Using settings module <code>urnik.settings</code></h4>
+  <table class="req">
+    <thead>
+      <tr>
+        <th>Setting</th>
+        <th>Value</th>
+      </tr>
+    </thead>
+    <tbody>
+      
+        <tr>
+          <td>MONTH_DAY_FORMAT</td>
+          <td class="code"><pre>'F j'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>USE_L10N</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>USE_THOUSAND_SEPARATOR</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CSRF_COOKIE_SECURE</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LANGUAGE_CODE</td>
+          <td class="code"><pre>'en-us'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>ROOT_URLCONF</td>
+          <td class="code"><pre>'urnik.urls'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>MANAGERS</td>
+          <td class="code"><pre>(('polz', 'polz@fri.uni-lj.si'),
+ ('gregor', 'gregor.jerse@fri.uni-lj.si'),
+ ('gasperfele@fri1.uni-lj.si', 'polz@fri.uni-lj.si'))</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DEFAULT_CHARSET</td>
+          <td class="code"><pre>'utf-8'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>STATIC_ROOT</td>
+          <td class="code"><pre>'/home/urnik/urnik/django/urnik/site_media'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>MESSAGE_STORAGE</td>
+          <td class="code"><pre>'django.contrib.messages.storage.fallback.FallbackStorage'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EMAIL_SUBJECT_PREFIX</td>
+          <td class="code"><pre>'[Django] '</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SEND_BROKEN_LINK_EMAILS</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>URL_VALIDATOR_USER_AGENT</td>
+          <td class="code"><pre>'Django/1.4 (https://www.djangoproject.com)'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>STATICFILES_FINDERS</td>
+          <td class="code"><pre>('django.contrib.staticfiles.finders.FileSystemFinder',
+ 'django.contrib.staticfiles.finders.AppDirectoriesFinder')</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_COOKIE_DOMAIN</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_COOKIE_NAME</td>
+          <td class="code"><pre>'sessionid'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>ADMIN_FOR</td>
+          <td class="code"><pre>()</pre></td>
+        </tr>
+      
+        <tr>
+          <td>TIME_INPUT_FORMATS</td>
+          <td class="code"><pre>('%H:%M:%S', '%H:%M')</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DATABASES</td>
+          <td class="code"><pre>{'default': {'ENGINE': 'django.db.backends.postgresql_psycopg2',
+             'HOST': '127.0.0.1',
+             'NAME': 'urnik',
+             'OPTIONS': {},
+             'PASSWORD': u'********************',
+             'PORT': '',
+             'TEST_CHARSET': None,
+             'TEST_COLLATION': None,
+             'TEST_MIRROR': None,
+             'TEST_NAME': None,
+             'TIME_ZONE': 'Europe/Ljubljana',
+             'USER': 'urnik'},
+ 'najavefri': {'ENGINE': 'sql_server.pyodbc',
+               'HOST': '',
+               'NAME': 'najaveFRI',
+               'OPTIONS': {'driver': 'FreeTDS', 'dsn': 'najavefriodbc'},
+               'PASSWORD': u'********************',
+               'PORT': '',
+               'TEST_CHARSET': None,
+               'TEST_COLLATION': None,
+               'TEST_MIRROR': None,
+               'TEST_NAME': None,
+               'TIME_ZONE': 'Europe/Ljubljana',
+               'USER': 'urnik'}}</pre></td>
+        </tr>
+      
+        <tr>
+          <td>FILE_UPLOAD_PERMISSIONS</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>FILE_UPLOAD_HANDLERS</td>
+          <td class="code"><pre>('django.core.files.uploadhandler.MemoryFileUploadHandler',
+ 'django.core.files.uploadhandler.TemporaryFileUploadHandler')</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DEFAULT_CONTENT_TYPE</td>
+          <td class="code"><pre>'text/html'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>APPEND_SLASH</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>FIRST_DAY_OF_WEEK</td>
+          <td class="code"><pre>0</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DATABASE_ROUTERS</td>
+          <td class="code"><pre>['routers.NajaveFRIRouter']</pre></td>
+        </tr>
+      
+        <tr>
+          <td>YEAR_MONTH_FORMAT</td>
+          <td class="code"><pre>'F Y'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>STATICFILES_STORAGE</td>
+          <td class="code"><pre>'django.contrib.staticfiles.storage.StaticFilesStorage'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CACHES</td>
+          <td class="code"><pre>{'default': {'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+             'LOCATION': ''}}</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SERVER_EMAIL</td>
+          <td class="code"><pre>'root@localhost'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_COOKIE_PATH</td>
+          <td class="code"><pre>'/'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>USE_X_FORWARDED_HOST</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>MIDDLEWARE_CLASSES</td>
+          <td class="code"><pre>('django.middleware.common.CommonMiddleware',
+ 'django.contrib.sessions.middleware.SessionMiddleware',
+ 'django.middleware.csrf.CsrfViewMiddleware',
+ 'django.contrib.auth.middleware.AuthenticationMiddleware',
+ 'django.contrib.messages.middleware.MessageMiddleware',
+ 'django.contrib.sessions.middleware.SessionMiddleware')</pre></td>
+        </tr>
+      
+        <tr>
+          <td>USE_I18N</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>THOUSAND_SEPARATOR</td>
+          <td class="code"><pre>','</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SECRET_KEY</td>
+          <td class="code"><pre>u'********************'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LANGUAGE_COOKIE_NAME</td>
+          <td class="code"><pre>'django_language'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DEFAULT_INDEX_TABLESPACE</td>
+          <td class="code"><pre>''</pre></td>
+        </tr>
+      
+        <tr>
+          <td>TRANSACTIONS_MANAGED</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LOGGING_CONFIG</td>
+          <td class="code"><pre>'django.utils.log.dictConfig'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>TEMPLATE_LOADERS</td>
+          <td class="code"><pre>('django.template.loaders.filesystem.Loader',
+ 'django.template.loaders.app_directories.Loader')</pre></td>
+        </tr>
+      
+        <tr>
+          <td>WSGI_APPLICATION</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>TEMPLATE_DEBUG</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>X_FRAME_OPTIONS</td>
+          <td class="code"><pre>'SAMEORIGIN'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CSRF_COOKIE_NAME</td>
+          <td class="code"><pre>'csrftoken'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>FORCE_SCRIPT_NAME</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CACHE_BACKEND</td>
+          <td class="code"><pre>'locmem://'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SIGNING_BACKEND</td>
+          <td class="code"><pre>'django.core.signing.TimestampSigner'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_COOKIE_SECURE</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>AUTH_LDAP_GROUP_CACHE_TIMEOUT</td>
+          <td class="code"><pre>3600</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CSRF_COOKIE_DOMAIN</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>FILE_CHARSET</td>
+          <td class="code"><pre>'utf-8'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DEBUG</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_FILE_PATH</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DEFAULT_FILE_STORAGE</td>
+          <td class="code"><pre>'django.core.files.storage.FileSystemStorage'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>INSTALLED_APPS</td>
+          <td class="code"><pre>('auth_userlen_app',
+ 'django.contrib.auth',
+ 'django.contrib.contenttypes',
+ 'django.contrib.sessions',
+ 'django.contrib.sites',
+ 'django.contrib.messages',
+ 'django.contrib.staticfiles',
+ 'timetable',
+ 'friprosveta',
+ 'najavefri',
+ 'django.contrib.admin')</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LANGUAGES</td>
+          <td class="code"><pre>(('ar', 'Arabic'),
+ ('az', 'Azerbaijani'),
+ ('bg', 'Bulgarian'),
+ ('bn', 'Bengali'),
+ ('bs', 'Bosnian'),
+ ('ca', 'Catalan'),
+ ('cs', 'Czech'),
+ ('cy', 'Welsh'),
+ ('da', 'Danish'),
+ ('de', 'German'),
+ ('el', 'Greek'),
+ ('en', 'English'),
+ ('en-gb', 'British English'),
+ ('eo', 'Esperanto'),
+ ('es', 'Spanish'),
+ ('es-ar', 'Argentinian Spanish'),
+ ('es-mx', 'Mexican Spanish'),
+ ('es-ni', 'Nicaraguan Spanish'),
+ ('et', 'Estonian'),
+ ('eu', 'Basque'),
+ ('fa', 'Persian'),
+ ('fi', 'Finnish'),
+ ('fr', 'French'),
+ ('fy-nl', 'Frisian'),
+ ('ga', 'Irish'),
+ ('gl', 'Galician'),
+ ('he', 'Hebrew'),
+ ('hi', 'Hindi'),
+ ('hr', 'Croatian'),
+ ('hu', 'Hungarian'),
+ ('id', 'Indonesian'),
+ ('is', 'Icelandic'),
+ ('it', 'Italian'),
+ ('ja', 'Japanese'),
+ ('ka', 'Georgian'),
+ ('kk', 'Kazakh'),
+ ('km', 'Khmer'),
+ ('kn', 'Kannada'),
+ ('ko', 'Korean'),
+ ('lt', 'Lithuanian'),
+ ('lv', 'Latvian'),
+ ('mk', 'Macedonian'),
+ ('ml', 'Malayalam'),
+ ('mn', 'Mongolian'),
+ ('nb', 'Norwegian Bokmal'),
+ ('ne', 'Nepali'),
+ ('nl', 'Dutch'),
+ ('nn', 'Norwegian Nynorsk'),
+ ('pa', 'Punjabi'),
+ ('pl', 'Polish'),
+ ('pt', 'Portuguese'),
+ ('pt-br', 'Brazilian Portuguese'),
+ ('ro', 'Romanian'),
+ ('ru', 'Russian'),
+ ('sk', 'Slovak'),
+ ('sl', 'Slovenian'),
+ ('sq', 'Albanian'),
+ ('sr', 'Serbian'),
+ ('sr-latn', 'Serbian Latin'),
+ ('sv', 'Swedish'),
+ ('sw', 'Swahili'),
+ ('ta', 'Tamil'),
+ ('te', 'Telugu'),
+ ('th', 'Thai'),
+ ('tr', 'Turkish'),
+ ('tt', 'Tatar'),
+ ('uk', 'Ukrainian'),
+ ('ur', 'Urdu'),
+ ('vi', 'Vietnamese'),
+ ('zh-cn', 'Simplified Chinese'),
+ ('zh-tw', 'Traditional Chinese'))</pre></td>
+        </tr>
+      
+        <tr>
+          <td>COMMENTS_ALLOW_PROFANITIES</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>STATICFILES_DIRS</td>
+          <td class="code"><pre>()</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PREPEND_WWW</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SECURE_PROXY_SSL_HEADER</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>AUTH_PROFILE_MODULE</td>
+          <td class="code"><pre>'friprosveta.Teacher'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_COOKIE_HTTPONLY</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DEBUG_PROPAGATE_EXCEPTIONS</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>AUTH_LDAP_BIND_PASSWORD</td>
+          <td class="code"><pre>u'********************'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DATETIME_FORMAT</td>
+          <td class="code"><pre>'N j, Y, P'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LOGIN_URL</td>
+          <td class="code"><pre>'/accounts/login/'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_EXPIRE_AT_BROWSER_CLOSE</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>AUTH_LDAP_BIND_DN</td>
+          <td class="code"><pre>'CN=ldapp,OU=System;OU=Users;OU=FRI12;DC=fri7;DC=uni-lj;DC=si'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>TIME_FORMAT</td>
+          <td class="code"><pre>'P'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DATE_INPUT_FORMATS</td>
+          <td class="code"><pre>('%Y-%m-%d',
+ '%m/%d/%Y',
+ '%m/%d/%y',
+ '%b %d %Y',
+ '%b %d, %Y',
+ '%d %b %Y',
+ '%d %b, %Y',
+ '%B %d %Y',
+ '%B %d, %Y',
+ '%d %B %Y',
+ '%d %B, %Y')</pre></td>
+        </tr>
+      
+        <tr>
+          <td>AUTH_LDAP_USER_FLAGS_BY_GROUP</td>
+          <td class="code"><pre>{}</pre></td>
+        </tr>
+      
+        <tr>
+          <td>AUTHENTICATION_BACKENDS</td>
+          <td class="code"><pre>('django_auth_ldap.backend.LDAPBackend',
+ 'django.contrib.auth.backends.ModelBackend')</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EMAIL_HOST_PASSWORD</td>
+          <td class="code"><pre>u'********************'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PASSWORD_RESET_TIMEOUT_DAYS</td>
+          <td class="code"><pre>u'********************'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CACHE_MIDDLEWARE_ALIAS</td>
+          <td class="code"><pre>'default'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_SAVE_EVERY_REQUEST</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>NUMBER_GROUPING</td>
+          <td class="code"><pre>0</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_ENGINE</td>
+          <td class="code"><pre>'django.contrib.sessions.backends.db'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CSRF_FAILURE_VIEW</td>
+          <td class="code"><pre>'django.views.csrf.csrf_failure'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CSRF_COOKIE_PATH</td>
+          <td class="code"><pre>'/'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LOGIN_REDIRECT_URL</td>
+          <td class="code"><pre>'/my_preferences/'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LOGGING</td>
+          <td class="code"><pre>{'disable_existing_loggers': False,
+ 'filters': {'require_debug_false': {'()': 'django.utils.log.RequireDebugFalse'}},
+ 'handlers': {'mail_admins': {'class': 'django.utils.log.AdminEmailHandler',
+                              'filters': ['require_debug_false'],
+                              'level': 'ERROR'}},
+ 'loggers': {'django.request': {'handlers': ['mail_admins'],
+                                'level': 'ERROR',
+                                'propagate': True}},
+ 'version': 1}</pre></td>
+        </tr>
+      
+        <tr>
+          <td>IGNORABLE_404_URLS</td>
+          <td class="code"><pre>()</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LOCALE_PATHS</td>
+          <td class="code"><pre>()</pre></td>
+        </tr>
+      
+        <tr>
+          <td>TEMPLATE_STRING_IF_INVALID</td>
+          <td class="code"><pre>''</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LOGOUT_URL</td>
+          <td class="code"><pre>'/accounts/logout/'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EMAIL_USE_TLS</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>FIXTURE_DIRS</td>
+          <td class="code"><pre>()</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EMAIL_HOST</td>
+          <td class="code"><pre>'localhost'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DATE_FORMAT</td>
+          <td class="code"><pre>'N j, Y'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>MEDIA_ROOT</td>
+          <td class="code"><pre>''</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DEFAULT_EXCEPTION_REPORTER_FILTER</td>
+          <td class="code"><pre>'django.views.debug.SafeExceptionReporterFilter'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>ADMINS</td>
+          <td class="code"><pre>(('polz', 'polz@fri.uni-lj.si'),
+ ('gregor', 'gregor.jerse@fri.uni-lj.si'),
+ ('gasperfele@fri1.uni-lj.si', 'polz@fri.uni-lj.si'))</pre></td>
+        </tr>
+      
+        <tr>
+          <td>FORMAT_MODULE_PATH</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DEFAULT_FROM_EMAIL</td>
+          <td class="code"><pre>'webmaster@localhost'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>MEDIA_URL</td>
+          <td class="code"><pre>''</pre></td>
+        </tr>
+      
+        <tr>
+          <td>AUTH_LDAP_ALWAYS_UPDATE_USER</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>TEMPLATE_DIRS</td>
+          <td class="code"><pre>()</pre></td>
+        </tr>
+      
+        <tr>
+          <td>AUTH_LDAP_CACHE_GROUPS</td>
+          <td class="code"><pre>True</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SITE_ID</td>
+          <td class="code"><pre>1</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DISALLOWED_USER_AGENTS</td>
+          <td class="code"><pre>()</pre></td>
+        </tr>
+      
+        <tr>
+          <td>ALLOWED_INCLUDE_ROOTS</td>
+          <td class="code"><pre>()</pre></td>
+        </tr>
+      
+        <tr>
+          <td>AUTH_LDAP_USER_ATTR_MAP</td>
+          <td class="code"><pre>{'email': 'mail', 'first_name': 'givenName', 'last_name': 'sn'}</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DECIMAL_SEPARATOR</td>
+          <td class="code"><pre>'.'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SHORT_DATE_FORMAT</td>
+          <td class="code"><pre>'m/d/Y'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>TEST_RUNNER</td>
+          <td class="code"><pre>'django.test.simple.DjangoTestSuiteRunner'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CACHE_MIDDLEWARE_KEY_PREFIX</td>
+          <td class="code"><pre>u'********************'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>TIME_ZONE</td>
+          <td class="code"><pre>'Europe/Ljubljana'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>FILE_UPLOAD_MAX_MEMORY_SIZE</td>
+          <td class="code"><pre>2621440</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EMAIL_BACKEND</td>
+          <td class="code"><pre>'django.core.mail.backends.smtp.EmailBackend'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DEFAULT_TABLESPACE</td>
+          <td class="code"><pre>''</pre></td>
+        </tr>
+      
+        <tr>
+          <td>TEMPLATE_CONTEXT_PROCESSORS</td>
+          <td class="code"><pre>('django.contrib.auth.context_processors.auth',
+ 'django.core.context_processors.debug',
+ 'django.core.context_processors.i18n',
+ 'django.core.context_processors.media',
+ 'django.core.context_processors.static',
+ 'django.core.context_processors.tz',
+ 'django.contrib.messages.context_processors.messages')</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SESSION_COOKIE_AGE</td>
+          <td class="code"><pre>1209600</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SETTINGS_MODULE</td>
+          <td class="code"><pre>'urnik.settings'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>USE_ETAGS</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>LANGUAGES_BIDI</td>
+          <td class="code"><pre>('he', 'ar', 'fa')</pre></td>
+        </tr>
+      
+        <tr>
+          <td>AUTH_LDAP_USER_SEARCH</td>
+          <td class="code"><pre>&lt;django_auth_ldap.config.LDAPSearch object at 0x7f6b5bfffe10&gt;</pre></td>
+        </tr>
+      
+        <tr>
+          <td>FILE_UPLOAD_TEMP_DIR</td>
+          <td class="code"><pre>None</pre></td>
+        </tr>
+      
+        <tr>
+          <td>INTERNAL_IPS</td>
+          <td class="code"><pre>()</pre></td>
+        </tr>
+      
+        <tr>
+          <td>STATIC_URL</td>
+          <td class="code"><pre>'/site_media/'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>AUTH_LDAP_SERVER_URI</td>
+          <td class="code"><pre>'ldap://dcv1fri.fri1.uni-lj.si'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EMAIL_PORT</td>
+          <td class="code"><pre>25</pre></td>
+        </tr>
+      
+        <tr>
+          <td>USE_TZ</td>
+          <td class="code"><pre>False</pre></td>
+        </tr>
+      
+        <tr>
+          <td>SHORT_DATETIME_FORMAT</td>
+          <td class="code"><pre>'m/d/Y P'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PASSWORD_HASHERS</td>
+          <td class="code"><pre>u'********************'</pre></td>
+        </tr>
+      
+        <tr>
+          <td>ABSOLUTE_URL_OVERRIDES</td>
+          <td class="code"><pre>{}</pre></td>
+        </tr>
+      
+        <tr>
+          <td>CACHE_MIDDLEWARE_SECONDS</td>
+          <td class="code"><pre>600</pre></td>
+        </tr>
+      
+        <tr>
+          <td>DATETIME_INPUT_FORMATS</td>
+          <td class="code"><pre>('%Y-%m-%d %H:%M:%S',
+ '%Y-%m-%d %H:%M:%S.%f',
+ '%Y-%m-%d %H:%M',
+ '%Y-%m-%d',
+ '%m/%d/%Y %H:%M:%S',
+ '%m/%d/%Y %H:%M:%S.%f',
+ '%m/%d/%Y %H:%M',
+ '%m/%d/%Y',
+ '%m/%d/%y %H:%M:%S',
+ '%m/%d/%y %H:%M:%S.%f',
+ '%m/%d/%y %H:%M',
+ '%m/%d/%y')</pre></td>
+        </tr>
+      
+        <tr>
+          <td>EMAIL_HOST_USER</td>
+          <td class="code"><pre>''</pre></td>
+        </tr>
+      
+        <tr>
+          <td>PROFANITIES_LIST</td>
+          <td class="code"><pre>u'********************'</pre></td>
+        </tr>
+      
+    </tbody>
+  </table>
+
+</div>
+
+  <div id="explanation">
+    <p>
+      You're seeing this error because you have <code>DEBUG = True</code> in your
+      Django settings file. Change that to <code>False</code>, and Django will
+      display a standard 500 page.
+    </p>
+  </div>
+
+
+
+</body></html>

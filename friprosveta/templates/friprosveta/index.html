@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}Izbira urnika{% endblock %}
+
+{% block body %}
+<h1>Izbira urnikov</h1>
+<a href={% url "friprosveta.views.results" %}>Urniki</a><br/>
+<a href={% url "friprosveta.views.teacher_preference_login" %}>Časovne omejitve pedagogov</a><br/>
+{% endblock %}

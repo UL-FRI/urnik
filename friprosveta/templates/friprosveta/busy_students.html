@@ -1,0 +1,98 @@
+<html>
+<head>
+<title>URNIK</title>
+<meta name="GENERATOR" CONTENT="Urnik">
+<meta http-equiv="Content-Type" content="text/html; charset=utf8">
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}/css/teacher_preferences.css">
+<style type="text/css">
+    tr.timetable {
+        height: 6em;
+    }
+    td.hour {
+        vertical-align: top;
+    }
+    td.MON{
+        background-color: #F7F7FF;
+    }
+    td.MON.allocated{
+        background-color: #CACAFF;
+    }
+    td.TUE{
+    }
+    td.TUE.allocated{
+        background-color: #DBDBFF;
+    }
+    td.WED{
+        background-color: #F7F7FF;
+    }
+    td.WED.allocated{
+        background-color: #CACAFF;
+    }
+    td.THU{
+    }
+    td.THU.allocated{
+        background-color: #DBDBFF;
+    }
+    td.FRI{
+        background-color: #F7F7FF;
+    }
+    td.FRI.allocated{
+        background-color: #CACAFF;
+    }
+    a.activity{
+        color:#800000;
+    }
+    a.teacher{
+        color:#000080;
+        font-size: 60%;
+    }
+    a.group{
+        color:#000000;
+        font-size: 70%;
+    }
+    a.classroom{
+        color:#008000;
+    }
+    td.allocated div {position: relative;}
+    td.allocated div span {display: none;}
+    td.allocated div:hover span {display: block;
+        position: absolute; top: 5px; left: 6em; width: 180px;
+        padding: 5px; margin: 10px; z-index: 100;
+        opacity: .8;
+        color: black; background: #FFFFAA;
+        font: 10px Verdana, sans-serif; text-align: center;}
+
+
+</style>
+</head>
+<body>
+<h1 id="id_timetable">ZASEDENOST TERMINOV za {{realization.activity.name}}</h1>
+<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}{% for t in realization.teachers.all %}{% if forloop.first %}?{% else %}&{% endif %}teacher={{t.id}}{% endfor %}>Izvajalci</a>: {% for t in realization.teachers.all %}<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?teacher={{t.id}}>{{t}}</a> {% endfor %}
+<br/>
+{% for allocation in allocations %}
+{{allocation.day}}, {{allocation.start}}<br/>
+{% if is_staff%}<a href="{% url 'busy_students_admin' timetable_slug=timetable_slug realization_id=allocation.activityRealization_id %}">PREMAKNI</a><br/>{% endif %}
+<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?classroom={{allocation.classroom_id}}>{{allocation.classroom.shortName}}</a><br/>
+Studentov: {{allocation.activityRealization.size}}, znanih {{students|length}}<br/>
+
+<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}{% for g in allocation.activityRealization.groups.all %}{% if forloop.first %}?{% else %}&{% endif %}group={{g.id}}{% endfor %}>Skupine</a>: {% for g in realization.groups.all %}<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?group={{g.id}}>{{g.shortName}}</a> {% endfor %}<br/>
+{% endfor %}
+<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}{% for c in preferred_rooms %}{% if forloop.first %}?{% else %}&{% endif %}classroom={{c.id}}{% endfor %}>Učilnice</a>: {% for c in preferred_rooms %} <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?classroom={{c.id}}>{{c.shortName}}</a> {% endfor %}</br>
+<table class="time_preferences">
+    <th>Ura</th>
+    {% for d in days %}<th>{{d}}</th>{% endfor %}
+    {% for hour, days in busy %}
+    <tr class="timetable">
+        <td class="hour">{{hour}}</td>
+        {% for d in days %}
+            <td>{{d.busy}}</br>
+            {% for c in d.classrooms_free %}
+                <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?classroom={{c.id}}>{{c.shortName}}</a><br/>
+            {% endfor %}
+            </td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+</body>
+</html>

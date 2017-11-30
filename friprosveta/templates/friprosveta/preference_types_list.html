@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "TIMETABLE" %} - {% trans "settings" %} - {% trans "choose" %}{% endblock %}
+{% block body %}
+<h1>{% trans "Choose settings type" %}</h1>
+<p>
+    <a href={% url "my_preferences" timetable_set_slug=timetable_set_slug preference_set_slug=preference_set_slug %}>{% trans "My settings" %}</a></br>
+    {% if user.is_staff %}
+    <a href={% url "teacher_preference_list" timetable_set_slug=timetable_set_slug preference_set_slug=preference_set_slug %}>{% trans "Others settings" %}</a></br>
+    <a href={% url "group_preference_list" timetable_set_slug=timetable_set_slug preference_set_slug=preference_set_slug %}>{% trans "Groups settings" %}</a></br>
+    <a href={% url "tag_preference_list" timetable_set_slug=timetable_set_slug preference_set_slug=preference_set_slug %}>{% trans "Tags settings" %}</a></br>
+    {% endif %}
+</p>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load timetable_extras %}
+{% block title %}URNIK - sodelavci - {{subject.name}} {% endblock %}
+{% block body %}
+{{media}}
+
+<h1>{{subject.name}} ({{subject.code}}) (<a href="{% url "subject" timetable_slug=timetable_slug subject_code=subject.code %}" class="newpage">nazaj na nastavitve</a>)</h1>
+
+<script type="text/javascript" src="{{STATIC_URL}}/js/i18n.js"></script>
+<script type="text/javascript">
+$('a.newpage').click(
+    function(){
+        return confirm("Neshranjeni podatki bodo izgubljeni. Želite nadaljevati?");
+    }
+);
+</script>
+
+<form method="post">
+{% csrf_token %}
+{{assignment_formset.management_form}}
+{% for form in assignment_formset.forms %}
+<h2>{{form.instance.get_type_display}}</h2>
+<table>
+<tr><td>
+{{form.non_field_errors}}
+  {% for field in form %}
+{{field}}{{field.errors}}
+  {% endfor %}
+</td></tr>
+</table>
+<input type="submit" value="Shrani" />
+{% endfor %}
+</form>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}URNIK - pregled pedagoških obremenitev ljudi{% endblock %}
+{% block body %}
+
+
+<link href="{{STATIC_URL}}/css/cycles_overview.css" type="text/css" media="all" rel="stylesheet" />
+
+<h1>Obremenitve</h1>
+
+<style>
+table td {
+  border-style: solid; 
+  border-width: 1px;
+}
+</style>
+
+<table>
+  <thead>
+    <tr>
+	  <th>Delavec</th>
+	  {% for timetable in timetables %}
+	  <th colspan={{ timetable_colspan }}>{{ timetable.name }}{{ timetable.colspan }}</th>
+	  {% endfor %}
+	  <th colspan={{ timetable_colspan }}>SUM</th>
+	</tr>
+	<tr>
+	  <th></th>
+	  {% for timetable in timetables %}
+		  {% for activity_type in  activity_types %}
+  	  <th colspan={{ activity_colspan }}>
+		    {{ activity_type }}
+	  </th>
+		  {% endfor %}	
+	  {% endfor %}		
+      {% for activity_type in  activity_types %}
+  	  <th colspan={{ activity_colspan }}>
+	    {{ activity_type }}
+	  </th>
+	  {% endfor %}
+  	  <th colspan={{ activity_colspan }}>
+	    V
+	  </th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for teacher_data in teacher_data %}
+    <tr>
+        <td>{{ teacher_data.0 }}</td>
+        {% for entry in  teacher_data.1 %}
+        <td>{{ entry.0 }}</td><td>{{ entry.1 }}</td>
+        {% endfor %}
+    </tr>        
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

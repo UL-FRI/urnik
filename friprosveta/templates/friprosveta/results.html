@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}URNIK{% endblock %}
+{% block body %}
+<h1>Urnik</h1>
+
+<form action="/timetable/{{timetable_slug}}/allocations" method="GET">
+{% trans "Student number" %} {{student_form.student}}
+<input type="submit" value='{% trans "My timetable" %}'/> 
+</form> 
+
+<p>
+    <br/>
+    {% blocktrans %}<strong>IŠRM</strong>, <strong>UI</strong>, <strong>PRI</strong> and <strong>MM</strong>
+student must consult tha timetable at your originating faculty (FMF, UI, PEF and FE) to obtain the complete
+personal timetable.{% endblocktrans %}
+</p>
+
+
+<table>
+<tr>
+    <td>
+        <h2>{% trans "Teachers" %}</h2>
+        <div style="height:500px;width:170px;overflow:auto">
+    {% for teacher in teachers %}
+            <a href= "{{allocations_view}}?teacher={{teacher.id}}">{{teacher}}</a><br/>
+    {% endfor %}
+        </div>
+    </td>
+    <td>
+        <h2>{% trans "Classrooms" %}</h2>
+        <div style="height:500px;width:100px;overflow:auto">
+    {% for classroom in classrooms %}
+            <a href="{{allocations_view}}?classroom={{classroom.id}}">{{classroom.name}}</a><br/>
+    {% endfor %}
+        </div>
+    </td>
+    <td>
+        <h2>{% trans "Groups" %}</h2>
+        <div style="height:500px;width:280px;overflow:auto">
+    {% for group in studyGroups %}
+            <a href="{{allocations_view}}?group={{group.id}}">{{group.name}}</a><br/>
+    {% endfor %}
+        </div>
+    </td>
+    <td>
+        <h2>{% trans "Subjects" %}</h2>
+        <div style="height:500px;width:330px;overflow:auto">
+    {% for subject in subjects %}
+            <a href="{{allocations_view}}?subject={{subject.code}}">{{subject.name}} ({{subject.code}})</a><br/>
+    {% endfor %}
+        </div>
+    </td>
+</tr>
+</table>
+{% endblock %}

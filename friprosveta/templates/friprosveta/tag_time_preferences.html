@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load timetable_extras %}
+{% block title %}URNIK - nastavitve{% endblock %}
+
+{% block media %}
+{{activity_requirement_formset.media}}
+{{form.media}}
+{% endblock %}
+{% block body %}
+
+<h1>Vnos časovnih omejitev</h1>
+<h2>{{form.group}}</h2>
+<p>
+V spodnji tabeli s klikom označite časovne termine, v katerih objekti, povezani s tagom
+ne bi imeli pouka. 
+</p>
+{% if gotPost %}
+<p id="postConfirmation">
+Želje uspešno vnešene.
+</p>
+{% endif %}
+<p>
+<form action="" method="POST">{% csrf_token %}
+    {{form.owner}}
+    {{form.preferenceset}}
+    <table class="time_preferences">
+        {{form.as_table}}
+    </table>
+    <input type="submit" value="Submit" />
+</form>
+</p>
+{% endblock %}

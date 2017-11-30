@@ -1,0 +1,17 @@
+<html>
+<head>
+<title>URNIK</title>
+<meta name="GENERATOR" content="Urnik">
+<meta http-equiv="Content-Type" content="text/html; charset=utf8">
+</head>
+<body>
+<script language="JavaScript"> 
+</script>
+<h1>Preference učiteljev - urniki</h1>
+<p>
+    {% for timetable in object_list %}
+    <a href="{{timetable.id}}/">{{timetable}}</a></br>
+    {% endfor %}
+</p>
+</body>
+</html>

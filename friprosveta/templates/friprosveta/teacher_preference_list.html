@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}URNIK - nastavitve - izbira učitelja{% endblock %}
+{% block body %}
+<h1>Nastavitve ostalih učiteljev - urniki</h1>
+<p>
+<table>
+    <tr>
+         <th>Učitelj</th>
+         <th>zahtev</th>
+         <th>želja -</th>
+         <th>želja +</th>
+         <th>komentarji</th>
+    </tr>
+    {% for teacher in object_list %}
+    <tr>
+         <td><a href={% url "teacher_single_preferences" teacher_id=teacher.id timetable_slug=timetable_slug %}>{{teacher}}</a></td>
+         <td>[{{teacher.cant_hours}}]</td>
+         <td>[{{teacher.hate_hours}}]</td>
+         <td>[{{teacher.want_hours}}]</td>
+         <td>{% for c in teacher.filtered_descriptive_preferences %}{{c.value}}{% endfor %}</td>
+    </tr>
+    {% endfor %}
+</table>
+</p>
+{% endblock %}

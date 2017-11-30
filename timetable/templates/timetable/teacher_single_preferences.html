@@ -1,0 +1,109 @@
+{% load timetable_extras %}
+<html>
+<head>
+<title>URNIK</title>
+<meta name="GENERATOR" content="Urnik">
+<meta http-equiv="Content-Type" content="text/html; charset=utf8">
+</head>
+{{activity_requirement_formset.media}}
+{{form.media}}
+<style type="text/css">
+    div.realization {
+        display: inline;
+    }
+    div.extra_realization {
+        display: inline;
+        color: red;
+    }
+</style>
+
+<script language="JavaScript"> 
+<!-- Hide the script from old browsers -- 
+// jquery requirement goodness
+// old-school non-jquery clickety preferences.
+//--> 
+</script> 
+<body>
+
+<h1>Vnos preferenc</h1>
+<h2>Časi (ne)poučevanja za osebo "{{form.teacher}}"</h2>
+<p>
+V spodnji tabeli s klikanjem označite svoje želje glede časa poučevanja. Označite čase, ko ne bi radi učili. Vsako izbiro
+lahko utežite s poljubno utežjo - višja, ko bo utež, več možnosti
+bo, da se vaša želja upošteva. Vse izbrane uteži se normalizirajo.
+</p>
+<p>
+Polja, v katerih raje ne bi poučevali, označite s klikom. Obarvala se bodo rumeno. V polje, ki se prikaže,
+vnesite utež.
+V primeru, da ste ob določenih časih zasedeni z opravki, nujnimi za
+fakulteto, z nadaljnjim klikom na polje označite tudi čase,
+ko absolutno ne morete poučevati.
+
+Tako izbrani časi se bodo obvezno upoštevali.
+</p>
+<p>
+Z morebitnimi zlorabami časov, ko ne morete poučevati, se bo ukvarjalo vodstvo fakultete.
+</p>
+<p>
+<form action="" method="POST">{% csrf_token %}
+    {{form.timePreferences.teacher}}
+    {{form.timePreferences.preferenceset}}
+    <table class="time_preferences">
+        {{form.timePreferences.as_table}}
+    </table>
+<h2>Zahteve predmetov</h2>
+<p>
+V primeru, da za izvajanje predmetov potrebujete posebno opremo, ki je praviloma
+ni v učilnicah, jo izberite spodaj.
+
+Če vaše opreme še ni na seznamu, to sporočite na <a href="mailto:urnik@fri.uni-lj.si">urnik@fri.uni-lj.si</a>
+</p>
+{{activity_requirement_formset.management_form}}
+{% for activity in activity_requirement_formset.forms %}
+<div>
+    <h3>{{activity.instance.name}}</h3>
+    Zahteve:
+    <div class="requirements">
+    <table>
+    {{activity.as_table}}
+    </table>
+    {% for f in activity %}
+        {{f}}
+    {% endfor %}
+    </div>
+    <h3>Cikli</h3>
+    <div class="realizations">
+    {{activity.realizations_formset.management_form}}
+    {% for realization in activity.realizations_formset.initial_forms %}
+        <div class="realization">
+            {{realization.id.errors}}{{realization.id}}
+            {{realization.activity.errors}}{{realization.activity}}
+            {{realization.teachers.errors}}{{realization.teachers}}
+            {{realization.groups.errors}}{{realization.groups|add_class:"realization_group_select"}}
+briši:{{realization.DELETE|add_class:"realization_delete"}}        
+        </div>
+    {% endfor %}
+    {% for realization in activity.realizations_formset.extra_forms %}
+        <div class="extra_realization">
+            {{realization.id.errors}}{{realization.id}}
+            {{realization.activity.errors}}{{realization.activity}}
+            {{realization.teachers.errors}}{{realization.teachers}}
+            {{realization.groups.errors}}{{realization.groups|add_class:"realization_group_select"}}
+briši:{{realization.DELETE|add_class:"realization_delete"}}
+        </div>
+    {% endfor %}
+        <img src="{{STATIC_URL}}/icon_addlink.gif" class="add_realization" />
+    </div>
+</div>
+{% endfor %}
+<h2>Komentarji, pripombe:</h2>
+<p>
+V primeru, da imate še kakšno pripombo v zvezi z urnikom, jo dodajte spodaj.
+</p>
+    <table>
+        {{form.descriptivePreferences.as_table}}
+    </table>
+    <input type="submit" value="Submit" />
+</form>
+</p></body>
+</html>

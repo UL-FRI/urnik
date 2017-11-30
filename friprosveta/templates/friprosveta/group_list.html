@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "TIMETABLE" %} - {% trans "settings" %} - {% trans "group choice" %}{% endblock %}
+{% block body %}
+<h1>{% trans "Group settings" %}</h1>
+<p>
+    {% for group in object_list %}
+    <a href="{% url "group_single_preferences" timetable_slug=timetable_slug group_id=group.id %}/">{{group}}</a></br>
+    {% endfor %}
+</p>
+{% endblock %}

@@ -1,0 +1,34 @@
+<html>
+<head>
+<title>URNIK</title>
+<meta name="GENERATOR" content="Urnik">
+<meta http-equiv="Content-Type" content="text/html; charset=utf8">
+</head>
+<body>
+<script language="JavaScript"> 
+<!-- Hide the script from old browsers -- 
+function showItem(form) {
+    var myindex=form.selectedItem.selectedIndex 
+    location=form.selectedItem.options[myindex].value; 
+}
+//--> 
+</script> 
+<h1>Vnos zahtev</h1>
+<p>
+<form action="" method="POST">{% csrf_token %}
+    {% if teacher %}
+    <h2>Nastavitve predmetov za {{teacher}}</h2>
+    <table>
+    {{user_formset}}
+    </table>
+    {% endif %}
+    {% if complete_formset %}
+    <h2>Nastavitve vseh predmetov</h2>
+    <table>
+    {{complete_formset}}
+    </table>
+    {% endif %}
+    <input type="submit" value="Submit" />
+</form>
+</p></body>
+</html>

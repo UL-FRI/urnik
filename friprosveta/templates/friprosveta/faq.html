@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block media %}
+<style>
+  ul li {
+    padding-bottom: 1em;
+    padding-top: 1em;
+    line-height: 2em;
+  }
+
+  ol {
+    list-style: bullet;
+  } 
+  ol li {
+    padding-top: 1em;
+  }
+</style>
+{% endblock %}
+
+
+{% block title %}Pogosta vprašanja{% endblock %}
+
+{% block body %}
+
+
+<h1>Pogosta vprašanja</h1>
+<h2>Vprašanja študentov</h2>
+<ul>
+<li>
+<div>Q: Vidim, da je urnik objavljen. Ali se bo še spreminjal?</div>
+<div>A: Predvidoma bo urnik ostal tak, kot je. Pri izbiranju predmetov torej bodite pazljivi, da se vam predavanja ne bodo prekrivala.</div>
+</li>
+<li>
+<div>Q: Prepisal sem se na predmet, pa ga še vedno nimam na urniku!</div>
+<div>A: Vpisi se usklajujejo samo ob začetku semestra. Če ste zamenjali predmet, ga na urniku ne boste videli. V tem primeru se za termin vaj dogovorite neposredno z izvajalci predmeta. Oni se najbolje vedo, v katerih skupinah je se prostor.</div>
+</li>
+<li>
+<div>Q: Kako lahko zamenjam termin za vaje?</div>
+<div>A: Glede terminov vaj, ki jih obiskujete, se dogovorite z izvajalci. Spremembe se na urniku ne bodo poznale.</div>
+</li>
+<li>
+<div>Q: Kje dobim Android aplikacijo za Urnik?</div>
+<div>A: Nobena Android aplikacija ni uradno podprta.</div>
+</li>
+<li>
+<div>Q: Kakšen javni API ponuja urnik? Rad bi spisal svoj program za pregledovanje...</div>
+<div>A: Urnik nima javnega API. Lahko pa si pomagate z API rezervacij, v katere se urnik uvaža. Najdete jih na http://rezervacije.fri.uni-lj.si</div>
+</li>
+</ul>
+<h2>Vprašanja zaposlenih</h2>
+<ul>
+<li>
+<div>Q: Študent/ka me je opozoril/a, da zaradi prekrivanja ne more hoditi na vaje. Kaj naj storim?</div>
+<div>A: To, katere cikle obiskuje kateri študent, je stvar dogovora med študenti in izvajalci.
+Urničarja študente staviva na cikle ob ustvarjanju urnika. Kasneje se dogajajo prepisi in premiki vaj na zahtevo izvajalcev, kar povzroči prekrivanja nekaterim študentom. Če le morete, omogočite študentom, da obiskujejo predmet v tistem terminu, ko nimajo prekrivanj.</div>
+</li>
+<li>
+<div>Q: Zakaj je urnik narejen šele ob začetku predavanj?</div>
+<div>A: Ker naj bi imeli študentje čim manj prekrivanj, točni podatki o vpisih pa niso znani dovolj zgodaj.<br/>
+Letos bomo poskusili z izdelavo urnika veliko časa v naprej in bomo videli, kako se bo obnesel.</div>
+</li>
+<li>
+<div>Q: Ali ne bi mogli uporabiti lanskega urnika in ga le malo popraviti?</div>
+<div>A: Ne, saj se študentje vpisujejo vsako leto drugače in so nedovoljena prekrivanja vsako leto drugačna. Urnik bi lahko obdržali kvečjemu za prve letnike.</div>
+</li>
+<li>
+<div>Q: Vidim, da je urnik objavljen prej kot lani. Ali bo držal?</div>
+<div>A: Predvidoma bo urnik predavanj ostal tak, kot je. Če bo zaradi sprememb števila študentov na predmetih prišlo do večjih sprememb boste o tem obveščeni.</div>
+</li>
+<li>
+<div>Q: Imam problem z urnikom, urničarja pa ne odgovarjata na pošto! Kaj naj storim?</div>
+<div>A: Počakajte. Urničarja obdelujeta probleme po vrsti oz. po pomembnosti. Prednost imajo težave, ki so povezane z drugimi fakultetami, in tiste, ki preprečujejo, da bi bilo urnik mogoče izvesti. Prosiva, da s svojimi težavami ne obremenjujete prodekana, saj vam problema ne bo mogel rešiti nič hitreje. V času izdelave urnika se bova urničarja potrudila, da vam odgovoriva v roku enega delovnega dneva.</div>
+</li>
+<li>
+<div>Q: Rad/a bi zamenjal/a termin predavanj ali vaj, pa nisem prepričan/a, da je to mogoče. Kje lahko to preverim?</div>
+<div>A: Prijavljeni uporabniki na predmetih lahko preverijo, kdaj so študentje, ki so pisani na predmet, že zasedeni. Zasedenost študentov lahko prijavljeni uporabniki vidite s klikom na povezavo "ZASEDENOST". Če najdete ugodnejši termin, ko so prosti tako študentje kot primerna učilnica, z veseljem opraviva spremembo - samo pošljite e-mail. Seveda s predlogi za premike počakajte vsaj še nekaj dni po koncu vpisov.</div>
+</li>
+<li>
+<div>Q: Študent pravi, da je vpisan, a ga ni na urniku. Komu naj verjamem?</div>
+<div>A: Verjemite študentu. Vpisi študentov se izvedejo ob začetku semestra. Po tem urnik ni več usklajen z vpisi, kar pomeni, da nekateri študentje nikdar ne dobite "pravega" urnika.</div>
+</li>
+<li>
+<div>Q: Opazil sem, da so vaje postavljene v učilnico, kjer jih ne bo mogoče izvajati. Kaj naj storim?</div>
+<div>A: Napiši e-mail urničarjema. Vaje bodo prestavljene v pravšnjo učilnico, zelo verjetno v manj ugoden termin</div>
+</li>
+</ul>
+
+<h1>Terminski plan izdelave urnika</h1>
+<ol>
+    <li>V mesecu juniju se uredijo najave in zberejo se želje in zahteve učiteljev glede poučevanja v novem šolskem letu.</li>
+    <li>V mesecu juliju se naredi začetna verzija urnika za oba semestra.</li>
+    <li>Sredi julija je vpogled v urnik omogočen skrbnikom študijskih programov.</li>
+    <li>Konec julija urnik postane javen. Če ni večjih napak, se ga ne spreminja.</li>
+    <li>Predloge za spremembe na urniku sprejemava od 20. septembra dalje.</li>
+    <li>Prva dva tedna zimskega/letnega semestra velja začasni urnik.
+        Spremembe na urniku bodo vidne konec tedna oz. takoj, če so nujne.</li>
+    <li>Tretji teden vsakega semestra je zadnji, ko sprejemava predloge za premike. Po tretjem tednu je urnik
+        fiksen.</li>
+</ol>
+
+
+</ol>
+{% endblock %}

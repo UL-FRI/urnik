@@ -1,0 +1,14 @@
+<html>
+<head>
+<title>URNIK</title>
+<meta name="GENERATOR" CONTENT="Urnik">
+<meta http-equiv="Content-Type" content="text/html; charset=utf8">
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}/css/teacher_preferences.css">
+</head>
+<body>
+<h1 id="id_timetable">Seznam studentov za {{realization.activity.name}} ({% for allocation in allocations %}{{allocation.day}} {{allocation.start}}{% endfor %}) ({{students|length}})</h1>
+    {% for student in students %}
+    <p>{{ student.surname }}, {{ student.name }}</p>
+    {% endfor %}
+</body>
+</html>

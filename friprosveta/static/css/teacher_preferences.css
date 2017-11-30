@@ -1,0 +1,64 @@
+@CHARSET "UTF-8";
+
+div.own_activity {
+    clear: both;
+}
+
+div.others_activity {
+    clear: both;
+}
+
+div.requirements {
+    clear: both;
+}
+
+table.time_preferences {
+	border: medium solid black;
+	border-collapse:collapse;
+}
+
+table.time_preferences  th {
+	border: 1px solid black;
+}
+
+table.time_preferences  td {
+	border: 1px solid black;
+	width: 100px;
+	height: 40px;
+}
+
+div.realization {
+	margin-right: 15px;
+	font-size: 1em;
+	display: inline-block;
+}
+
+div.realization input.realization_delete {
+	margin-bottom: 20px; 	
+}
+
+p#postConfirmation {
+  font-weight:bold;
+  color: red;
+}
+
+
+table.headteacher_cycles th {
+	font-weight:bold;
+}
+
+table.assistantteacher_cycles th {
+	font-weight:bold;
+}
+
+table.headteacher_cycles td {
+	padding: 10px;
+	vertical-align: center;
+}
+
+table.assistantteacher_cycles td {
+	padding: 10px;
+	vertical-align: center;
+}
+
+.alternateTableColor { background-color: #DEDFDE; }

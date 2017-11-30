@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}URNIK - nastavitve - izbira urnika{% endblock %}
+{% block body %}
+<h1>Nastavitve učiteljev - urniki</h1>
+<p>
+    {% for timetable in object_list %}
+    <a href="{{timetable.id}}/">{{timetable}}</a></br>
+    {% endfor %}
+</p>
+{% endblock %}

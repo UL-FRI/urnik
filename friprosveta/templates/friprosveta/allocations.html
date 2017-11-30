@@ -1,0 +1,128 @@
+{% load i18n %}
+
+<html>
+<head>
+<title>URNIK</title>
+<meta name="GENERATOR" CONTENT="Urnik">
+<meta http-equiv="Content-Type" content="text/html; charset=utf8">
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}/css/teacher_preferences.css">
+<style type="text/css">
+    tr.timetable {
+        height: 6em;
+    }
+    td.hour {
+        vertical-align: top;
+    }
+    td.MON{
+        background-color: #F7F7FF;
+    }
+    td.MON.allocated{
+        background-color: #CACAFF;
+    }
+    td.TUE{
+    }
+    td.TUE.allocated{
+        background-color: #DBDBFF;
+    }
+    td.WED{
+        background-color: #F7F7FF;
+    }
+    td.WED.allocated{
+        background-color: #CACAFF;
+    }
+    td.THU{
+    }
+    td.THU.allocated{
+        background-color: #DBDBFF;
+    }
+    td.FRI{
+        background-color: #F7F7FF;
+    }
+    td.FRI.allocated{
+        background-color: #CACAFF;
+    }
+    a.activity{
+        color:#800000;
+    }
+    a.teacher{
+        color:#000080;
+        font-size: 60%;
+    }
+    a.group{
+        color:#000000;
+        font-size: 70%;
+    }
+    a.classroom{
+        color:#008000;
+    }
+    td.allocated div {position: relative;}
+    td.allocated div span {display: none;}
+    td.allocated div:hover span {display: block;
+        position: absolute; top: 5px; left: 6em; width: 180px;
+        padding: 5px; margin: 10px; z-index: 100;
+        opacity: .8;
+        color: black; background: #FFFFAA;
+        font: 10px Verdana, sans-serif; text-align: center;}
+
+
+</style>
+</head>
+<body>
+<h1 id="id_timetable">{{title}}</h1>
+{% for subtitle in subtitles %}
+<h2>{{subtitle}}</h2><br/>
+{% endfor %}
+<a href="?type=P{{contextlinks.type}}">{% trans "Show only lectures" %} </a><br/>
+<a href="?type=LV&type=AV&type=LAB{{contextlinks.type}}">{% trans "Show only lab work" %}</a><br/>
+<a href="?{{contextlinks.type}}">{% trans "Show lectures and lab work" %}</a><br/>
+<table class="time_preferences">
+    <th>Ura</th>
+    {% for dayname, width in day_header %}<th colspan={{width}}>{{dayname}}</th>{% endfor %}
+    {% for hour,hour_allocations in allocations_by_hour %}
+    <tr class="timetable">
+        <td class="hour">{{hour}}</td>
+        {% for day_allocations in hour_allocations %}
+            {% for width, height, allocation, classes in day_allocations %}
+                {% if allocation == Null %}
+        <td class="{{classes|join:" "}}" colspan={{width}} rowspan = {{height}}>
+                {% else %}
+        <td class="{{classes|join:" "}}" colspan={{width}} rowspan = {{height}}>
+            <div>
+            <span>
+                {{allocation.get_day_display}} {{allocation.start}} - {{allocation.end}}<br/>
+                {{allocation.classroom.name}} <!-- ({{allocation.activityRealization.size}} / {{ allocation.classroom.capacity }}) --> <br/>
+                {{allocation.activityRealization.activity.name}}<br/>
+                {% for teacher in allocation.activityRealization.teachers.all %}            
+                {{teacher}}<br/>
+                {% endfor %}
+                {% for studyGroup in allocation.activityRealization.groups.all %}
+                {{studyGroup.name}}<br/>
+                {% endfor %}
+            </span>
+            <a class="activity" href="?activity={{allocation.activityRealization.activity.id}}{{contextlinks.activity}}">{{allocation.activityRealization.activity.short_name}}</a><br/>
+            <a class="classroom" href="?classroom={{allocation.classroom.id}}{{contextlinks.classroom}}">{{allocation.classroom.short_name}}</a><br/>
+                    {% for teacher in allocation.activityRealization.teachers.all %}            
+            <a class="teacher" href="?teacher={{teacher.id}}{{contextlinks.teacher}}">{{teacher}}</a><br/>
+                    {% endfor %}
+                    {% for studyGroup in allocation.activityRealization.groups.all %}
+            <a class="group" href="?group={{studyGroup.id}}{{contextlinks.group}}">{{studyGroup.short_name}}</a><br/>
+                    {% endfor %}
+                    {% if is_teacher %}
+            <a class="busy_students" href="{% url 'busy_students' timetable_slug allocation.activityRealization.id %}">{% trans "Student overlaps" %}</a><br/>
+            <a class="busy_students" href="{% url 'students_list' timetable_slug allocation.activityRealization.id %}">{% trans "Student list" %}</a>
+                    {% endif %}
+            </div>
+                {% endif %}
+        </td>
+            {% endfor %}
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+<p>
+{% for g in groups %}
+<a class="group" href="?group={{g.id}}{{contextlinks.group}}">{{g.short_name}}</a><br/>
+{% endfor %}
+</p>
+</body>
+</html>

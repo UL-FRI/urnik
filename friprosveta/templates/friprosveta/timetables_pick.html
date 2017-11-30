@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}URNIK{% endblock %}
+{% block body %}
+{{timetable_form.media}}
+<script language="JavaScript"> 
+<!-- Hide the script from old browsers -- 
+$(document).ready(function(){
+    $("#submit_button").hide()
+    // id_timetable se zrendrira v vrstici
+    // { timetable_form.as_p }  
+    // spodaj.
+    $("#id_timetable").change(function(event){
+        $("#timetable_form").submit();
+    })
+})
+//--> 
+</script> 
+<h1>Izbira urnikov</h1>
+<p>
+<form action="allocations?timetable={{ selected_timetables_ids|join:"&timetable=" }}" method="GET">
+{% for timetable in selected_timetables_ids %}
+<input type="hidden" name="timetable" value="{{timetable}}"/>
+{% endfor %}
+</form>
+<form id="timetable_form" action="" method="GET">
+{{timetable_form.as_p}}
+<input id="submit_button" type="submit" value="Izberi urnik(e)"/>
+</form>
+</p>
+<h1>Izbrani urniki</h1>
+<ul>
+{% for timetable in selected_timetable_names %}
+<li>{{timetable}}</li>
+{% endfor %}
+</ul>
+</body>
+</html>
+{% endblock %}

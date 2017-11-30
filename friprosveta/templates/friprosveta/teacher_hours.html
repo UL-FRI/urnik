@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}URNIK - pregled pedagoških obremenitev ljudi{% endblock %}
+{% block body %}
+
+
+<script type="text/javascript">
+        function tableHide(tableid){ document.getElementById(tableid).display = "none";}
+        function tableShow(tableid){ document.getElementById(tableid).display = "block";}
+</script>
+
+
+<link href="{{STATIC_URL}}/css/cycles_overview.css" type="text/css" media="all" rel="stylesheet" />
+
+<h1>Obremenitve</h1>
+{% for teacher in data %}
+<h2>{{teacher}}</h2>
+
+  {% for timetable, datatuple in teacher.timetables_hours.items %}
+
+    <h3>{{timetable}}</h3>
+    {% with subject_cycles=datatuple.0 subject_sums=datatuple.1 %}
+    <table class="people_cycles_overview">
+		<tr><th>Predmet</th><th>Tip</th><th>Predvideno ciklov</th><th>Dodeljeno ciklov</th></tr>		
+	    {% for subject, cycleType, cycleNum, cycleNum1, cyclePercentage in subject_cycles %}
+	      <tr class="regular">
+	      	<td class="subject"><a href={% url "subject" timetable_set_slug=timetable_set_slug subject_code=subject.code %}>{{ subject }}</a></td>
+	      	<td class="type">{{ cycleType }}</td>
+	      	<td class="num">{{ cycleNum1 }} {% if cyclePercentage < 1.0 %}({{ cyclePercentage }}) {% endif %}</td>
+	      	<td class="num">{{ cycleNum }}</td>
+	      </tr>
+	    {% endfor %}
+	    {% for cycleType, cycleNum, cycleNum1 in subject_sums %}
+	      <tr class="sum">
+	      	<td class="subject">Skupaj</td>
+	      	<td class="type">{{ cycleType }}</td>
+	      	<td class="num">{{ cycleNum1 }}</td>
+	      	<td class="num">{{ cycleNum }}</td>
+	      </tr>
+	    {% endfor %}
+    {% endwith %} 
+    </table>
+  {% endfor %}
+<div>
+</div>
+{% endfor %}
+{% endblock %}

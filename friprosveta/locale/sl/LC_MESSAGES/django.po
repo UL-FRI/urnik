@@ -1,0 +1,262 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-08-24 15:18+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n"
+"%100==4 ? 2 : 3);\n"
+
+#: templates/friprosveta/allocations.html:75
+#: templates/friprosveta/simple_allocations.html:75
+msgid "Show only lectures"
+msgstr "Samo predavanja"
+
+#: templates/friprosveta/allocations.html:76
+#: templates/friprosveta/simple_allocations.html:76
+msgid "Show only lab work"
+msgstr "Samo vaje"
+
+#: templates/friprosveta/allocations.html:77
+#: templates/friprosveta/simple_allocations.html:77
+msgid "Show lectures and lab work"
+msgstr "Vaje in predavanja"
+
+#: templates/friprosveta/allocations.html:111
+#: templates/friprosveta/simple_allocations.html:107
+#| msgid "Student number"
+msgid "Student overlaps"
+msgstr "Prekrivanja študentov"
+
+#: templates/friprosveta/allocations.html:112
+#: templates/friprosveta/simple_allocations.html:108
+#| msgid "Student number"
+msgid "Student list"
+msgstr "Seznam študentov"
+
+#: templates/friprosveta/group_list.html:3
+#: templates/friprosveta/group_preferences.html:5
+#: templates/friprosveta/preference_types_list.html:3
+#: templates/timetable/preferenceset_list.html:3
+msgid "TIMETABLE"
+msgstr "URNIK"
+
+#: templates/friprosveta/group_list.html:3
+#: templates/friprosveta/group_preferences.html:5
+#: templates/friprosveta/preference_types_list.html:3
+#: templates/friprosveta/teacher_single_democratic_preferences.html:5
+#: templates/timetable/preferenceset_list.html:3
+msgid "settings"
+msgstr "nastavitve"
+
+#: templates/friprosveta/group_list.html:3
+msgid "group choice"
+msgstr "izberi skupino"
+
+#: templates/friprosveta/group_list.html:5 templates/navigation.html:35
+#| msgid "Groups"
+msgid "Group settings"
+msgstr "Nastavitve skupin"
+
+#: templates/friprosveta/group_preferences.html:11
+msgid "Group time preferences"
+msgstr "Časovne zahteve skupin"
+
+#: templates/friprosveta/group_preferences.html:14
+msgid "Mark group not available times with red colour."
+msgstr "Termine, v katerih ste nedosegljivi, označite rdeče."
+
+#: templates/friprosveta/group_preferences.html:18
+msgid "Preferences saved."
+msgstr "Zahteve shranjene."
+
+#: templates/friprosveta/group_preferences.html:28
+msgid "Submit"
+msgstr "Pošlji"
+
+#: templates/friprosveta/preference_types_list.html:3
+msgid "choose"
+msgstr "izberi"
+
+#: templates/friprosveta/preference_types_list.html:5
+msgid "Choose settings type"
+msgstr "Izberi tip nastavitev"
+
+#: templates/friprosveta/preference_types_list.html:7
+msgid "My settings"
+msgstr "Moje nastavitve"
+
+#: templates/friprosveta/preference_types_list.html:9
+#: templates/navigation.html:34
+msgid "Others settings"
+msgstr "Nastavitve drugih"
+
+#: templates/friprosveta/preference_types_list.html:10
+msgid "Groups settings"
+msgstr "Nastavitve skupin"
+
+#: templates/friprosveta/preference_types_list.html:11
+msgid "Tags settings"
+msgstr "Nastavitve značk"
+
+#: templates/friprosveta/results.html:8
+msgid "Student number"
+msgstr "Vpisna številka"
+
+#: templates/friprosveta/results.html:9
+msgid "My timetable"
+msgstr "Moj urnik"
+
+#: templates/friprosveta/results.html:14
+msgid ""
+"<strong>IŠRM</strong>, <strong>UI</strong>, <strong>PRI</strong> and "
+"<strong>MM</strong>\n"
+"student must consult tha timetable at your originating faculty (FMF, UI, PEF "
+"and FE) to obtain the complete\n"
+"personal timetable."
+msgstr ""
+"Študentje smeri <strong>IŠRM</strong>, <strong>UI</strong>, <strong>PRI</"
+"strong> in <strong>MM</strong> morate za popoln predmetnik pregledati tudi "
+"urnik vaših matičnih fakultet (FMF, UI, PEF in FE)."
+
+#: templates/friprosveta/results.html:23
+msgid "Teachers"
+msgstr "Izvajalci"
+
+#: templates/friprosveta/results.html:31
+msgid "Classrooms"
+msgstr "Učilnice"
+
+#: templates/friprosveta/results.html:39
+msgid "Groups"
+msgstr "Skupine"
+
+#: templates/friprosveta/results.html:47 templates/navigation.html:30
+msgid "Subjects"
+msgstr "Predmeti"
+
+#: templates/friprosveta/teacher_single_democratic_preferences.html:17
+msgid "Settings are locked."
+msgstr "Nastavitve so zaklenjene"
+
+#: templates/friprosveta/teacher_single_democratic_preferences.html:24
+#, python-format
+msgid ""
+"\n"
+"<p>\n"
+"S kliki na polja v spodnji tabeli jih ustrezno obarvajte. Pomen barv je "
+"sledeč.\n"
+"<ul>\n"
+"<li><span style=\"background-color: #FFFF00\">Rumena:</span> v označenih "
+"terminih ne želite učiti.</li>\n"
+"<li><span style=\"background-color: #FF0000\">Rdeča:</span> v označenih "
+"terminih ne morete učiti. \n"
+"    <strong>Izberite le, če ste ob ustreznem terminu zasedeni z nujnimi "
+"fakultetnimi obveznostmi (seje, sestanki v odborih, ...).</strong>  \n"
+"</li>\n"
+"<li><span style=\"background-color: #00FF00\">Zelena:</span> v označenih "
+"terminih želite učiti.</li>\n"
+"</ul>\n"
+"</p>\n"
+"<p>\n"
+"V rumeno in zeleno polje lahko vnesite utež - višja ko bo, bolj verjetno bo "
+"vaša želja upoštevana. \n"
+"Upoštevana utež za termin bo razmerje med utežjo v tem terminu in vsoto vseh "
+"vaših uteži. \n"
+"</p>\n"
+"<p>\n"
+" Zadnji rok za oddajo želja je %(final_date)s.\n"
+"</p>\n"
+msgstr ""
+
+#: templates/friprosveta/teacher_single_democratic_preferences.html:59
+msgid ""
+"\n"
+"<h2>Zahteve predmetov</h2>\n"
+"<p>\n"
+"V primeru, da za izvajanje predmetov potrebujete posebno opremo, ki je "
+"praviloma\n"
+"ni v učilnicah, jo izberite spodaj.\n"
+" \n"
+"Če vaše opreme še ni na seznamu, to <a href=\"mailto:urnik@fri.uni-lj.si"
+"\">sporočite urničarjema</a>\n"
+"</p>\n"
+msgstr ""
+
+#: templates/friprosveta/teacher_single_democratic_preferences.html:100
+msgid "Komentarji, pripombe"
+msgstr ""
+
+#: templates/friprosveta/teacher_single_democratic_preferences.html:102
+msgid ""
+"V primeru, da imate še kakšno pripombo v zvezi z urnikom, jo dodajte spodaj."
+msgstr ""
+
+#: templates/navigation.html:18
+#| msgid "My timetable"
+msgid "Timetable"
+msgstr "Urnik"
+
+#: templates/navigation.html:19
+msgid "FAQ"
+msgstr "FAQ"
+
+#: templates/navigation.html:20 templates/timetable/timetableset_list.html:5
+#| msgid "My timetable"
+msgid "Choose timetable"
+msgstr "Izberi urnik"
+
+#: templates/navigation.html:23
+msgid "Reservations"
+msgstr "Rezervacije"
+
+#: templates/navigation.html:26 templates/navigation.html:28
+msgid "Settings"
+msgstr "Nastavitve"
+
+#: templates/navigation.html:32
+msgid "Obremenitve"
+msgstr "Obremenitve"
+
+#: templates/navigation.html:36
+msgid "Tags"
+msgstr "Značke"
+
+#: templates/navigation.html:40
+msgid "Logout"
+msgstr "Odjava"
+
+#: templates/navigation.html:42
+msgid "Login"
+msgstr "Prijava"
+
+#: templates/timetable/preferenceset_list.html:3
+#| msgid "My timetable"
+msgid "choose timetable"
+msgstr "izberi urnik"
+
+#: templates/timetable/preferenceset_list.html:5
+msgid "Choose timetable for settings"
+msgstr "Izberi urnik za pregled nastavitev"
+
+#: templates/timetable/timetableset_list.html:3
+msgid "URNIK - settings - choose timetable"
+msgstr "TIMETABLE - nastavitve - izberi urnik"
+
+#~ msgid "Slovenian"
+#~ msgstr "Slovensko"
+
+#~ msgid "English"
+#~ msgstr "Angleško"

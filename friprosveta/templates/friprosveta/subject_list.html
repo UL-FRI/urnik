@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}URNIK - nastavitve - izbira predmeta{% endblock %}
+{% block body %}
+
+
+<script type="text/javascript">
+        function tableHide(tableid){ document.getElementById(tableid).display = "none";}
+        function tableShow(tableid){ document.getElementById(tableid).display = "block";}
+</script>
+
+
+<link href="{{STATIC_URL}}/css/cycles_overview.css" type="text/css" media="all" rel="stylesheet" />
+
+<h1>Podatki o predmetih</h1>
+{% for tn, object_list in data %}
+<h2>{{tn}}</h2>
+<div>
+
+    <table class="subjects_cycles_overview">
+        <tr>
+            <th>Predmet</th>
+            <th>Št. študentov</th>
+            <th>Nepokritih pri AV</th>
+            <th>Nepokritih pri LV</th>
+            <th>Nepokritih pri P</th>
+            <th>Sinhronizirano najave</th>
+        </tr>
+    {% for s, stevilo_studentov, nepokriti_lv, nepokriti_av, nepokriti_p, css_class, is_synced, synced_message in object_list %}
+        <tr class = "{{css_class}}">
+            <td><a href={% url "subject" timetable_slug=timetable_slug subject_code=s.code %}>{{s.name}} ({{s.code}})</a></td>
+            <td>{{stevilo_studentov}}</td>
+            <td>{{nepokriti_lv}}</td>
+            <td>{{nepokriti_av}}</td>
+            <td>{{nepokriti_p}}</td>
+            <td>{{synced_message}}</td>
+        </tr>
+    		
+    {% endfor %}
+
+    </table>
+
+</div>
+{% endfor %}
+{% endblock %}

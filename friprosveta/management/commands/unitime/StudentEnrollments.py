@@ -1,0 +1,27 @@
+def studentEnrollments(timetable, campus, term, year):
+    entries = []
+    for student in timetable.students:
+        demands = []
+        for subject in student.enrolledSubjects(timetable):
+            demands += [
+                "class",
+                {
+                    "subject": u"{0}".format(subject.code),
+                    "courseNbr": "101"
+                },
+                [],
+            ]
+        entry = [
+            "student",
+            {
+                "externalId": str(student.id),
+            },
+            demands
+        ]
+        entries += entry
+    enrollments = [
+        "studentEnrollments",
+        {"campus": campus, "term": term, "year": year},
+        entries
+    ]
+    return enrollments
