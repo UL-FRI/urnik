@@ -15,5 +15,6 @@ urlpatterns = [
     url(r'^impersonate/', include('impersonate.urls')),
     url(r'^accounts/login/$', login, name='django.contrib.auth.views.login'),
     url(r'^accounts/logout/$', logout),
+    url(r'^exchange/', include('exchange.urls')),
 ] 
 
