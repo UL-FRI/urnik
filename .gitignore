@@ -1,1 +1,3 @@
 *.py[co]
+urnik_fri/settings.py
+urnik_fri/wsgi.py
