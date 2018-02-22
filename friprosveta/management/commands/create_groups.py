@@ -64,7 +64,7 @@ def create_regular_groups(izvajanja, semestri, studijsko_drevo, groupset):
         sname, name = najave.group_name(predmetnik)
         g = Group.objects.get_or_create(
             name=name,
-            short_name=sname,
+            shortName=sname,
             parent=None,
             groupset=groupset,
             size=0)

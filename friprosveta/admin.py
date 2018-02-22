@@ -9,7 +9,7 @@ class ActivityAdmin(ImportExportActionModelAdmin):
     search_fields = ('name', 'teachers__user__first_name', 'teachers__user__last_name', 'activityset__timetable__name')
     fieldsets = (
         (None, {
-            'fields':('name', 'activityset', 'short_name', 'type', 'locations', 'duration', 'requirements', 'subject', 'lecture_type'),
+            'fields':('name', 'activityset', 'shortName', 'type', 'locations', 'duration', 'requirements', 'subject', 'lecture_type'),
         }),
         ('Advanced options', {
             'classes': ('collapse',),

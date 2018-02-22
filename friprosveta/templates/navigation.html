@@ -18,6 +18,7 @@
                       <li class="leaf">{% if timetable_slug %}<a href={% url "results" timetable_slug=timetable_slug %}>{% trans "Timetable" %}</a>{% endif %}</li>
                       <li class="leaf"><a href={% url "faq" %}>{% trans "FAQ" %}</a></li>
                       <li class="leaf"><a href={% url "timetables" %}>{% trans "Choose timetable" %}</a></li>
+                      <li class="leaf"><a href={% url "main_redirect_root" %}>{% trans "Exchange" %}</a></li>
                       {% if user.is_authenticated %}
                         <li class="leaf"><a href="https://rezervacije.fri.uni-lj.si" target=_blank>{% trans "Reservations" %}</a></li>
                         {% if timetable_slug %}

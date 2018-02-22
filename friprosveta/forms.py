@@ -16,7 +16,7 @@ class ActivityAntiDemocraticForm(forms.ModelForm):
         exclude = ('groups', 'locations', 'mustNotOverlap')
         widgets = {
             'name': forms.HiddenInput(),
-            'short_name': forms.HiddenInput(),
+            'shortName': forms.HiddenInput(),
             'activityset': forms.HiddenInput(),
             'type': forms.HiddenInput(),
             'duration': forms.HiddenInput(),

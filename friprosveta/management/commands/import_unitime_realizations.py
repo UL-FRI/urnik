@@ -67,7 +67,7 @@ def import_unitime_activities(tt, solution):
             subject=subject,
             lecture_type=lecture_type,
             name=subject.name + "_" + type_short_name,
-            short_name=subject.short_name,
+            short_name=subject.shortName,
             activityset=tt.activityset,
             type=type_short_name,
             duration=minutes/60,

@@ -18,8 +18,8 @@ class Command(BaseCommand):
         group = timetable.models.Group.objects.get(pk=args[0])
         assert group.activities.count() == 1, 'Group should be assigned to exactly one activity.'
         activity = group.activities.get()
-        last_underscore = group.short_name.rfind('_')
-        basename = group.short_name[:last_underscore]
+        last_underscore = group.shortName.rfind('_')
+        basename = group.shortName[:last_underscore]
         last_space = group.name.rfind(' ')
         baselongname = group.name[:last_space]
         group_number = 1
@@ -28,9 +28,9 @@ class Command(BaseCommand):
         parent = group.parent
         groupset = group.groupset
         for i in range(group.size-1):
-            short_name = '{0}_{1:02}'.format(basename, start + i)
+            shortName = '{0}_{1:02}'.format(basename, start + i)
             name = '{0} {1}'.format(baselongname, start + i)
-            g = timetable.models.Group(name=name, short_name=short_name, parent=parent, groupset=groupset, size=1)
+            g = timetable.models.Group(name=name, shortName=shortName, parent=parent, groupset=groupset, size=1)
             g.save()
             g.activities.add(*group.activities.all())
         group.size = 1

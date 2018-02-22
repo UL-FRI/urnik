@@ -9,7 +9,7 @@ from django.db import transaction
 from django.db.models import Q, Sum
 from django.utils.translation import ugettext as _
 from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseForbidden
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.shortcuts import get_object_or_404, render_to_response, redirect, render
 from django.views.generic.list import ListView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
@@ -22,9 +22,9 @@ import timetable.forms
 import frinajave
 import friprosveta.models
 from bisect import bisect_left
-from timetable.models import Timetable, Group, ActivityRealization,\
-                             Allocation, Activity, WORKHOURS, WEEKDAYS,\
-                             Tag
+from timetable.models import Timetable, Group, ActivityRealization, \
+    Allocation, Activity, WORKHOURS, WEEKDAYS, \
+    Tag, defaultTimetable
 
 import timetable.views
 import logging
@@ -146,6 +146,11 @@ class TagListView(ListView):
         context = super(TagListView, self).get_context_data(**kwargs)
         context['timetable_slug'] = self.timetable_slug
         return context
+
+
+def default_timetable_redirect(request):
+    slug = defaultTimetable().slug
+    return redirect("/timetable/{}/".format(slug), permanent=False)
 
 
 # @cache_page(60 * 15)

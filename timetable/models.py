@@ -154,11 +154,11 @@ class GroupSet(models.Model):
 
 class Group(models.Model):
     def __str__(self):
-        last = self.short_name.split('_')[-1]
+        last = self.shortName.split('_')[-1]
         llast = len(last)
         if self._is_number(last) and len(last) == 1:
             last = '0' + last
-        return "{0} ({1}), {2}".format(self.short_name[:-llast]+last, self.size, self.groupset)
+        return "{0} ({1}), {2}".format(self.shortName[:-llast]+last, self.size, self.groupset)
 
     def _is_number(self, s):
         try:
@@ -168,18 +168,18 @@ class Group(models.Model):
             return False
 
     def id_string(self):
-        return self.short_name
+        return self.shortName
 
     name = models.CharField(max_length=255)
-    short_name = models.CharField(max_length=64)
+    shortName = models.CharField(max_length=64)
     size = models.IntegerField(null=True)
-    parent = models.ForeignKey('self', null=True, blank=True)
-    groupset = models.ForeignKey('GroupSet', related_name='groups')
+    parent = models.ForeignKey('self', null=True, blank=True, related_name="+", on_delete=models.CASCADE)
+    groupset = models.ForeignKey('GroupSet', related_name='groups', on_delete=models.CASCADE)
 
     # Return the second part of group name, split by '_'
     @property
     def study(self):
-        split = self.short_name.split('_')
+        split = self.shortName.split('_')
         if len(split) >= 2:
             return split[1]
         # No study found: return default
@@ -187,12 +187,12 @@ class Group(models.Model):
 
     @property
     def classyear(self):
-        split = self.short_name.split('_')
+        split = self.shortName.split('_')
         return split[0]
 
     @property
     def type(self):
-        split = self.short_name.split('_')
+        split = self.shortName.split('_')
         if len(split) >= 3:
             return split[2]
         # No study found: return default
@@ -200,7 +200,7 @@ class Group(models.Model):
 
     @property
     def groupnum(self):
-        split = self.short_name.split('_')
+        split = self.shortName.split('_')
         if len(split) >= 4:
             return split[-1]
         # No study found: return default
@@ -222,7 +222,7 @@ class Group(models.Model):
 
     @property
     def subjectname(self):
-        split = self.short_name.split('_')
+        split = self.shortName.split('_')
         if len(split) >= 5:
             return split[-3]
         return ""
@@ -286,8 +286,8 @@ class Activity(models.Model):
     # old_teachers = models.ManyToManyField('Teacher', blank=True, through='ActivityPercentage', related_name='old_teacher_activities')
     teachers = models.ManyToManyField('Teacher', blank=True, related_name='activities')
     name = models.CharField(max_length=200)
-    short_name = models.CharField(max_length=32)
-    activityset = models.ForeignKey('ActivitySet', related_name='activities')
+    shortName = models.CharField(max_length=32)
+    activityset = models.ForeignKey('ActivitySet', related_name='activities', on_delete=models.CASCADE)
     type = models.CharField(max_length=4, choices=ACTIVITYTYPES)
     locations = models.ManyToManyField('Location', blank=False)
     duration = models.IntegerField()
@@ -344,8 +344,8 @@ class NRequirementsPerStudent(models.Model):
 
     class Meta:
         unique_together = (("resource", "activity"),)
-    resource = models.ForeignKey(Resource)
-    activity = models.ForeignKey(Activity)
+    resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
     n = models.FloatField()
 
 
@@ -355,7 +355,7 @@ class ActivityRealization(models.Model):
             " ".join([str(i) for i in self.teachers.all()]) + " " + \
             " ".join([str(i) for i in self.groups.all()])
 
-    activity = models.ForeignKey('Activity', related_name='realizations')
+    activity = models.ForeignKey('Activity', related_name='realizations', on_delete=models.CASCADE)
     teachers = models.ManyToManyField('Teacher', related_name='activity_realizations',
                                       blank=True)
     groups = models.ManyToManyField('Group', blank=True, related_name='realizations')
@@ -419,7 +419,7 @@ class Teacher(models.Model):
             s = self.user
         return s
 
-    user = models.OneToOneField(User, null=True, related_name='teacher')
+    user = models.OneToOneField(User, null=True, related_name='teacher', on_delete=models.CASCADE)
     # activities = models.ManyToManyField('Activity', blank=True, through='ActivityPercentage')
     code = models.CharField(max_length=32, default="", unique=True)
 
@@ -442,19 +442,19 @@ class Teacher(models.Model):
 class LocationDistance(models.Model):
     distance = models.IntegerField()
     time = models.IntegerField()
-    from_location = models.ForeignKey('Location', related_name='from_location')
-    to_location = models.ForeignKey('Location', related_name='to_location')
+    from_location = models.ForeignKey('Location', related_name='from_location', on_delete=models.CASCADE)
+    to_location = models.ForeignKey('Location', related_name='to_location', on_delete=models.CASCADE)
 
 
 class Classroom(models.Model):
     def __str__(self):
-        return "{0} ({1})".format(self.name, self.short_name)
+        return "{0} ({1})".format(self.name, self.shortName)
     name = models.CharField(max_length=50)
-    short_name = models.CharField(max_length=32)
+    shortName = models.CharField(max_length=32)
     resources = models.ManyToManyField(Resource, through='ClassroomNResources',
                                        blank=True, related_name='classrooms')
     capacity = models.IntegerField()
-    location = models.ForeignKey('Location')
+    location = models.ForeignKey('Location', on_delete=models.CASCADE)
 
 
 class ClassroomNResources(models.Model):
@@ -463,8 +463,8 @@ class ClassroomNResources(models.Model):
 
     class Meta:
         unique_together = (("resource", "classroom"),)
-    resource = models.ForeignKey(Resource)
-    classroom = models.ForeignKey(Classroom, related_name='n_resources')
+    resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
+    classroom = models.ForeignKey(Classroom, related_name='n_resources', on_delete=models.CASCADE)
     n = models.IntegerField()
 
 
@@ -495,12 +495,12 @@ class Timetable(models.Model):
     def __str__(self):
         return self.name
     # respects = models.ManyToManyField('self', blank=True)
-    activityset = models.ForeignKey('ActivitySet', blank=True)
+    activityset = models.ForeignKey('ActivitySet', blank=True, on_delete=models.CASCADE)
 
-    preferenceset = models.ForeignKey('PreferenceSet', blank=True, null=True)
-    groupset = models.ForeignKey('GroupSet', blank=True, null=True, related_name='timetables')
-    classroomset = models.ForeignKey('ClassroomSet', blank=False, null=False,
-                                     related_name='timetables')
+    preferenceset = models.ForeignKey('PreferenceSet', blank=True, null=True, on_delete=models.CASCADE)
+    groupset = models.ForeignKey('GroupSet', blank=True, null=True, related_name='timetables', on_delete=models.CASCADE)
+    classroomset = models.ForeignKey('ClassroomSet', blank=True, null=True,
+                                     related_name='timetables', on_delete=models.CASCADE)
 
     respects = models.ManyToManyField("self", related_name="respected_by",
                                       symmetrical=False, blank=True)
@@ -573,10 +573,10 @@ class Allocation(models.Model):
         return "{0}, {1} ob {2}".format(self.classroom, WEEKDAYSSLO[self.day],
                                         self.start)
 
-    timetable = models.ForeignKey(Timetable, related_name='own_allocations')
+    timetable = models.ForeignKey(Timetable, related_name='own_allocations', on_delete=models.CASCADE)
     # respected_by = models.ManyToManyField(Timetable, related_name='allocations')
-    activityRealization = models.ForeignKey(ActivityRealization, related_name='allocations')
-    classroom = models.ForeignKey(Classroom, null=True)
+    activityRealization = models.ForeignKey(ActivityRealization, related_name='allocations', on_delete=models.CASCADE)
+    classroom = models.ForeignKey(Classroom, null=True, on_delete=models.CASCADE)
     day = models.CharField(max_length=3, choices=WEEKDAYS)
     start = models.CharField(max_length=5, choices=WORKHOURS)
 
@@ -670,7 +670,7 @@ class Preference(models.Model):
         return self.level + \
             " " + str(self.weight)
 
-    preferenceset = models.ForeignKey("PreferenceSet", related_name="preferences")
+    preferenceset = models.ForeignKey("PreferenceSet", related_name="preferences", on_delete=models.CASCADE)
     level = models.CharField(max_length=4, choices=PREFERENCELEVELS)
     weight = models.FloatField(default=1.0)
 
@@ -685,7 +685,7 @@ class GroupPreference(Preference):
     def __str__(self):
         return str(self.group) + ' ' + str(self.level)
 
-    group = models.ForeignKey('Group', related_name='group_preferences')
+    group = models.ForeignKey('Group', related_name='group_preferences', on_delete=models.CASCADE)
 
     def adjustedWeight(self, optionalAdjustment=0.5):
         if self.level == 'CANT':
@@ -727,7 +727,7 @@ class TeacherPreference(Preference):
     def __str__(self):
         return str(self.teacher) + ' ' + str(self.level)
 
-    teacher = models.ForeignKey('Teacher', related_name='teacher_preferences')
+    teacher = models.ForeignKey('Teacher', related_name='teacher_preferences', on_delete=models.CASCADE)
 
     def adjustedWeight(self, optionalAdjustment=1, min_weight=0, max_weight=1):
         if self.level == 'CANT':
@@ -797,16 +797,16 @@ class ActivityPreference(Preference):
     def __str__(self):
         return str(self.classroom) + " " + str(self.activity) + \
             Preference.__str__(self)
-    classroom = models.ForeignKey('Classroom')
-    activity = models.ForeignKey('Activity')
+    classroom = models.ForeignKey('Classroom', on_delete=models.CASCADE)
+    activity = models.ForeignKey('Activity', on_delete=models.CASCADE)
 
 
 class ActivityTimePlacePreference(Preference):
     def __str__(self):
         return str(self.classroom) + " " + str(self.activity) + self.day + \
             " " + self.start + " (+" + str(self.duration) + ")" + Preference.__str__(self)
-    classroom = models.ForeignKey(Classroom)
-    activity = models.ForeignKey(Activity)
+    classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE)
+    activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
     day = models.CharField(max_length=3, choices=WEEKDAYS)
     start = models.CharField(max_length=5, choices=WORKHOURS)
     duration = models.IntegerField()
@@ -816,7 +816,7 @@ class TagPreference(Preference):
     def __str__(self):
         return self.tag + ' ' + self.level
 
-    tag = models.ForeignKey('Tag', related_name='preferences')
+    tag = models.ForeignKey('Tag', related_name='preferences', on_delete=models.CASCADE)
 
     def adjustedWeight(self, optionalAdjustment=0.5):
         if self.level == 'CANT':

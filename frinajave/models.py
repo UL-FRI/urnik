@@ -41,7 +41,7 @@ class TeacherSubjectCycles(models.Model):
 
     teacher_code = models.CharField(max_length=16, blank=False)
     subject_code = models.CharField(max_length=16, blank=False)
-    timetable_set = models.ForeignKey(TimetableSet)
+    timetable_set = models.ForeignKey(TimetableSet, on_delete=models.CASCADE)
     instruction_type = models.IntegerField(choices=INSTRUCTION_STYLE,
                                            null=True)
     lecture_type = models.IntegerField()

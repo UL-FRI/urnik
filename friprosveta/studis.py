@@ -104,15 +104,15 @@ class Studenti(Studis):
 
     def get_confirmed_enrollments(self, date, unfinished=True):
         if unfinished:
-            return self.data(self.source_urls['studis_confirmed_unfinished'])
+            return self.data(self.source_urls['studis_confirmed_unfinished'].format(date))
         return self.data(self.source_urls['studis_confirmed'].format(date))
 
     def get_unconfirmed_enrollments(self, date, unfinished=True):
         if unfinished:
-            return self.data(self.source_urls['studis_unconfirmed_unfinished'])
+            return self.data(self.source_urls['studis_unconfirmed_unfinished'].format(date))
         return self.data(self.source_urls['studis_unconfirmed'].format(date))
         
-    def get_student_enrollments(self, date, unconfirmed=True, unfinished=True):
+    def get_student_enrollments(self, date, unconfirmed=True, unfinished=True, preenrolment=True):
         """
         Get information about student enrollments.
 
@@ -120,16 +120,17 @@ class Studenti(Studis):
         uncorfirmed and pre enrollments are considered.
         """
         chosen_sources = [
-            ('studis_preenrolment', False, False),
-            ('studis_unconfirmed', True, False),
-            ('studis_unconfirmed_unfinished', True, True),
-            ('studis_confirmed', False, False),
-            ('studis_confirmed_unfinished', False, True),
+            ('studis_preenrolment', False, False, True),
+            ('studis_unconfirmed', True, False, False),
+            ('studis_unconfirmed_unfinished', True, True, False),
+            ('studis_confirmed_unfinished', False, True, False),
+            ('studis_confirmed', False, False, False),
         ]
         results = []
-        for source, only_unconfirmed, only_unfinished in chosen_sources:
+        for source, only_unconfirmed, only_unfinished, only_preenrolment in chosen_sources:
             if (not unconfirmed and only_unconfirmed) or\
-               (not unfinished and only_unfinished): continue
+               (not unfinished and only_unfinished) or \
+               (not preenrolment and only_preenrolment): continue
             
             data = self.data(self.source_urls[source].format(date))
             for enrolment in data:

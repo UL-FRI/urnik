@@ -4,20 +4,22 @@ Created on 10. jan. 2013
 @author: polz
 '''
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
+from optparse import make_option
+from django.db import transaction
 import friprosveta.models as fm
+import timetable.models as tm
 import friprosveta
-from collections import defaultdict
 
 
 class Command(BaseCommand):
     """
     Put students into groups for a given timetable.
     """
-
-    help = """Usage: fill_groups [--subject=subject_code] timetable_slug [write_to_db, default False]
+    
+    help="""Usage: fill_groups [--subject=subject_code] timetable_slug [write_to_db, default False] [unenroll_first, default False]
 Example: fill_groups "FRI 2013/2014, zimski semester" True"""
-
+    
     def add_arguments(self, parser):
         parser.add_argument(
             'timetable_slug', nargs=1)
@@ -25,79 +27,73 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
             'write_to_db', nargs='?',
             type=bool, default=False)
         parser.add_argument(
+            'unenroll_first', nargs='?',
+            type=bool, default=False)
+        parser.add_argument(
             '--subject', nargs=1,
             dest='subject_code',
             help='Fill groups for the given subject only.')
-
-    def handle(self, *args, **options):
-        WRITE_TO_DB = options['write_to_db']
+ 
+    def handle(self, *args, **options):        
+        WRITE_TO_DB=options['write_to_db']
+        print(WRITE_TO_DB)
+        UNENROLL_FIRST=options['unenroll_first']
         tt = fm.Timetable.objects.get(slug=options['timetable_slug'][0])
-<<<<<<< HEAD
-        subjects = tt.subjects.all()
-        if "subject_code" in options and options['subject_code'] != None:
-            subjects = tt.subjects.filter(code=options["subject_code"])
-        # self.stdout.write(str(subjects))
-=======
         
         subjects = tt.subjects.all() 
-        if "subject_code" in options and options['subject_code']!=None:
+        if "subject_code" in options and options['subject_code'] != None:
+            print(options["subject_code"][0])
             subjects = tt.subjects.filter(code=options["subject_code"][0]) 
         self.stdout.write(str(subjects))
->>>>>>> 41401e0709ce05bdbcb597a7f122453c55e6e25c
-        self.fillGroupsBySize(tt, subjects, WRITE_TO_DB)
+        self.fillGroupsBySize(tt, subjects, WRITE_TO_DB, UNENROLL_FIRST)
         self.printGroupSurnames(tt)
-
-    def fillGroupsBySize(self, tt, subjects, write_to_db=False, clear=False):
+   
+    @transaction.atomic 
+    def fillGroupsBySize(self, tt, subjects, write_to_db = False, unenroll_first = False):
+        # study = fm.Study.objects.get(shortName=group.study)
+        # students = study.enrolledStudentsClassyear(tt, int(group.classyear)).order_by("surname", "name").all()
+        #group.students.clear()
+        #for s in students:
+        #    group.students.add(s)
+        #group.size = len(students)
+        #group.save()
         for subject in subjects.all():
-<<<<<<< HEAD
-            groups_by_activitytype = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-=======
-            print("Processing {}".format(subject))
             groups_by_activitytype = dict()
->>>>>>> 41401e0709ce05bdbcb597a7f122453c55e6e25c
             self.stdout.write("{} {}".format(subject.shortName, subject.code))
             debugGroupDict = dict()
             fooGroupList = list()
-            existing_students = defaultdict(set)
             for activity in subject.activities.filter(activityset=tt.activityset):
+            #    print "  ", activity.shortName 
                 for group in activity.groups.filter(groupset=tt.groupset).distinct():
-                    l = groups_by_activitytype[activity.type][group.classyear][group.study]
+            #        print "  ->", group.shortName
+                    dy = groups_by_activitytype.get(activity.type, {})
+                    groups_by_activitytype[activity.type] = dy # get a reference to groups by year
+                    ds = dy.get(group.classyear, {})
+                    dy[group.classyear] = ds # get a reference to groups by study
+                    l = ds.get(group.study, [])
+                    ds[group.study] = l
                     debugTuple = (group.shortName, activity.type, group.classyear, group.study)
                     if group in l:
                         fooGroupList.append(debugTuple)
                     else:
                         l.append(group)
-                        for student in group.students.all():
-                            if student in existing_students[activity.type]:
-                                self.stderr.write("Student {0} je v vec skupinah {1} pri {2}".format(
-                                    student, activity.type, subject))
-                            existing_students[activity.type].add(student)
                     deblist = debugGroupDict.get(debugTuple, [])
                     deblist.append((activity, group))
                     debugGroupDict[debugTuple] = deblist
             for fg in fooGroupList:
                 self.stderr.write("Skupina {0} je vsaj dvakrat na {1} {2} {3}".format(*fg))
                 for i in debugGroupDict[fg]:
-                    self.stderr.write("    {} {} {} {}".format(
-                        i[0].id, i[0].shortName, i[1].id, i[1].shortName))
+                    self.stderr.write("    {} {} {} {}".format(i[0].id, i[0].shortName, i[1].id, i[1].shortName))
             # enroll "normal" students
             normal_enrollment_types = [4, 26]
-            subject_enrollments = fm.StudentEnrollment.objects.filter(
+            subject_enrollments = friprosveta.models.StudentEnrollment.objects.filter(
                 subject=subject,
                 groupset=tt.groupset)
-            expected_students = set([fm.Student.objects.get(id=i) for i in
-                subject_enrollments.values_list('student_id', flat=True)])
-            normal_enrollments = subject_enrollments.filter(
-                enrollment_type__in=normal_enrollment_types)
-            extra_enrollments = subject_enrollments.exclude(
-                enrollment_type__in=normal_enrollment_types)
-            extra_students = set([fm.Student.objects.get(id=i) for i in
-                extra_enrollments.values_list('student_id', flat=True)])
+            normal_enrollments = subject_enrollments.filter(enrollment_type__in=normal_enrollment_types)
+            extra_enrollments = subject_enrollments.exclude(enrollment_type__in=normal_enrollment_types)
             # self.stderr.write("{} extra:{}".format(subject.code, extra_enrollments.count()))
             for t, groups_by_year in groups_by_activitytype.items():
                 self.stdout.write(t)
-                students_to_remove = existing_students[t] - expected_students
-                self.stdout.write("        to remove:{}".format(students_to_remove))
                 for classyear, groups_by_study in groups_by_year.items():
                     self.stdout.write("  "+str(classyear))
                     for study_name, groups in groups_by_study.items():
@@ -105,52 +101,62 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
                         try:
                             study = fm.Study.objects.get(shortName=study_name)
                             if study_name == 'PAD':
-                                new_students = extra_students.copy()
+                                students = set(extra_enrollments.values_list('student', flat=True))
                             else:
-                                new_students = set()
-                                for student_id in normal_enrollments.filter(
-                                            study=study, classyear=int(classyear)
-                                        ).values_list('student_id', flat=True):
-                                    new_students.add(fm.Student.objects.get(id=student_id))
-                            n_expected = len(new_students)
-                            new_students -= existing_students[activity.type]
-                            new_students = list(new_students)
+                                students = set(normal_enrollments.filter(
+                                        study=study, classyear=int(classyear)
+                                    ).values_list('student', flat=True))
                         except Exception as e:
                             self.stderr.write(u"Problem finding students for {0}-{1}: {2}".format(classyear, study_name, e))
-                            n_expected = 0
-                            new_students = []
-                        self.stdout.write("        new:{}".format(new_students))
+                            students = set()
+                        # students now contains all the students for this type of groups
+                        self.stdout.write("        {}".format(students))
                         groups.sort(key=str)
+                        former_students = set()
+                        new_students = set()
+                        current_students = set()
+                        for group in groups:
+                            if unenroll_first:
+                                former_students = former_students + set(group.students.all())
+                            else:
+                                g_set = set(group.students.values_list('id', flat=True))
+                                current_students = current_students.union(g_set.intersection(students))
+                                former_students = former_students.union(g_set.difference(students))
+                        new_students = students - current_students
+                        # former_students should be removed from the groups.
+                        # new_students should be added to some group.
                         i_s = 0
                         check_sum = 0
+                        new_students = fm.Student.objects.filter(id__in=new_students).order_by('surname', 'name')
+                        former_students = fm.Student.objects.filter(id__in=former_students).order_by('surname', 'name')
+                        # new_students = sorted(new_students, key=lambda x: (x.surname, x.name))
+                        print("NEW:", new_students, "DESIRED:", students, "CURRENT:", current_students, "FORMER:", former_students)
                         for group in groups:
-                            g_students = set(group.students.all())
-                            i_g = len(g_students)
-                            for student in students_to_remove:
-                                if student in g_students:
+                            group_students = list(group.students.all())
+                            for student in group_students:
+                                if student in former_students:
                                     if write_to_db:
                                         group.students.remove(student)
-                                    i_g -= 1
+                            i_g = group.students.count()
                             while i_g < group.size and i_s < len(new_students):
                                 if write_to_db:
                                     group.students.add(new_students[i_s])
+                                    group.students.add(new_students[i_s])
                                 i_s += 1
                                 i_g += 1
+                            self.stdout.write("       --{} {} {} {} {}".format(
+                                group.shortName, i_s, i_g, group.size, group.id))
                             check_sum += group.size
-                            self.stdout.write(
-                                "       --{} {} {} {} {}".format(
-                                    group.shortName, i_s, i_g,
-                                    group.size, group.id))
-                        if n_expected != check_sum:
+                        if len(students) != check_sum:
                             self.stderr.write("Wrong group size: {} {} ({}){} {} known:{} expected:{}".format(
-                                classyear, study_name, subject.code, subject, t, n_expected, check_sum))
-                            if n_expected > check_sum:
+                                classyear, study_name, subject.code, subject, t, len(students), check_sum))
+                            if len(students) > check_sum:
                                 self.stderr.write("    groups too small")
                             else:
                                 self.stderr.write("    groups too large")
                             for group in groups:
-                                self.stderr.write("    {}: {} ?= {}".format(
-                                    group.shortName, group.size, group.students.count()))
+                                self.stderr.write("    {}: {}".format(group.shortName, group.size))
+                        #assert len(students) == check_sum
 
     def printGroupSurnames(self, tt):
         l = []
@@ -172,9 +178,10 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
                 firstdiff += 1
             d[shortName] = (s1, firstdiff+1, s2, firstdiff+1, n, gn)
             d[lastName] = (s1_, l1_, s2_, firstdiff+1, n_, gn_)
-            lastName = shortName
+            lastName = shortName    
         s1_, l1_, s2_, l2_, n_, gn_ = d[lastName]
         d[lastName] = (s1_, l1_, s2_, 1, n_, gn_)
         for k in sorted(d):
             s1, l1, s2, l2, n, gn = d[k]
             self.stdout.write(u"{0}: {1} .. {2} ({3} - {4})".format(k, s1[:l1], s2[:l2], n, gn))
+    

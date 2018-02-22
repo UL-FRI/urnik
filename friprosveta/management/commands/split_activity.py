@@ -36,7 +36,7 @@ split into {3}".format(activity, activity.duration, splits))
             act = activity
             all_activities = [act]
             for split in splits[1:]:
-                activity = friprosveta.models.Activity(name=act.name, short_name=act.short_name,
+                activity = friprosveta.models.Activity(name=act.name, shortName=act.shortName,
                                                        type=act.type, duration=split,
                                                        subject=act.subject,
                                                        activityset=act.activityset,

@@ -8,9 +8,7 @@ from .restapi import SubjectDetailsView, SubjectsView
 
 
 urlpatterns = [
-    url(r'^$', RedirectView.as_view(
-        url='timetable/{0}/'.format(defaultTimetable().slug),
-        permanent=False), name='default_timetable'),
+    url(r'^$', views.default_timetable_redirect, name='default_timetable'),
     url(r'^timetable/(?P<timetable_slug>[\w-]+)/allocations.json', views.allocations_json, name='allocations_json'),
     url(r'^timetable/(?P<timetable_slug>[\w-]+)/realizations.json', views.realizations_json, name='realizations_json'),
     url(r'^timetable/(?P<timetable_slug>[\w-]+)/allocations_edit', views.allocations_edit, name='allocations_edit'),

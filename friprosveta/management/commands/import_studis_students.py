@@ -1,17 +1,14 @@
 import sys
 from _collections import defaultdict
 from django.core.management.base import BaseCommand
-import logging
-
+import json
 from friprosveta.models import StudentEnrollment, Timetable, Study, Student
 from friprosveta.models import Subject
 from friprosveta.studis import Sifranti, Studij, Studenti
 
-logger = logging.getLogger(__name__)
 
 def get_study_classyear(studijsko_drevo, entry_id):
     if entry_id not in studijsko_drevo:
-        logger.debug("Entry {} not in studijsko drevo".format(entry_id))
         return ('PAD', 8)
     study_mapper = {'Upravna informatika': 'BUN-UI', 'Izmenjave': 'IZMENJAVE', 'BUN-ML': 'BUN-MM'}
     classyear_mapper = {'B': 8, 'D': 4}
@@ -51,6 +48,29 @@ Year is the first part in current studijsko leto 2014/2015 -> 2014.'''
         parser.add_argument('timetable_slug', nargs=1, type=str)
         parser.add_argument('year', nargs=1, type=str)
         parser.add_argument('date', nargs=1, type=str)
+        # Unconfirmed enrollments
+        parser.add_argument(
+            '--unconfirmed',
+            action='store_true',
+            dest='unconfirmed',
+            help='Process unconfirmed enrollments',
+        )
+        # Unfinished enrollments
+        parser.add_argument(
+            '--unfinished',
+            action='store_true',
+            dest='unfinished',
+            help='Process unfinished enrollments',
+        )
+        # Unconfirmed enrollments
+        parser.add_argument(
+            '--preenrolment',
+            action='store_true',
+            dest='preenrolment',
+            help='Process preenrollments',
+        )
+
+ 
 
     def handle(self, *args, **options):
         timetable = Timetable.objects.get(slug=options['timetable_slug'][0])
@@ -63,7 +83,7 @@ Year is the first part in current studijsko leto 2014/2015 -> 2014.'''
         studenti = Studenti()
 
         studijsko_drevo = studij.get_studijsko_drevo()
-        self.students = studenti.get_student_enrollments(date)
+        self.students = studenti.get_student_enrollments(date, unfinished=options['unfinished'], unconfirmed=options['unconfirmed'], preenrolment=options['preenrolment'])
         self.stdout.write("got {} student enrollments".format(len(self.students)))
         self.enrollment_types = sifranti.get_tipi_vpisa()
         self.izredni_studij_id = sifranti.get_nacini_studija_izredni_studij_id
@@ -77,7 +97,7 @@ Year is the first part in current studijsko leto 2014/2015 -> 2014.'''
         self.enrolStudents(timetable)
         # regular_studies_subjects = self.getRegularSubjects(timetable)
         # Commented out by Gregor, not needed on UniTime
-        #$ padstudy = Study.objects.get(short_name="PAD")
+        #$ padstudy = Study.objects.get(shortName="PAD")
         # crossections.fixRegularSubjectsEnrollments(
         #     timetable, regular_studies_subjects, padstudy
         # )
@@ -94,20 +114,16 @@ Year is the first part in current studijsko leto 2014/2015 -> 2014.'''
 
         for student in self.students:
             # json.dump(student, self.stderr)
-            logger.info("Processing student {}".format(student))
             study_short_name, classyear = get_study_classyear(
                 self.studijsko_drevo, student['id_izvajanje_studija']
             )
             izredni = student['id_nacin_studija'] == self.izredni_studij_id
             try:
-                study = Study.objects.get(short_name=study_short_name)
-                logger.info("Got study {} from sn {}".format(study, study_short_name))
+                study = Study.objects.get(shortName=study_short_name)
             except:
-                logger.exception()
-                logger.error("Study {} not found".format(study_short_name))
                 self.stderr.write('student {} - study {} not found:'.format(
                     student['vpisna_stevilka'], study_short_name))
-                study = Study.objects.get(short_name='PAD')
+                study = Study.objects.get(shortName='PAD')
 
             studis_enrollment_type_id = student['id_tip_vpisa']
             student_id = student['vpisna_stevilka'].strip()
@@ -124,16 +140,13 @@ Year is the first part in current studijsko leto 2014/2015 -> 2014.'''
             subjects_to_enroll = []
             for entry in student['predmetnik']:
                 if (not entry['opravlja_vaje']) and (not entry['opravlja_predavanja']):
-                    pass
-                    # self.stderr.write("Student {} attending neither lectures nor exercises for {}".format(
-                    #     student_id, entry['id_predmet']))
-                    # Ignore student that doesn't attend neither lectures and exercises
-                    # continue
+                    continue
                 studis_subject = self.subjects.get(entry['id_predmet'], None)
                 if studis_subject is None:
                     self.stdout.write('Skiping subject with id {0}'.format(entry['id_predmet']))
                     continue
                 assert studis_subject['sifra'] == entry['sifra_predmeta']
+
 
                 subject = Subject.objects.filter(code=studis_subject['sifra'])
                 assert len(subject) <= 1, u"More than one subject\
@@ -152,6 +165,8 @@ with code {0} in database.".format(subject.code)
                 #    continue
             StudentEnrollment.objects.filter(groupset=groupset,
                                      student=databaseStudent).delete()
+            if student_id == '63160433':
+                print("here i am")
             for subject in subjects_to_enroll:
                 se = StudentEnrollment(groupset=groupset,
                                   student=databaseStudent,
@@ -163,5 +178,7 @@ with code {0} in database.".format(subject.code)
                                   regular_enrollment=not izredni)
                                   
                 se.save()
-                self.stderr.write("enroll {} on {}({}) under {}_{} -> {}".format(
-                    student_id, subject.short_name, subject.code, classyear, study, se.id))
+                #self.stderr.write("enroll {} on {}({}) under {}_{} -> {}".format(
+                #    student_id, subject.shortName, subject.code, classyear, study, se.id))
+                if student_id == '63160433':
+                    print (se)

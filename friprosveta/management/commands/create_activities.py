@@ -113,7 +113,7 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
             return name
 
         def activity_short_name(subject, lecture_type):
-            name = "{0}_{1}".format(subject.short_name, lecture_type.short_name)
+            name = "{0}_{1}".format(subject.shortName, lecture_type.short_name)
             logger.debug("Generated sname {}".format(name))
             return name
 
@@ -228,7 +228,7 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
                         subject=subject, lecture_type=lecture_type,
                         activityset=timetable.activityset, duration=duration,
                         name=activity_name(subject, lecture_type),
-                        short_name=activity_short_name(subject, lecture_type),
+                        shortName=activity_short_name(subject, lecture_type),
                         type=lecture_type.short_name
                     )
                     activity.save()
@@ -237,7 +237,7 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
                     activities = [activity]
                 for activity in activities:
                     activity.name = activity_name(subject, lecture_type),
-                    activity.short_name = activity_short_name(subject, lecture_type),
+                    activity.shortName = activity_short_name(subject, lecture_type),
                     activity.save()
                     activity.teachers.clear()
                     activity.teachers.add(*teachers)

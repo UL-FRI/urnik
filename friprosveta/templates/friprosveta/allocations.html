@@ -5,7 +5,7 @@
 <title>URNIK</title>
 <meta name="GENERATOR" CONTENT="Urnik">
 <meta http-equiv="Content-Type" content="text/html; charset=utf8">
-<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}/css/teacher_preferences.css">
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}css/teacher_preferences.css">
 <style type="text/css">
     tr.timetable {
         height: 6em;
@@ -99,13 +99,13 @@
                 {{studyGroup.name}}<br/>
                 {% endfor %}
             </span>
-            <a class="activity" href="?activity={{allocation.activityRealization.activity.id}}{{contextlinks.activity}}">{{allocation.activityRealization.activity.short_name}}</a><br/>
-            <a class="classroom" href="?classroom={{allocation.classroom.id}}{{contextlinks.classroom}}">{{allocation.classroom.short_name}}</a><br/>
+            <a class="activity" href="?activity={{allocation.activityRealization.activity.id}}{{contextlinks.activity}}">{{allocation.activityRealization.activity.shortName}}</a><br/>
+            <a class="classroom" href="?classroom={{allocation.classroom.id}}{{contextlinks.classroom}}">{{allocation.classroom.shortName}}</a><br/>
                     {% for teacher in allocation.activityRealization.teachers.all %}            
             <a class="teacher" href="?teacher={{teacher.id}}{{contextlinks.teacher}}">{{teacher}}</a><br/>
                     {% endfor %}
                     {% for studyGroup in allocation.activityRealization.groups.all %}
-            <a class="group" href="?group={{studyGroup.id}}{{contextlinks.group}}">{{studyGroup.short_name}}</a><br/>
+            <a class="group" href="?group={{studyGroup.id}}{{contextlinks.group}}">{{studyGroup.shortName}}</a><br/>
                     {% endfor %}
                     {% if is_teacher %}
             <a class="busy_students" href="{% url 'busy_students' timetable_slug allocation.activityRealization.id %}">{% trans "Student overlaps" %}</a><br/>
@@ -121,7 +121,7 @@
 </table>
 <p>
 {% for g in groups %}
-<a class="group" href="?group={{g.id}}{{contextlinks.group}}">{{g.short_name}}</a><br/>
+<a class="group" href="?group={{g.id}}{{contextlinks.group}}">{{g.shortName}}</a><br/>
 {% endfor %}
 </p>
 </body>

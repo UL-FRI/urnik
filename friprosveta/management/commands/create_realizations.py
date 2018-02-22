@@ -94,7 +94,7 @@ flag is disabled. Aborting.".format(activity).encode("utf-8")
             if g1.size != g2.size:
                 return g2.size - g1.size
             else:
-                return g1.short_name < g2.short_name
+                return g1.shortName < g2.shortName
         group_list = sorted(activity.groups.all(), cmp=_cmp)
         try:
             for group in group_list:
