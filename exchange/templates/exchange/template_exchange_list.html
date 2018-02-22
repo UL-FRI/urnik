@@ -1,0 +1,15 @@
+<ul class="exchange-list">
+    {% for ex in exchanges %}
+        <li{% if ex.cancelled %} class="cancelled"{% endif %}>
+        {% if show_subject %}{{ ex.subject }}: {% endif %}
+        {{ source_word }} {{ ex.allocation_from }} {{ destination_word }} {{ ex.allocation_to }}
+        {% if ex.requested_finalizer_student and show_student %}
+            (offered by {% if ex.has_initiator_student %}{{ ex.initiator_student }}{% else %}a teacher{% endif %})
+        {% endif %}
+        {% if ex.accept_link %}<em><a class="accept-link" href="{{ ex.accept_link }}">Accept</a></em>{% endif %}
+        {% if ex.cancel_link and show_cancel_link %}<em><a href="{{ ex.cancel_link }}">Cancel exchange</a></em>{% endif %}
+        </li>
+    {% empty %}
+        <li>No exchanges are available.</li>
+    {% endfor %}
+</ul>

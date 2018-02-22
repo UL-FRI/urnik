@@ -1,0 +1,26 @@
+{% extends "exchange/exchange_main.html" %}
+
+{% load exchange_helpers %}
+
+{% block body_under_title %}
+    <div class="section-header">
+        <h2 class="title">My exchanges</h2>
+        <span class="side"><a href="{% url "create_exchange_student" selected_timetable.slug %}">Create a new exchange offer</a></span>
+    </div>
+    <div class="section-content">
+        <h3>Pending exchanges</h3>
+        {% render_exchanges pending_exchanges show_student=True show_cancelled=True manager_student=student %}
+        <h3>Fulfilled exchanges</h3>
+        {% render_exchanges completed_exchanges show_finalized=True show_cancelled=True show_student=False %}
+    </div>
+
+    <div class="section-header">
+        <h2 class="title">Available exchanges</h2>
+    </div>
+    <div class="section-content">
+        {% for subject, exchanges, current_allocation in available_subject_exchanges_allocations %}
+            <h3>{{ subject }}</h3>
+            {% render_exchanges exchanges show_subject=False show_student=False manager_student=student show_cancel_link=False %}
+        {% endfor %}
+    </div>
+{% endblock %}

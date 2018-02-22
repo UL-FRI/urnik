@@ -1,0 +1,53 @@
+.section-header {
+    width: 100%;
+    display: block;
+    border-bottom: solid 1px #767676;
+    padding-top: 1ex;
+    padding-bottom: 0.5ex;
+
+    /* expand around outer divs */
+    overflow: auto;
+    /* needed to bottom-align .side */
+    position: relative;
+}
+
+.section-header .title {
+    display: inline-block;
+    float: left;
+    margin-bottom: 0;
+    margin-top: 0;
+    padding-bottom: 0;
+}
+
+.section-header .side {
+    display: inline-block;
+    float: right;
+
+    /* bottom align */
+    position: absolute;
+    bottom: 0;
+    /* bottom align breaks floating to the right border, so fix */
+    right: 0;
+}
+
+.section-content {
+    display: block;
+}
+
+.section-content h3 {
+    margin: 1ex 0 0;
+    padding: 0;
+}
+
+.exchange-list {
+
+}
+
+.exchange-list .cancelled {
+    text-decoration: line-through;
+    color: gray;
+}
+
+.exchange-list a.accept-link:not(:hover) {
+    color: green;
+}

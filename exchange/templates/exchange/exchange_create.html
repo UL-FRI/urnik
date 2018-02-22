@@ -1,0 +1,29 @@
+{% extends "exchange/exchange_main.html" %}
+
+{% block body_under_title %}
+    <div class="section-header">
+        <h2 class="title">Create an exchange request</h2>
+        <em class="side"><a href="{% url "exchange_create_help" %}">Help</a></em>
+    </div>
+    <div class="section-content">
+        <form action="" method="post">
+            {% csrf_token %}
+            {% for field in form.hidden_fields %}
+                <div style="display:none;">{{ field }}</div>
+            {% endfor %}
+            <table>
+                <thead></thead>
+                <tbody>
+                {% for field in form.visible_fields %}
+                    <tr>
+                        <td>{{ field.label_tag }}</td>
+                        <td>{{ field }}</td>
+                        <td>{{ field.errors }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            <input type="submit" value="Submit request">
+        </form>
+    </div>
+{% endblock %}

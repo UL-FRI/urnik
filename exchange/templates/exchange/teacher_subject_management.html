@@ -1,0 +1,39 @@
+{% extends "exchange/exchange_main.html" %}
+
+{% load exchange_helpers %}
+
+{% block body_under_title %}
+    <div class="section-header">
+        <h2 class="title">{{ subject.name }}</h2>
+    </div>
+
+    <div class="section-header">
+        <h3 class="title">Subject preferences</h3>
+    </div>
+    <div class="section-content">
+        <form action="" method="post">
+            {% csrf_token %}
+            {{ subject_preference_form }}
+            <input type="submit" value="Submit"/>
+        </form>
+        {{ form_notification_text }}
+    </div>
+
+    <div class="section-header">
+        <h3 class="title">Offer a lab cycle switch to a student</h3>
+    </div>
+    <div class="section-content">
+        {# yes, this form is meant to be a get form #}
+        <form action="{% url 'create_exchange_teacher' selected_timetable.slug subject.code %}" method="get">
+            {{ student_selection_form }}
+            <input type="submit" value="Submit"/>
+        </form>
+    </div>
+
+    <div class="section-header">
+        <h3 class="title">Exchanges</h3>
+    </div>
+    <div class="section-content">
+        {% render_exchanges subject_exchanges show_subject=False third_person=True show_finalized=True show_cancelled=True %}
+    </div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Exchange{% endblock %}
+
+{% block media %}
+    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}css/exchange.css">
+{% endblock %}
+
+{% block body %}
+    <div class="section-header">
+        <h1 class="title"><a href="{% url "main_redirect_root" %}">Exchange</a></h1> <sup>BETA</sup>
+        <em class="side">{{ selected_timetable.name }}</em>
+    </div>
+    {% block body_under_title %}{% endblock %}
+{% endblock %}
