@@ -5,8 +5,27 @@
         <h2 class="title">Help</h2>
     </div>
     <div class="section-content">
-        1) Requesting multiple exchanges at once does not create a set - they are fulfilled individually.
-        <br>
-        2) However, requesting a specific student applies to all choices.
+        <div class="section-header">
+            <h3 class="title">Students</h3>
+        </div>
+        <div class="section-content">
+            <ul style="list-style: inside;">
+                <li>Choose the target lab cycles you want from the dropdowns.</li>
+                <li>You can request a specific student to exchange with you by using their enrollment number (63xxxxxx) or their LDAP identity (xy1234@student.uni-lj.si)</li>
+                <li>Exchanges may be fulfilled immediately or placed into a queue. You can cancel any pending exchange you initiated.</li>
+                <li>Requesting multiple exchanges at once does not create a set - they are fulfilled individually.
+                    However, requesting a specific student applies to all choices.</li>
+            </ul>
+        </div>
+        <div class="section-header">
+            <h3 class="title">Teachers</h3>
+        </div>
+        <div class="section-content">
+            <ul style="list-style: inside;">
+                <li>In your subject overview, you may disable exchanges entirely for a particular subject, or set a date up to which exchanges are allowed.</li>
+                <li>It is possible to offer a lab cycle switch to a particular student, even if there is not enough room in the lab cycle.
+                    The student must then accept this proposal. The order in which a teacher's and a student's requests are placed does not matter.</li>
+            </ul>
+        </div>
     </div>
 {% endblock %}
