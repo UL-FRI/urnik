@@ -1,4 +1,4 @@
-from settings_common import *
+from .settings_common import *
 
 
 ADMINS = (
@@ -26,7 +26,7 @@ SECRET_KEY = 'my_very_secret_key'
 # ldap settings
 import ldap
 from django_auth_ldap.config import LDAPSearch, GroupOfNamesType
-from reservations.ul_groupname import ULNestedGroupOfNamesType
+from friprosveta.ul_groupname import ULNestedGroupOfNamesType
 
 AUTH_LDAP_SERVER_URI = "ldap://ldap_server"
 
@@ -129,3 +129,5 @@ LOGGING = {
 
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
+# whether to use the studis api (production) or a best-effort solution
+STUDENT_MAPPER_PRODUCTION = False
