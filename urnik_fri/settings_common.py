@@ -27,17 +27,14 @@ TIME_ZONE = 'Europe/Ljubljana'
 # Otherwise, Django will use naive datetimes in local time.
 USE_TZ = False
 
-
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'sl'
 
 LANGUAGES = (
-  ('sl', _('Slovenian')),
-  ('en', _('English')),
+    ('sl', _('Slovenian')),
+    ('en', _('English')),
 )
-
-
 
 # The ID, as an integer, of the current site in the django_site database table.
 # This is used so that application data can hook into specific sites and a single
@@ -65,9 +62,9 @@ MEDIA_URL = '/media/'
 
 # ADMIN_MEDIA_PREFIX is used in django-authority
 
-LOGIN_URL='/accounts/login/'
-LOGIN_REDIRECT_URL='/'
-LOGOUT_URL='/accounts/logout/'
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_URL = '/accounts/logout/'
 
 AUTH_PROFILE_MODULE = 'friprosveta.Teacher'
 
@@ -121,6 +118,7 @@ INSTALLED_APPS = (
     'friprosveta',
     'frinajave',
     'unitime',
+    'exchange',
     'django.contrib.admin',
     'cookielaw',
     'rest_framework',
@@ -132,7 +130,6 @@ CACHE_BACKEND = 'locmem://'
 
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
-        'reservations.renderers.TemplateAPIRenderer',
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ),
