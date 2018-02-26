@@ -1440,7 +1440,7 @@ def subject_list(request, timetable_slug):
                 synced_message += "{}: {}\n".format(activity.shortName, synced)
                 is_synced = False
 
-        student_num = len(frisubject.enrolledStudents(tt))
+        student_num = len(frisubject.get_enrolled_students(tt))
         unallocated_students = [
             frisubject.number_of_unallocated_students(tip, tt) for tip in ["LV", "AV", "P"]]
         if sum(unallocated_students) > 0:
