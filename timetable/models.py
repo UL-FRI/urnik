@@ -232,7 +232,7 @@ class Group(models.Model):
         Scope = sub for all children (default), one for single level.
         """
         l = []
-        for i in self.group_set.all():
+        for i in Group.objects.filter(parent=self):
             l.append(i)
             if scope == 'sub':
                 l += i.children()
