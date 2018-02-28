@@ -580,7 +580,7 @@ def create_allocation_exchange_group(allocation):
     descriptor = "{}_{}_{}_{}".format(subject.short_name, activity.type, allocation.day, allocation.start)
     new_group = Group.objects.create(
         name="99 - Skupina za menjave - {}".format(descriptor),
-        shortName="{}_{}".format(TIMETABLE_EXCHANGE_GROUP_PREFIX, descriptor),
+        short_name="{}_{}".format(TIMETABLE_EXCHANGE_GROUP_PREFIX, descriptor),
         groupset_id=common_groupset_id,
         # size and parent are both None, as they don't make sense
     )

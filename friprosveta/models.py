@@ -82,7 +82,7 @@ class GroupSizeHint(models.Model):
         logger.debug("groupset: {0}".format(groupset))
         logger.debug("enrollment types: {0}".format(enrollment_types))
         method = "group from {0} with enrollment types {1}".format(groupset, enrollment_types)
-        old_group = groupset.groups.get(shortName=group.shortName)
+        old_group = groupset.groups.get(short_name=group.short_name)
         logger.debug("oldgroup: {0}".format(old_group))
         students = old_group.students.all()
         logger.debug("got students: {0}".format(students))
@@ -290,8 +290,8 @@ class Activity(timetable.models.Activity):
 
 class Study(models.Model):
     def __str__(self):
-        return self.shortName
-    shortName = models.CharField(max_length=32)
+        return self.short_name
+    short_name = models.CharField(max_length=32)
     name = models.TextField()
 
     def enrolledStudents(self, timetable):
@@ -569,7 +569,7 @@ class Student(models.Model):
         for (s, v) in studies.items():
             if v > m:
                 (study, m) = (s, v)
-        return study.shortName
+        return study.short_name
 
     def enrolledSubjects(self, timetable):
         """
@@ -656,11 +656,9 @@ class Subject(models.Model):
     managers = models.ManyToManyField(Teacher, related_name='managed_subjects')
     short_name = models.CharField(max_length=32, blank=True, default="")
 
-    @property
-    def shortName(self):
+    def make_short_name(self):
         """
-        Read database field short_name. If short_name == "", then 
-        new short name is generated and stored into short_name database field.
+        Create short_name from the long one.
         """
         if self.short_name == "":
             ignore = ['IN', 'V', 'Z', 'S']
@@ -866,7 +864,7 @@ class Subject(models.Model):
                 # Others will be set by the create_groups method
                 activities = self.activities.filter(activityset=activityset, type=type)
                 for activity in activities:
-                    for tmp in activity.groups.filter(shortName__startswith=group.shortName):
+                    for tmp in activity.groups.filter(shortName__startswith=group.short_name):
                         tmp.size = 0
                         tmp.save()
                 for method in methods:
@@ -882,7 +880,7 @@ class Subject(models.Model):
                 else:
                     # Do not set size if no entry in hints exists for this group
                     continue
-                if "PAD" in group.shortName:
+                if "PAD" in group.short_name:
                     splits = split_into_sizes(gsh_size, [3, 2, 1])
                 else:
                     splits = split_into_sizes(gsh_size, sizes[type])
@@ -922,7 +920,7 @@ class Subject(models.Model):
             )
             logger.debug("Study short name: {}".format(study_short_name))
             logger.debug("Exiting get_study")
-            return Study.objects.get(shortName=study_short_name)
+            return Study.objects.get(short_name=study_short_name)
 #            return Study.objects.get(short_name=study_short_name)
 
         predmetnik = self.get_studis_predmetnik(year, studij=studij, najave=najave)
@@ -1001,14 +999,14 @@ class Subject(models.Model):
                 activity.groups.add(g)
         padalci_top_level, created = Group.objects.get_or_create(
             name='Vsi padalci',
-            shortName='VSI_PADALCI',
+            short_name='VSI_PADALCI',
             parent=None,
             groupset=groupset,
             defaults={"size": 0}
         )
         padalci, created = Group.objects.get_or_create(
             name='{} padalci'.format(self.code),
-            shortName='{}_PAD'.format(self.code),
+            short_name='{}_PAD'.format(self.code),
             parent=padalci_top_level,
             groupset=groupset,
             defaults={"size": 0}

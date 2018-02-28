@@ -642,7 +642,7 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
         dayname = _(WEEKDAYS[day][1])
         day_header.append((dayname, maxOverlapsDay[day]))
 
-    logger.debug("Allocations by hours: {}".format(allocations_by_hour))
+    # logger.debug("Allocations by hours: {}".format(allocations_by_hour))
     response = render(request, 'friprosveta/allocations.html', {
         # 'spaceTakenList': spaceTakenList,
         'is_teacher': is_teacher,
@@ -830,7 +830,7 @@ def busy_students_admin(request, timetable_slug, realization_id):
             for k, v in g_dict.items():
                 total_overlap += v
                 try:
-                    study = k.shortName.split('_')[1]
+                    study = k.short_name.split('_')[1]
                 except:
                     study = ''
                 if study == 'PAD' or study == '8' or study == '4':
@@ -1011,9 +1011,9 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
         others_activities = friprosveta.models.Activity.objects.none()
     else:
         own_activities = teacher.subordinate_activities.filter(
-            activityset=tt.activityset).distinct().order_by('-shortName')
+            activityset=tt.activityset).distinct().order_by('-short_name')
         others_activities = teacher.others_activities.filter(
-            activityset=tt.activityset).distinct().order_by('-shortName')
+            activityset=tt.activityset).distinct().order_by('-short_name')
     problems = False
     problemMsg = "?"
     gotPostMsg = ""
@@ -1043,9 +1043,9 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
                     others_activities = friprosveta.models.Activity.objects.none()
                 else:
                     own_activities = teacher.subordinate_activities.filter(
-                        activityset=tt.activityset).distinct().order_by('-shortName')
+                        activityset=tt.activityset).distinct().order_by('-short_name')
                     others_activities = teacher.others_activities.filter(
-                        activityset=tt.activityset).distinct().order_by('-shortName')
+                        activityset=tt.activityset).distinct().order_by('-short_name')
         else:
             problemMsg = "Problem v eni od form za aktivnosti"
             problemMsg += str(own_act_formset.errors) + str(others_act_formset.errors)
@@ -1437,7 +1437,7 @@ def subject_list(request, timetable_slug):
         for activity in tt.activities.filter(subject=frisubject):
             synced = is_synced_with_najave(activity)
             if len(synced) > 0:
-                synced_message += "{}: {}\n".format(activity.shortName, synced)
+                synced_message += "{}: {}\n".format(activity.short_name, synced)
                 is_synced = False
 
         student_num = len(frisubject.get_enrolled_students(tt))

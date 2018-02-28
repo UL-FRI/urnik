@@ -99,7 +99,7 @@ is read from studis. '
         assert timetable.subjects.filter(id=subject.id).count() == 1, u"Subject {0} must exist \
 in the timetable {1}".format(subject, timetable).encode("utf-8")
         for activity in subject.activities.filter(activityset=timetable.activityset):
-            print u"Processing {0}".format(activity.shortName)
+            print u"Processing {0}".format(activity.short_name)
             groups = oldutils.updateGroupsForActivity(activity=activity,
                                                       timetable=timetable,
                                                       studis_studies=studis_activity)

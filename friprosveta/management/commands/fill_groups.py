@@ -50,7 +50,7 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
    
     @transaction.atomic 
     def fillGroupsBySize(self, tt, subjects, write_to_db = False, unenroll_first = False):
-        # study = fm.Study.objects.get(shortName=group.study)
+        # study = fm.Study.objects.get(short_name=group.study)
         # students = study.enrolledStudentsClassyear(tt, int(group.classyear)).order_by("surname", "name").all()
         #group.students.clear()
         #for s in students:
@@ -59,20 +59,20 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
         #group.save()
         for subject in subjects.all():
             groups_by_activitytype = dict()
-            self.stdout.write("{} {}".format(subject.shortName, subject.code))
+            self.stdout.write("{} {}".format(subject.short_name, subject.code))
             debugGroupDict = dict()
             fooGroupList = list()
             for activity in subject.activities.filter(activityset=tt.activityset):
-            #    print "  ", activity.shortName 
+            #    print "  ", activity.short_name
                 for group in activity.groups.filter(groupset=tt.groupset).distinct():
-            #        print "  ->", group.shortName
+            #        print "  ->", group.short_name
                     dy = groups_by_activitytype.get(activity.type, {})
                     groups_by_activitytype[activity.type] = dy # get a reference to groups by year
                     ds = dy.get(group.classyear, {})
                     dy[group.classyear] = ds # get a reference to groups by study
                     l = ds.get(group.study, [])
                     ds[group.study] = l
-                    debugTuple = (group.shortName, activity.type, group.classyear, group.study)
+                    debugTuple = (group.short_name, activity.type, group.classyear, group.study)
                     if group in l:
                         fooGroupList.append(debugTuple)
                     else:
@@ -83,7 +83,7 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
             for fg in fooGroupList:
                 self.stderr.write("Skupina {0} je vsaj dvakrat na {1} {2} {3}".format(*fg))
                 for i in debugGroupDict[fg]:
-                    self.stderr.write("    {} {} {} {}".format(i[0].id, i[0].shortName, i[1].id, i[1].shortName))
+                    self.stderr.write("    {} {} {} {}".format(i[0].id, i[0].short_name, i[1].id, i[1].short_name))
             # enroll "normal" students
             normal_enrollment_types = [4, 26]
             subject_enrollments = friprosveta.models.StudentEnrollment.objects.filter(
@@ -99,7 +99,7 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
                     for study_name, groups in groups_by_study.items():
                         self.stdout.write("    "+str(study_name))
                         try:
-                            study = fm.Study.objects.get(shortName=study_name)
+                            study = fm.Study.objects.get(short_name=study_name)
                             if study_name == 'PAD':
                                 students = set(extra_enrollments.values_list('student', flat=True))
                             else:
@@ -145,7 +145,7 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
                                 i_s += 1
                                 i_g += 1
                             self.stdout.write("       --{} {} {} {} {}".format(
-                                group.shortName, i_s, i_g, group.size, group.id))
+                                group.short_name, i_s, i_g, group.size, group.id))
                             check_sum += group.size
                         if len(students) != check_sum:
                             self.stderr.write("Wrong group size: {} {} ({}){} {} known:{} expected:{}".format(
@@ -155,7 +155,7 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
                             else:
                                 self.stderr.write("    groups too large")
                             for group in groups:
-                                self.stderr.write("    {}: {}".format(group.shortName, group.size))
+                                self.stderr.write("    {}: {}".format(group.short_name, group.size))
                         #assert len(students) == check_sum
 
     def printGroupSurnames(self, tt):
@@ -171,14 +171,14 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
         l.sort()
         lastName = l[0][0]
         d[lastName] = (l[0][1], 1, l[0][2], 1, l[0][3], l[0][4])
-        for i, (shortName, s1, s2, n, gn) in enumerate(l[1:]):
+        for i, (short_name, s1, s2, n, gn) in enumerate(l[1:]):
             s1_, l1_, s2_, l2_, n_, gn_ = d[lastName]
             firstdiff = 0
             while firstdiff+1 < min(len(s2_), len(s1)) and s2_[firstdiff] == s1[firstdiff]:
                 firstdiff += 1
-            d[shortName] = (s1, firstdiff+1, s2, firstdiff+1, n, gn)
+            d[short_name] = (s1, firstdiff+1, s2, firstdiff+1, n, gn)
             d[lastName] = (s1_, l1_, s2_, firstdiff+1, n_, gn_)
-            lastName = shortName    
+            lastName = short_name
         s1_, l1_, s2_, l2_, n_, gn_ = d[lastName]
         d[lastName] = (s1_, l1_, s2_, 1, n_, gn_)
         for k in sorted(d):

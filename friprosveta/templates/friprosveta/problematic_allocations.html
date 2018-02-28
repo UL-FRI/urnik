@@ -24,7 +24,7 @@
         </tr>
     {% for o in object_list|dictsortreversed:"total_overlaps" %}
         <tr class = "{{o.css_class}}">
-            <td><a href={% url "busy_students" timetable_set_slug=timetable_set_slug allocation_id=o.allocation.id %}>{{o.allocation.activityRealization.activity.name}} {{o.allocation.classroom.shortName}} {{o.allocation.day}} {{o.allocation.start}}</a></td>
+            <td><a href={% url "busy_students" timetable_set_slug=timetable_set_slug allocation_id=o.allocation.id %}>{{o.allocation.activityRealization.activity.name}} {{o.allocation.classroom.short_name}} {{o.allocation.day}} {{o.allocation.start}}</a></td>
             <td>{{o.total_overlaps}} / {{o.students.count}}</td>
             <td>{{o.group_overlaps}}</td>
             <td>{{o.individual_overlaps}}</td>

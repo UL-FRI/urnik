@@ -49,7 +49,7 @@ def subject_groups(subject_code, izvajanja, predmetnik, tt):
         name, short_name = names
         group, _ = Group.objects.get_or_create(
                     name=name,
-                    shortName=short_name,
+                    short_name=short_name,
                     size=0,
                     parent=None,
                     groupset=tt.groupset)

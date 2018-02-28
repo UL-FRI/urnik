@@ -16,8 +16,8 @@ def roomsNotAvailableToTimetable(constraints, timetable, activity, clear=False):
     for i in constraints:
         roomname = i.find('Room').text
         print(roomname)
-        classroom = Classroom.objects.get(shortName=roomname, classroomset=timetable.classroomset)
-        print(classroom.shortName)
+        classroom = Classroom.objects.get(short_name=roomname, classroomset=timetable.classroomset)
+        print(classroom.short_name)
         prev_hindex = None
         start_h = None
         prev_day = None
@@ -72,12 +72,12 @@ def allocationsFromActivitiesFile(f, timetable, name_filter = ".*"):
         aroom = xa.find('Room').text
         try:
             realization = ActivityRealization.objects.get(id = int(aid))
-            if re.match(name_filter, realization.activity.shortName):
+            if re.match(name_filter, realization.activity.short_name):
                 a = Allocation()
                 a.activityRealization = realization
                 a.start = ahour
                 a.day = dayDict[aday]
-                a.classroom = Classroom.objects.get(shortName=aroom, classroomset=timetable.classroomset)
+                a.classroom = Classroom.objects.get(short_name=aroom, classroomset=timetable.classroomset)
                 a.timetable = timetable
                 l.append(a)
         except Exception as e:
@@ -100,11 +100,11 @@ def allocationTeachersFromFile(f, allocations):
                     
     for a in allocations:
         try:
-            teachers = teacherDict[(a.get_day_display(), a.start, a.classroom.shortName)]
+            teachers = teacherDict[(a.get_day_display(), a.start, a.classroom.short_name)]
             a.save()
             a.teachers = teachers
         except KeyError as e:
-            print("coultn'd find ", (a.day, a.start, a.classroom.shortName))
+            print("coultn'd find ", (a.day, a.start, a.classroom.short_name))
             print(e)
             pass
         

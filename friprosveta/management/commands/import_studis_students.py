@@ -97,7 +97,7 @@ Year is the first part in current studijsko leto 2014/2015 -> 2014.'''
         self.enrolStudents(timetable)
         # regular_studies_subjects = self.getRegularSubjects(timetable)
         # Commented out by Gregor, not needed on UniTime
-        #$ padstudy = Study.objects.get(shortName="PAD")
+        #$ padstudy = Study.objects.get(short_name="PAD")
         # crossections.fixRegularSubjectsEnrollments(
         #     timetable, regular_studies_subjects, padstudy
         # )
@@ -119,11 +119,11 @@ Year is the first part in current studijsko leto 2014/2015 -> 2014.'''
             )
             izredni = student['id_nacin_studija'] == self.izredni_studij_id
             try:
-                study = Study.objects.get(shortName=study_short_name)
+                study = Study.objects.get(short_name=study_short_name)
             except:
                 self.stderr.write('student {} - study {} not found:'.format(
                     student['vpisna_stevilka'], study_short_name))
-                study = Study.objects.get(shortName='PAD')
+                study = Study.objects.get(short_name='PAD')
 
             studis_enrollment_type_id = student['id_tip_vpisa']
             student_id = student['vpisna_stevilka'].strip()
@@ -179,6 +179,6 @@ with code {0} in database.".format(subject.code)
                                   
                 se.save()
                 #self.stderr.write("enroll {} on {}({}) under {}_{} -> {}".format(
-                #    student_id, subject.shortName, subject.code, classyear, study, se.id))
+                #    student_id, subject.short_name, subject.code, classyear, study, se.id))
                 if student_id == '63160433':
                     print (se)

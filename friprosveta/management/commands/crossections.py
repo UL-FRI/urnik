@@ -116,20 +116,20 @@ def parseGroups(currentTimetable):
                 realizations.append(realization)
             
             for group in activity.groups.all():
-                if group.shortName not in groupname_group:
-                    groupname_group[group.shortName] = Group(group.shortName, group.size, getStudyForGroup(group.shortName), group)
+                if group.short_name not in groupname_group:
+                    groupname_group[group.short_name] = Group(group.short_name, group.size, getStudyForGroup(group.short_name), group)
                     # Add all students to this group
                     for student in group.students.all():
-                        groupname_group[group.shortName].enrol(student.studentId)
+                        groupname_group[group.short_name].enrol(student.studentId)
                     
                 
-                if activity.type not in groupname_group[group.shortName].types: groupname_group[group.shortName].types.append(activity.type)
+                if activity.type not in groupname_group[group.short_name].types: groupname_group[group.short_name].types.append(activity.type)
                                 
                 if subject.code.strip() not in subject_group:
                     subject_group[subject.code.strip()] = []
                     
-                if groupname_group[group.shortName] not in subject_group[subject.code.strip()]:
-                    subject_group[subject.code.strip()].append(groupname_group[group.shortName])  
+                if groupname_group[group.short_name] not in subject_group[subject.code.strip()]:
+                    subject_group[subject.code.strip()].append(groupname_group[group.short_name])  
     return (groupname_group, subject_group, realizations)
 
 
@@ -165,7 +165,7 @@ def fixRegularSubjectsEnrollments(currentTimetable, regular_subjects_map, newStu
 
     for ((classyear, study), regular_subjects) in regular_subjects_map.items():
         print ("Changing {0} {1}".format(study, classyear))
-        study = friprosveta.models.Study.objects.get(shortName=study)
+        study = friprosveta.models.Study.objects.get(short_name=study)
 
         regular_subjects_list = list(friprosveta.models.Subject.objects.filter(code__in=regular_subjects))
         students_on_all_regular_subjects = friprosveta.models.Student.objects.filter(enrolled_subjects__groupset=currentTimetable.groupset, enrolled_subjects__classyear=classyear, enrolled_subjects__study=study).distinct()                
@@ -349,7 +349,7 @@ def enrolStudents(students, subject_group):
 def getEnroledStudents(realization, groupname_group):
     students = set()
     for group in realization.groups.all():
-        mygroup = groupname_group[group.shortName]
+        mygroup = groupname_group[group.short_name]
         students = students.union(set(mygroup.students))
     return students
 
@@ -372,7 +372,7 @@ def getEnroledStudentsDatabase(realization, studentsCache, groupset=None):
             
             if groupset != None:
                 # A group is a match if it has a same short name and is on the same subject 
-                matched_groups = groupset.groups.filter(shortName=group.shortName, activities__in=subject.activities.all())
+                matched_groups = groupset.groups.filter(short_name=group.short_name, activities__in=subject.activities.all())
                 if matched_groups.count() != 1:
                     continue
                 else:
@@ -529,7 +529,7 @@ def studentsGroupsClasses(l):
 def getNumberOfStundentsForRealization(realization, groupname):
     ret = 0
     for group in realization.groups.all():
-        if group.shortName.startswith(groupname): ret += group.size
+        if group.short_name.startswith(groupname): ret += group.size
 
     #print "{0}, {1} -> {2}".format(realization, groupname, ret)
     return ret
@@ -644,13 +644,13 @@ def notoverlap_polz(tt, students, threshold=1):
                 i = g
                 while i.parent is not None:
                     i = i.parent
-                (year, group) = i.shortName.split('_')
+                (year, group) = i.short_name.split('_')
                 yeargroups1.add((year, group))
             for g in r2.groups.all():
                 i = g
                 while i.parent is not None:
                     i = i.parent
-                (year, group) = i.shortName.split('_')
+                (year, group) = i.short_name.split('_')
                 yeargroups2.add((year, group))
             overlap = 0
             for studygroup in yeargroups1 & yeargroups2:
@@ -689,7 +689,7 @@ def min_realization_overlap(r1, r2, students, studygroup, qwerkyset):
     if len(s2) != rsize[1]+otherssize[1] and (studygroup, r2.activity.id) not in qwerkyset:
         qwerkyset.add((studygroup, r2.activity.id))
     #    print studygroup, r2
-    #    print u"  {0} estudent:{1}, najave:{2}".format(r2.activity.shortName, len(s2), rsize[1])
+    #    print u"  {0} estudent:{1}, najave:{2}".format(r2.activity.short_name, len(s2), rsize[1])
     # assert len(s1) == rsize[0] and len(s2) == rsize[1]
     
     n1 = 0
@@ -787,7 +787,7 @@ if __name__=='__main__':
         regular_studies_subjects = dict((key, getSubjectsForGroup(group)) for key, group in regular_studies_top_groups.iteritems())                
         regular_subjects_map = regular_studies_subjects
         
-        padstudy = friprosveta.models.Study.objects.get(shortName="PAD")        
+        padstudy = friprosveta.models.Study.objects.get(short_name="PAD")        
         fixRegularSubjectsEnrollments(currentTimetable, regular_subjects_map, padstudy)
         
     elif action == 'calculate': 
