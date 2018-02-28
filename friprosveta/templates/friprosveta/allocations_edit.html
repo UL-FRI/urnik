@@ -65,13 +65,13 @@ function drop(ev, el) {
             {{studyGroup.name}}<br/>
                 {% endfor %}
         </span>
-        <a class="activity" href="?activity={{allocation.activityRealization.activity.id}}{{contextlinks.activity}}">{{allocation.activityRealization.activity.shortName}}</a><br/>
-        <a class="classroom" href="?classroom={{allocation.classroom.id}}{{contextlinks.classroom}}">{{allocation.classroom.shortName}}</a><br/>
+        <a class="activity" href="?activity={{allocation.activityRealization.activity.id}}{{contextlinks.activity}}">{{allocation.activityRealization.activity.short_name}}</a><br/>
+        <a class="classroom" href="?classroom={{allocation.classroom.id}}{{contextlinks.classroom}}">{{allocation.classroom.short_name}}</a><br/>
                 {% for teacher in allocation.activityRealization.teachers.all %}            
         <a class="teacher" href="?teacher={{teacher.id}}{{contextlinks.teacher}}">{{teacher}}</a><br/>
                 {% endfor %}
                 {% for studyGroup in allocation.activityRealization.groups.all %}
-        <a class="group" href="?group={{studyGroup.id}}{{contextlinks.group}}">{{studyGroup.shortName}}</a><br/>
+        <a class="group" href="?group={{studyGroup.id}}{{contextlinks.group}}">{{studyGroup.short_name}}</a><br/>
                 {% endfor %}
                 {% if is_teacher %}
         <a class="busy_students" href="{% url 'busy_students' timetable_set_slug allocation.id %}">{% trans "Student overlaps" %}</a><br/>

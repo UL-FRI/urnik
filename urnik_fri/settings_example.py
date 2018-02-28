@@ -9,6 +9,7 @@ ADMINS = (
 )
 
 MANAGERS = ADMINS
+DEBUG = True
 
 DATABASES = {
     'default': {

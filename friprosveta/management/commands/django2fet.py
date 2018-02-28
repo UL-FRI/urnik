@@ -78,7 +78,7 @@ def roomFet(tt):
             workplaces=workplaces_n[0].n
         logger.debug("Workplaces: {}".format(workplaces))
         rooms_list.append(l2El(['Room', None, [
-            ['Name', classroom.shortName],
+            ['Name', classroom.short_name],
             ['Building', location],
             ['Capacity', str(workplaces)]]]))
     logger.info("Exiting roomFet")
@@ -737,7 +737,7 @@ def timetableToRoomsNotAvailable(timetable, activity=None):
             logger.debug("Number of not available times: {}".format(len(l)))
             l = addNumberOf(l, 'Number_of_Not_Available_Times')
             r.append(['ConstraintRoomNotAvailableTimes', None,
-                [['Weight_Percentage', '100'], ['Room', room.shortName]] + l])
+                [['Weight_Percentage', '100'], ['Room', room.short_name]] + l])
     logger.debug("Returning {}".format(r))
     logger.info("Exiting timetableToRoomsNotAvailable")
     return r
@@ -803,8 +803,8 @@ def activityRequirementsToPreferredRooms(timetable):
             lr = []
             n_students = _shrunkenStudents(timetable, ar)
             for r in ar.preferred_rooms(timetable, n_students).distinct():
-            #    if r.shortName != "Eles" or bolonjaPodiplomci:  # Ugly hack
-                lr.append(['Preferred_Room', r.shortName])
+            #    if r.short_name != "Eles" or bolonjaPodiplomci:  # Ugly hack
+                lr.append(['Preferred_Room', r.short_name])
                 
 #            if ar.id == 2407:
 #            print "GREGOR:", a.id , a.subject.code, a.preferred_rooms(timetable).distinct()
@@ -838,7 +838,7 @@ def allocationsToPreferredRoom(timetable, allocationWeights):
             l.append(['ConstraintActivityPreferredRoom', None, [
                 ['Weight_Percentage', str(100 * w)],
                 ['Activity_Id', str(a.activityRealization.id)],
-                ['Room', a.classroom.shortName],
+                ['Room', a.classroom.short_name],
                 ['Permanently_Locked', 'false']]])
     return l
 

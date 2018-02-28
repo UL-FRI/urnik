@@ -72,12 +72,12 @@
 {% for allocation in allocations %}
 {{allocation.day}}, {{allocation.start}}<br/>
 {% if is_staff%}<a href="{% url 'busy_students_admin' timetable_slug=timetable_slug realization_id=allocation.activityRealization_id %}">PREMAKNI</a><br/>{% endif %}
-<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?classroom={{allocation.classroom_id}}>{{allocation.classroom.shortName}}</a><br/>
+<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?classroom={{allocation.classroom_id}}>{{allocation.classroom.short_name}}</a><br/>
 Studentov: {{allocation.activityRealization.size}}, znanih {{students|length}}<br/>
 
-<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}{% for g in allocation.activityRealization.groups.all %}{% if forloop.first %}?{% else %}&{% endif %}group={{g.id}}{% endfor %}>Skupine</a>: {% for g in realization.groups.all %}<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?group={{g.id}}>{{g.shortName}}</a> {% endfor %}<br/>
+<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}{% for g in allocation.activityRealization.groups.all %}{% if forloop.first %}?{% else %}&{% endif %}group={{g.id}}{% endfor %}>Skupine</a>: {% for g in realization.groups.all %}<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?group={{g.id}}>{{g.short_name}}</a> {% endfor %}<br/>
 {% endfor %}
-<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}{% for c in preferred_rooms %}{% if forloop.first %}?{% else %}&{% endif %}classroom={{c.id}}{% endfor %}>Učilnice</a>: {% for c in preferred_rooms %} <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?classroom={{c.id}}>{{c.shortName}}</a> {% endfor %}</br>
+<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}{% for c in preferred_rooms %}{% if forloop.first %}?{% else %}&{% endif %}classroom={{c.id}}{% endfor %}>Učilnice</a>: {% for c in preferred_rooms %} <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?classroom={{c.id}}>{{c.short_name}}</a> {% endfor %}</br>
 <table class="time_preferences">
     <th>Ura</th>
     {% for d in days %}<th>{{d}}</th>{% endfor %}
@@ -87,7 +87,7 @@ Studentov: {{allocation.activityRealization.size}}, znanih {{students|length}}<b
         {% for d in days %}
             <td>{{d.busy}}</br>
             {% for c in d.classrooms_free %}
-                <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?classroom={{c.id}}>{{c.shortName}}</a><br/>
+                <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?classroom={{c.id}}>{{c.short_name}}</a><br/>
             {% endfor %}
             </td>
         {% endfor %}

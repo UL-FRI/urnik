@@ -103,12 +103,12 @@
 <br/>
 {% for allocation in allocations %}
 {{allocation.day}}, {{allocation.start}}<br/>
-<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?classroom={{allocation.classroom_id}}>{{allocation.classroom.shortName}}</a><br/>
+<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?classroom={{allocation.classroom_id}}>{{allocation.classroom.short_name}}</a><br/>
 {% endfor %}
 Studentov: {{realization.size}}<br/>
-<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}{% for g in realization.groups.all %}{% if forloop.first %}?{% else %}&{% endif %}group={{g.id}}{% endfor %}>Skupine</a>: {% for g in realization.groups.all %}<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?group={{g.id}}>{{g.shortName}}</a> {% endfor %}<br/>
+<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}{% for g in realization.groups.all %}{% if forloop.first %}?{% else %}&{% endif %}group={{g.id}}{% endfor %}>Skupine</a>: {% for g in realization.groups.all %}<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?group={{g.id}}>{{g.short_name}}</a> {% endfor %}<br/>
 
-<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}{% for c in preferred_rooms %}{% if forloop.first %}?{% else %}&{% endif %}classroom={{c.id}}{% endfor %}>Učilnice</a>: {% for c in rooms %} <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?classroom={{c.id}}>{{c.shortName}}</a> {% endfor %}</br>
+<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}{% for c in preferred_rooms %}{% if forloop.first %}?{% else %}&{% endif %}classroom={{c.id}}{% endfor %}>Učilnice</a>: {% for c in rooms %} <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?classroom={{c.id}}>{{c.short_name}}</a> {% endfor %}</br>
 
 <table class="timetable">
     <th>Ura</th>
@@ -128,23 +128,23 @@ Studentov: {{realization.size}}<br/>
                             <input type=hidden id="id_start" name="start" value="{{hour}}"/>
                             <input type=hidden id="id_day" name="day" value="{{day}}"/>
                             <input type=hidden id="id_classroom" name="classroom" value="{{c.id}}"/>
-                            <input type=submit value="{{c.shortName}}" class="place_button"/>
+                            <input type=submit value="{{c.short_name}}" class="place_button"/>
                         </form>
                     {%endfor%}</div>
                     <div>{% for pref, l in cell.teacher_preferences.items %}{% for t in l%}<span class="{{pref}}">{{t}}</span><br/>
     {% endfor %}{% endfor %}
                     </div>
                     <div>{% for t, l in cell.busy_teachers.items %}<span class="CANT">{{t}}:
-    {% for a in l %}<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?subject={{a.activityRealization.activity.activity.subject_id}}>{{a.activityRealization.activity.shortName}}</a> {% endfor %}</span><br/>
+    {% for a in l %}<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?subject={{a.activityRealization.activity.activity.subject_id}}>{{a.activityRealization.activity.short_name}}</a> {% endfor %}</span><br/>
                     {% endfor %}
                     </div>
-                    <div>{% for g in cell.group_preference_dict %}<span class="CANT">{{g.shortName}} ({{g.size}})</span><br/>{% endfor %}
+                    <div>{% for g in cell.group_preference_dict %}<span class="CANT">{{g.short_name}} ({{g.size}})</span><br/>{% endfor %}
                     </div>
                     <div class=busy_activity>{% for a, n in cell.activities.items %}
-                        <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?activity={{a.activityRealization.activity.id}}>{{a.activityRealization.activity.shortName}}</a>: {{n}}<br/>
+                        <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?activity={{a.activityRealization.activity.id}}>{{a.activityRealization.activity.short_name}}</a>: {{n}}<br/>
           {%endfor%}</div>
                     <div class="busy_group">{% for g, n in cell.groups.items %}
-                        <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?group={{g.id}}>{{g.shortName}}</a>: {{n}}/{{g.size}}<br/>
+                        <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?group={{g.id}}>{{g.short_name}}</a>: {{n}}/{{g.size}}<br/>
           {%endfor%}</div>
                     <div class="semifree_classroom">{% for c in cell.classrooms_semifree %}
                         {% if allow_bad_place %}
@@ -153,10 +153,10 @@ Studentov: {{realization.size}}<br/>
                             <input type=hidden id="id_start" name="start" value="{{hour}}"/>
                             <input type=hidden id="id_day" name="day" value="{{day}}"/>
                             <input type=hidden id="id_classroom" name="classroom" value="{{c.id}}"/>
-                            <input type=submit value="{{c.shortName}}" class="bad_place_button"/>
+                            <input type=submit value="{{c.short_name}}" class="bad_place_button"/>
                         </form>
                         {% else %}
-                        <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?classroom={{c.id}}>{{c.shortName}}</a><br/>
+                        <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?classroom={{c.id}}>{{c.short_name}}</a><br/>
                         {% endif %}
                     {%endfor%}</div>
                     <div class=busy_classroom>{% for c, l in cell.classrooms_busy.items %}
@@ -166,11 +166,11 @@ Studentov: {{realization.size}}<br/>
                             <input type=hidden id="id_start" name="start" value="{{hour}}"/>
                             <input type=hidden id="id_day" name="day" value="{{day}}"/>
                             <input type=hidden id="id_classroom" name="classroom" value="{{c.id}}"/>
-                            <input type=submit class="bad_place_button" value="{{c.shortName}}"/>:
-                            {% for a in l %}<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?subject={{a.activityRealization.activity.activity.subject.code}}>{{a.activityRealization.activity.shortName}}</a> {% endfor %}
+                            <input type=submit class="bad_place_button" value="{{c.short_name}}"/>:
+                            {% for a in l %}<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?subject={{a.activityRealization.activity.activity.subject.code}}>{{a.activityRealization.activity.short_name}}</a> {% endfor %}
                         </form>
                         {% else %}
-                        <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?classroom={{c.id}}>{{c.shortName}}</a>: {% for a in l %}<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?subject={{a.activityRealization.activity.activity.subject.code}}>{{a.activityRealization.activity.shortName}}</a> {% endfor %}<br/>
+                        <a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?classroom={{c.id}}>{{c.short_name}}</a>: {% for a in l %}<a href={% url 'authenticated_allocations' timetable_slug=timetable_slug %}?subject={{a.activityRealization.activity.activity.subject.code}}>{{a.activityRealization.activity.short_name}}</a> {% endfor %}<br/>
                         {% endif %}
           {%endfor%}</div>
                 </div>

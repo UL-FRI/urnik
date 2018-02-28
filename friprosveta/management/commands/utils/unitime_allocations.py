@@ -75,10 +75,10 @@ def enroll_students(assignment, solution_id, tt):
     activity = realization.activity
     group_name = "g_{0}_{1}".format(realization.id, assignment.uniqueid)
     group_short_name = "g_{0}".format(realization.id)
-    parent = Group.objects.get(shortName='UT')
+    parent = Group.objects.get(short_name='UT')
     group = Group.objects.get_or_create(
                 name=group_name,
-                shortName=group_short_name,
+                short_name=group_short_name,
                 groupset=tt.groupset)[0]
     group.parent = parent
     group.save()
@@ -182,7 +182,7 @@ def check_sync_with_timetable(tt, unitime_allocations, solution_id,
                               lecture_types=['P']):
     # allocs = read_unitime_allocations(tt, solution_id)
     allocs = unitime_allocations
-    allocs_dict = {(start, day, classroom.shortName): (s, lt, ts) 
+    allocs_dict = {(start, day, classroom.short_name): (s, lt, ts)
                    for s, lt, ts, classroom, day, start in allocs}
 
     for start, day, classroom in allocs_dict:
@@ -201,7 +201,7 @@ def check_sync_with_timetable(tt, unitime_allocations, solution_id,
         activity = allocation.activityRealization.activity.activity
         start = allocation.start
         day = allocation.day
-        classroom = allocation.classroom.shortName
+        classroom = allocation.classroom.short_name
         subject = activity.subject
         if activity.lecture_type.short_name not in lecture_types:
             continue

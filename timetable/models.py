@@ -154,11 +154,11 @@ class GroupSet(models.Model):
 
 class Group(models.Model):
     def __str__(self):
-        last = self.shortName.split('_')[-1]
+        last = self.short_name.split('_')[-1]
         llast = len(last)
         if self._is_number(last) and len(last) == 1:
             last = '0' + last
-        return "{0} ({1}), {2}".format(self.shortName[:-llast]+last, self.size, self.groupset)
+        return "{0} ({1}), {2}".format(self.short_name[:-llast]+last, self.size, self.groupset)
 
     def _is_number(self, s):
         try:
@@ -168,10 +168,10 @@ class Group(models.Model):
             return False
 
     def id_string(self):
-        return self.shortName
+        return self.short_name
 
     name = models.CharField(max_length=255)
-    shortName = models.CharField(max_length=64)
+    short_name = models.CharField(max_length=64)
     size = models.IntegerField(null=True)
     parent = models.ForeignKey('self', null=True, blank=True, related_name="+", on_delete=models.CASCADE)
     groupset = models.ForeignKey('GroupSet', related_name='groups', on_delete=models.CASCADE)
@@ -179,7 +179,7 @@ class Group(models.Model):
     # Return the second part of group name, split by '_'
     @property
     def study(self):
-        split = self.shortName.split('_')
+        split = self.short_name.split('_')
         if len(split) >= 2:
             return split[1]
         # No study found: return default
@@ -187,12 +187,12 @@ class Group(models.Model):
 
     @property
     def classyear(self):
-        split = self.shortName.split('_')
+        split = self.short_name.split('_')
         return split[0]
 
     @property
     def type(self):
-        split = self.shortName.split('_')
+        split = self.short_name.split('_')
         if len(split) >= 3:
             return split[2]
         # No study found: return default
@@ -200,7 +200,7 @@ class Group(models.Model):
 
     @property
     def groupnum(self):
-        split = self.shortName.split('_')
+        split = self.short_name.split('_')
         if len(split) >= 4:
             return split[-1]
         # No study found: return default
@@ -222,7 +222,7 @@ class Group(models.Model):
 
     @property
     def subjectname(self):
-        split = self.shortName.split('_')
+        split = self.short_name.split('_')
         if len(split) >= 5:
             return split[-3]
         return ""
@@ -286,7 +286,7 @@ class Activity(models.Model):
     # old_teachers = models.ManyToManyField('Teacher', blank=True, through='ActivityPercentage', related_name='old_teacher_activities')
     teachers = models.ManyToManyField('Teacher', blank=True, related_name='activities')
     name = models.CharField(max_length=200)
-    shortName = models.CharField(max_length=32)
+    short_name = models.CharField(max_length=32)
     activityset = models.ForeignKey('ActivitySet', related_name='activities', on_delete=models.CASCADE)
     type = models.CharField(max_length=4, choices=ACTIVITYTYPES)
     locations = models.ManyToManyField('Location', blank=False)
@@ -448,9 +448,9 @@ class LocationDistance(models.Model):
 
 class Classroom(models.Model):
     def __str__(self):
-        return "{0} ({1})".format(self.name, self.shortName)
+        return "{0} ({1})".format(self.name, self.short_name)
     name = models.CharField(max_length=50)
-    shortName = models.CharField(max_length=32)
+    short_name = models.CharField(max_length=32)
     resources = models.ManyToManyField(Resource, through='ClassroomNResources',
                                        blank=True, related_name='classrooms')
     capacity = models.IntegerField()
