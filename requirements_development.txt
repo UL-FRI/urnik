@@ -17,7 +17,7 @@ django-debug-toolbar
 django-classy-tags
 ipython
 ply
-psycopg2
+psycopg2-binary
 pyodbc
 python-memcached
 six
