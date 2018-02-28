@@ -1,3 +1,6 @@
+import ldap
+from django_auth_ldap.config import LDAPSearch, GroupOfNamesType
+from friprosveta.ul_groupname import ULNestedGroupOfNamesType
 from .settings_common import *
 
 
@@ -22,22 +25,20 @@ DATABASES = {
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'my_very_secret_key'
 
-
 # ldap settings
-import ldap
-from django_auth_ldap.config import LDAPSearch, GroupOfNamesType
-from friprosveta.ul_groupname import ULNestedGroupOfNamesType
-
 AUTH_LDAP_SERVER_URI = "ldap://ldap_server"
-
 AUTH_LDAP_BIND_DN = "CN=..."
 AUTH_LDAP_BIND_PASSWORD = "geslo_za_ldap"
-AUTH_LDAP_USER_SEARCH = LDAPSearch("DC",
-    ldap.SCOPE_SUBTREE, "(userPrincipalName=%(user)s)")
+AUTH_LDAP_USER_SEARCH = LDAPSearch(
+    "DC",
+    ldap.SCOPE_SUBTREE,
+    "(userPrincipalName=%(user)s)")
 
 # Mirror groups in LDAP
-AUTH_LDAP_GROUP_SEARCH = LDAPSearch("DC=...",
-    ldap.SCOPE_SUBTREE, "(objectClass=group)"
+AUTH_LDAP_GROUP_SEARCH = LDAPSearch(
+    "DC=...",
+    ldap.SCOPE_SUBTREE,
+    "(objectClass=group)"
 )
 AUTH_LDAP_GROUP_TYPE = ULNestedGroupOfNamesType(name_attr="cn")
 AUTH_LDAP_MIRROR_GROUPS = True
@@ -50,9 +51,9 @@ AUTH_LDAP_USER_ATTR_MAP = {
 }
 
 AUTH_LDAP_USER_FLAGS_BY_GROUP = {
-#    "is_active": "cn=active,ou=django,ou=groups,dc=example,dc=com",
-#    "is_staff": "cn=staff,ou=django,ou=groups,dc=example,dc=com",
-#    "is_superuser": "cn=superuser,ou=django,ou=groups,dc=example,dc=com"
+    # "is_active": "cn=active,ou=django,ou=groups,dc=example,dc=com",
+    # "is_staff": "cn=staff,ou=django,ou=groups,dc=example,dc=com",
+    # "is_superuser": "cn=superuser,ou=django,ou=groups,dc=example,dc=com"
 }
 
 # This is the default, but I like to be explicit.
@@ -70,11 +71,8 @@ EMAIL_HOST_USER = 'mail_user'
 EMAIL_HOST_PASSWORD = 'mail_user_password'
 EMAIL_USE_TLS = True
 
-# Absolute path to the directory that holds media.
-# Example: "/home/media/media.lawrence.com/"
-STATIC_ROOT = '/path/to/static/files'
-
-MEDIA_ROOT = '/path/to/media/files'
+STATIC_ROOT = '/home/timetable/static'
+MEDIA_ROOT = '/home/timetable/media'
 
 # Studis API setting
 STUDIS_API_BASE_URL = 'https://studis.api/base_url'
@@ -105,7 +103,7 @@ LOGGING = {
         'file':{
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': '/path/to/log/file.log',
+            'filename': '/home/timetable/timetable.log',
             'formatter': 'verbose'
         },
     },
