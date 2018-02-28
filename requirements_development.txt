@@ -1,6 +1,9 @@
-Django
+Django=1.11.10
 argparse
 django-auth-ldap
+ldap
+ldap3
+pyldap
 django-authority
 django-guardian
 django-impersonate
@@ -16,9 +19,8 @@ ipython
 ply
 psycopg2
 pyodbc
-python-ldap
 python-memcached
 six
 slimit
-wsgiref
 beautifulsoup4
+celery
