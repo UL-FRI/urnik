@@ -1,4 +1,4 @@
-Django=1.11.10
+Django==1.11.10
 argparse
 django-auth-ldap
 ldap
