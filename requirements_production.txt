@@ -22,3 +22,5 @@ six==1.11.0
 slimit==0.8.1
 wsgiref==0.1.2
 beautifulsoup4==4.6.0
+django-celery-results
+django-celery-email

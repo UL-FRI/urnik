@@ -13,6 +13,8 @@ django-js-reverse
 django-debug-toolbar
 django-classy-tags
 django-import-export
+django-celery-results
+django-celery-email
 ipython
 ply
 psycopg2-binary
