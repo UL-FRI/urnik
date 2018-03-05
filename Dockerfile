@@ -12,6 +12,16 @@ ENV SECRET_KEY=very_secret_key
 # Add Tomo user and group first to make sure their IDs get assigned consistently
 RUN groupadd -r timetable && useradd -r -g timetable timetable
 
+# Change locale to en_US.UTF-8
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y locales
+
+RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+    dpkg-reconfigure --frontend=noninteractive locales && \
+    update-locale LANG=en_US.UTF-8
+    
+ENV LANG en_US.UTF-8
+ENV LC_ALL en_US.UTF-8 
+
 # Install required packages
 RUN apt-get update \
   && apt-get install -y \
