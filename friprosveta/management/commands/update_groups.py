@@ -1,21 +1,23 @@
-import traceback
-import sys
 import json
-import urllib2
+import sys
+import traceback
 from optparse import make_option
-from django.core.management.base import BaseCommand
+
+import urllib2
 from django.conf import settings
+from django.core.management.base import BaseCommand
 from django.db import transaction
-import friprosveta
-from friprosveta.utils.utils import Utils
 from enroll_students_to_subjects import get_study_classyear
+from friprosveta.utils.utils import Utils
+
+import friprosveta
 
 
 class Command(BaseCommand):
-    '''
+    """
     Update groups for a given timetable based on enrolments on subjects
     (see enrol_students_to_subjects).
-    '''
+    """
     args = 'update_groups timetable_slug studis_year'
     help = 'Update groups for the given timetable. Data about subjects (optional, classyear...) \
 is read from studis. '
@@ -76,17 +78,15 @@ is read from studis. '
                                                options['testrun'],
                                                studis_activity,
                                                never_delete_studies=['FKKT-UNI', 'FKKT-VS']
-)
-            except Exception, e:
-                print u"Error updating groups for subject {0}: {1}".format(subject,
-                                                                           repr(e)).encode("utf-8")
+                                               )
+            except Exception as e:
+                print("Error updating groups for subject {0}: {1}".format(subject, repr(e)).encode("utf-8"))
                 traceback.print_exc()
 
     @transaction.atomic
     def update_groups_for_subject(self, subject, timetable, testrun,
                                   studis_activity, safe_to_delete_studies=['PAD', 'UN-RI'],
-                                  never_delete_studies=['FKKT-UNI', 'FKKT-VS',
-                                                        'BUN-UI', 'BUN-MM', 'BM-RM', 'BM-MM']):
+                                  never_delete_studies=['FKKT-UNI', 'FKKT-VS', 'BUN-UI', 'BUN-MM', 'BM-RM', 'BM-MM']):
         """
         Update groups for a given subject for a given timetable.
         This method only updates groups on activities in existing activitySet.
@@ -96,10 +96,10 @@ is read from studis. '
         """
 
         oldutils = Utils()
-        assert timetable.subjects.filter(id=subject.id).count() == 1, u"Subject {0} must exist \
+        assert timetable.subjects.filter(id=subject.id).count() == 1, "Subject {0} must exist \
 in the timetable {1}".format(subject, timetable).encode("utf-8")
         for activity in subject.activities.filter(activityset=timetable.activityset):
-            print u"Processing {0}".format(activity.short_name)
+            print("Processing {0}".format(activity.short_name))
             groups = oldutils.updateGroupsForActivity(activity=activity,
                                                       timetable=timetable,
                                                       studis_studies=studis_activity)
@@ -113,19 +113,20 @@ in the timetable {1}".format(subject, timetable).encode("utf-8")
                     updated_groups_ids += map(lambda group: group.id, values)
             groups_to_remove = activity.groups.filter(groupset=timetable.groupset)
             groups_to_remove = groups_to_remove.exclude(id__in=updated_groups_ids)
-            print "Remove groups from activity: {0}".format(groups_to_remove)
+            print("Remove groups from activity: {0}".format(groups_to_remove))
             for group in groups_to_remove.all():
                 if group.study in never_delete_studies:
-                    print 'Group {0} study in never_delete_studies, not removing'.format(group)
+                    print('Group {0} study in never_delete_studies, not removing'.format(group))
                     continue
                 if friprosveta.models.StudentEnrollment.objects.filter(subject=subject,
                                                                        groupset=timetable.groupset,
-                                                                       study__shortName=group.study).count()==0:                    
-                    if group.study in safe_to_delete_studies or raw_input(u'No enrolment data found for group {0}. Delete (Y/n)? '.format(group)) in ['y','Y']:
-                        print 'Deleting'
+                                                                       study__shortName=group.study).count() == 0:
+                    if group.study in safe_to_delete_studies or raw_input(
+                            'No enrolment data found for group {0}. Delete (Y/n)? '.format(group)) in ['y', 'Y']:
+                        print('Deleting')
                         activity.groups.remove(group)
                 else:
-                    print 'Deleting'
+                    print('Deleting')
                     activity.groups.remove(group)
         if testrun:
             raise Exception('Testrun')

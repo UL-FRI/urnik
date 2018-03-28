@@ -1,12 +1,11 @@
 import MySQLdb
 from django.conf import settings
-from timetable.models import WORKHOURS
 
 
 # Convert day and duration in start index
-def toStartIndex(day, start):
-    day_start = (24*2) * index_days[day]
-    hour_start = int(start[:2])*2
+def to_start_index(day, start):
+    day_start = (24 * 2) * index_days[day]
+    hour_start = int(start[:2]) * 2
     return day_start + hour_start
 
 
@@ -18,6 +17,7 @@ class PreferenceLevel:
      Discouraged,
      StronglyDiscouraged,
      Prohibited) = ('R', '0', '1', '2', '3', '4', 'P')
+
 
 index_days = {'MON': 0, 'TUE': 1, 'WED': 2, 'THU': 3, 'FRI': 4}
 allocation_days = {'MON': 64, 'TUE': 32, 'WED': 16, 'THU': 8, 'FRI': 4,
@@ -70,13 +70,13 @@ class Database:
         self.commit()
         return self.connection.close()
 
-    def fetchallrows(self):
+    def fetch_all_rows(self):
         return self.cursor.fetchall()
 
-    def fetchnextrow(self):
+    def fetch_next_row(self):
         return self.cursor.fetchone()
 
-    def getIDRange(self):
+    def get_id_range(self):
         """
         Accepts cursor to the database.
         Returns (start_range, end_range) of reserved ids.
@@ -89,25 +89,23 @@ class Database:
 high value in the database"
         high = c.fetchone()[0]
         lo = 32767
-        sql = "UPDATE timetable.hibernate_unique_key \
-SET next_hi={0}".format(high+1)
+        sql = "UPDATE timetable.hibernate_unique_key SET next_hi={0}".format(high + 1)
         c.execute(sql)
         db.commit()
         db.close()
-        return (high*lo + 1, (high+1)*lo-1)
+        return high * lo + 1, (high + 1) * lo - 1
 
-    def getNextID(self):
+    def get_next_id(self):
         if self.current_id >= self.high:
-            self.low, self.high = self.getIDRange()
+            self.low, self.high = self.get_id_range()
             self.current_id = self.low
         self.current_id += 1
         return self.current_id - 1
 
-    def getSessionID(self, start_date):
+    def get_session_id(self, start_date):
         session_id_query = ("SELECT uniqueid FROM sessions "
                             "where session_begin_date_time ='{0}'"
                             ).format(start_date)
         self.cursor.execute(session_id_query)
-        assert self.rowcount == 1, "There must be exactly one \
-session with the given start in the database"
-        return self.fetchnextrow()[0]
+        assert self.rowcount == 1, "There must be exactly one session with the given start in the database"
+        return self.fetch_next_row()[0]

@@ -1,11 +1,8 @@
-# -*- coding: utf-8 -*-
-
-from random import randint
-from frinajave.models import TeacherSubjectCycles, ACTIVITY_TEACHERS_SIZE
 import friprosveta
+from frinajave.models import TeacherSubjectCycles, ACTIVITY_TEACHERS_SIZE
 from friprosveta.models import StudentEnrollment
 from unitime.models import CourseOffering, Class
-from common import type_itype_mapping
+from .common import type_itype_mapping
 
 
 def classes_for_subject(subject_code, itype):
@@ -23,10 +20,10 @@ def offerings(tt, campus, term, year):
     # TODO: this could be wrong when a timetable in included in multiple timetable sets
     tt_set = tt.timetable_sets.first()
     rewrite = {
-               "P": "Lec",
-               "LV": "Lab",
-               "SEM": "Sem",
-               "AV": "Rec",
+        "P": "Lec",
+        "LV": "Lab",
+        "SEM": "Sem",
+        "AV": "Rec",
     }
     ignore_types = ["lab."]
     activityset = tt.activityset
@@ -36,8 +33,8 @@ def offerings(tt, campus, term, year):
             continue
         lecture = lecture[0]
         enrolled_limit = StudentEnrollment.objects.filter(
-                groupset=tt.groupset,
-                subject__code=subject.code).count()
+            groupset=tt.groupset,
+            subject__code=subject.code).count()
         # enrolled_limit = lecture.size
         projected_limit = TeacherSubjectCycles.projected_class_size(subject.code, tt_set)
         subparttypes = dict()
@@ -68,7 +65,7 @@ def offerings(tt, campus, term, year):
                 {
                     "type": rewrite[activity.type],
                     "suffix": suffix_append,
-                    "minPerWeek": str(60*activity.duration),
+                    "minPerWeek": str(60 * activity.duration),
                 },
                 []
             ]
@@ -115,11 +112,11 @@ def offerings(tt, campus, term, year):
                             class_id = id_pool[usuffix]
                         classes += ["class", {
                             "id": str(class_id),
-                            "type":  rewrite[activity.type],
+                            "type": rewrite[activity.type],
                             "suffix": usuffix,
                             "limit": str(class_size),
                             "displayInScheduleBook": "true",
-                            }, instructors]
+                        }, instructors]
                         suffix += 1
             except Exception:
                 pass
@@ -139,7 +136,7 @@ def offerings(tt, campus, term, year):
             "course",
             {
                 "id": str(subject.id),
-                "subject": u"{0}".format(subject.code),
+                "subject": "{0}".format(subject.code),
                 "courseNbr": "101",  # TODO: kaj točno je to?
                 "controlling": "true",  # TODO: kaj je to?
                 "title": subject.name

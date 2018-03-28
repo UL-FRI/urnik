@@ -1,22 +1,20 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
+from collections import OrderedDict
 
 from django import forms
+from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.forms import widgets
 from django.forms.forms import BoundField
-from django.utils.safestring import mark_safe
 from django.forms.utils import ErrorList
-from collections import OrderedDict
-from timetable.models import TeacherValuePreference,\
-    TeacherTimePreference, TeacherDescriptivePreference,\
-    Group, GroupTimePreference,\
-    Activity, ActivityRealization,\
-    TagTimePreference, Tag,\
-    Preference, WEEKDAYS, WORKHOURS, PreferenceSet, Teacher,\
-    PREFERENCELEVELS
-from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 
+from timetable.models import TeacherValuePreference, \
+    TeacherTimePreference, TeacherDescriptivePreference, \
+    Group, GroupTimePreference, \
+    Activity, ActivityRealization, \
+    TagTimePreference, Tag, \
+    Preference, WEEKDAYS, WORKHOURS, PreferenceSet, Teacher, \
+    PREFERENCELEVELS
 
 
 class SimplePreferenceForm(forms.ModelForm):
@@ -81,12 +79,12 @@ class CommonTimetablePreferenceForm(forms.Form):
             preferenceset_id = None
         if owner is not None:
             self.fields['owner'] = forms.IntegerField(
-                    widget=forms.HiddenInput(),
-                    initial=owner.id, label='')
+                widget=forms.HiddenInput(),
+                initial=owner.id, label='')
             self._owner = owner
             self.fields['preferenceset'] = forms.IntegerField(
-                    widget=forms.HiddenInput(),
-                    initial=preferenceset_id, label='')
+                widget=forms.HiddenInput(),
+                initial=preferenceset_id, label='')
             for p in self._preference_class.objects.filter(
                     preferenceset=preferenceset,
                     **{self._owner_field: self._owner}):
@@ -100,9 +98,9 @@ class CommonTimetablePreferenceForm(forms.Form):
                     pd[p.day][hour] = (p.level, weight)
         else:
             self.fields['owner'] = forms.IntegerField(
-                    widget=forms.HiddenInput())
+                widget=forms.HiddenInput())
             self.fields['preferenceset'] = forms.IntegerField(
-                    widget=forms.HiddenInput(), initial=preferenceset_id)
+                widget=forms.HiddenInput(), initial=preferenceset_id)
         for (hour, hourname) in WORKHOURS:
             self.levelFieldsByHourDay[hour] = OrderedDict()
             self.weightFieldsByHourDay[hour] = OrderedDict()
@@ -111,13 +109,13 @@ class CommonTimetablePreferenceForm(forms.Form):
                 if day in pd and hour in pd[day]:
                     initial = pd[day][hour]
                 wfield = forms.FloatField(
-                        label="", initial=initial[1], required=False,
-                        widget=forms.TextInput(
-                            attrs={
-                                'size': 2,
-                                'class': 'TTablePrefWeight'
-                            }
-                        )
+                    label="", initial=initial[1], required=False,
+                    widget=forms.TextInput(
+                        attrs={
+                            'size': 2,
+                            'class': 'TTablePrefWeight'
+                        }
+                    )
                 )
                 lfield = forms.TypedChoiceField(
                     label="", initial=initial[0], empty_value=None,
@@ -125,9 +123,9 @@ class CommonTimetablePreferenceForm(forms.Form):
                 self.fields['lf-{0}-{1}'.format(day, hour)] = lfield
                 self.fields['wf-{0}-{1}'.format(day, hour)] = wfield
                 self.levelFieldsByHourDay[hour][day] = BoundField(
-                        self, lfield, 'lf-{0}-{1}'.format(day, hour))
+                    self, lfield, 'lf-{0}-{1}'.format(day, hour))
                 self.weightFieldsByHourDay[hour][day] = BoundField(
-                        self, wfield, 'wf-{0}-{1}'.format(day, hour))
+                    self, wfield, 'wf-{0}-{1}'.format(day, hour))
 
     def owner(self):
         if self._owner is None and self['owner'].data is not None:
@@ -135,18 +133,18 @@ class CommonTimetablePreferenceForm(forms.Form):
         return self._owner
 
     def preferenceset(self):
-        if self._preferenceset is None and\
+        if self._preferenceset is None and \
                 self['preferenceset'].data is not None:
             self._preferenceset = PreferenceSet.objects.get(
                 id=self['preferenceset'].data)
         return self._preferenceset
 
-    def getPreferences(self):
+    def get_preferences(self):
         # print "get prefs!"
         l = []
         for (day, dayname) in WEEKDAYS:
-            lastWeight = 0.0
-            lastLevel = None
+            last_weight = 0.0
+            last_level = None
             duration = 0
             start = WORKHOURS[0][0]
             for (hour, hourname) in WORKHOURS:
@@ -159,26 +157,26 @@ class CommonTimetablePreferenceForm(forms.Form):
                     weight = 0.0
                 if level == 'CANT':
                     weight = 1.0
-                if weight != lastWeight or level != lastLevel:
-                    if lastWeight > 0.0 and lastLevel in\
+                if weight != last_weight or level != last_level:
+                    if last_weight > 0.0 and last_level in \
                             self.permissible_levels:
                         l.append(self._preference_class(
-                                day=day, start=start,
-                                preferenceset=self.preferenceset(),
-                                duration=duration, level=lastLevel,
-                                weight=lastWeight,
-                                **{self._owner_field: self.owner()}
-                            )
+                            day=day, start=start,
+                            preferenceset=self.preferenceset(),
+                            duration=duration, level=last_level,
+                            weight=last_weight,
+                            **{self._owner_field: self.owner()}
+                        )
                         )
                     duration = 0
                     start = hour
-                lastWeight = weight
-                lastLevel = level
+                last_weight = weight
+                last_level = level
             duration += 1
-            if lastWeight > 0.0 and lastLevel in self.permissible_levels:
+            if last_weight > 0.0 and last_level in self.permissible_levels:
                 l.append(self._preference_class(
                     day=day, start=start, preferenceset=self.preferenceset(),
-                    duration=duration, level=lastLevel, weight=lastWeight,
+                    duration=duration, level=last_level, weight=last_weight,
                     **{self._owner_field: self.owner()}))
         return l
 
@@ -190,7 +188,7 @@ class CommonTimetablePreferenceForm(forms.Form):
                 **{self._owner_field: self.owner()}
             ).delete()
         l = []
-        for i in self.getPreferences():
+        for i in self.get_preferences():
             l.append(i)
             if (commit):
                 i.save()
@@ -201,7 +199,7 @@ class CommonTimetablePreferenceForm(forms.Form):
         # someday, someone should replace this with proper i18n support
         s = '<tr class="teacherTimePrefTable"><th>{0}</th>'.format(_("Time"))
         for (day, dayname) in WEEKDAYS:
-            s += u"<th class='day'>{0}</th>".format(_(dayname), dayname)
+            s += "<th class='day'>{0}</th>".format(_(dayname), dayname)
         s += "</tr>"
         for (hour, hourname) in WORKHOURS:
             s += "<tr>\n"
@@ -214,6 +212,7 @@ class CommonTimetablePreferenceForm(forms.Form):
             s += "</tr>"
         return mark_safe(s)
 
+
 #    def is_valid(self):
 #        return True
 
@@ -223,10 +222,10 @@ class TeacherTimetablePreferenceForm(CommonTimetablePreferenceForm):
                  initial=None, error_class=ErrorList, label_suffix=':',
                  empty_permitted=False, teacher=None, preferenceset=None):
         CommonTimetablePreferenceForm.__init__(
-                self, data, files, auto_id, prefix,
-                initial, error_class, label_suffix,
-                empty_permitted, TeacherTimePreference, 'teacher',
-                Teacher, teacher, preferenceset)
+            self, data, files, auto_id, prefix,
+            initial, error_class, label_suffix,
+            empty_permitted, TeacherTimePreference, 'teacher',
+            Teacher, teacher, preferenceset)
 
     def teacher(self):
         return self.owner()
@@ -237,10 +236,10 @@ class GroupTimetablePreferenceForm(CommonTimetablePreferenceForm):
                  initial=None, error_class=ErrorList, label_suffix=':',
                  empty_permitted=False, group=None, preferenceset=None):
         CommonTimetablePreferenceForm.__init__(
-                self, data, files, auto_id, prefix,
-                initial, error_class, label_suffix,
-                empty_permitted, GroupTimePreference, 'group',
-                Group, group, preferenceset)
+            self, data, files, auto_id, prefix,
+            initial, error_class, label_suffix,
+            empty_permitted, GroupTimePreference, 'group',
+            Group, group, preferenceset)
 
     def group(self):
         return self.owner()
@@ -257,23 +256,23 @@ class TagTimetablePreferenceForm(CommonTimetablePreferenceForm):
                  initial=None, error_class=ErrorList, label_suffix=':',
                  empty_permitted=False, tag=None, preferenceset=None):
         CommonTimetablePreferenceForm.__init__(
-                self, data, files, auto_id, prefix,
-                initial, error_class, label_suffix,
-                empty_permitted, TagTimePreference, 'tag',
-                Tag, tag, preferenceset,
-                level_choices=ALL_LEVEL_CHOICES)
+            self, data, files, auto_id, prefix,
+            initial, error_class, label_suffix,
+            empty_permitted, TagTimePreference, 'tag',
+            Tag, tag, preferenceset,
+            level_choices=ALL_LEVEL_CHOICES)
 
     def tag(self):
         return self.owner()
 
 
 TeacherValuePreferenceFormset = forms.models.modelformset_factory(
-        TeacherValuePreference, form=TeacherValuePreferenceForm,
-        extra=1, can_delete=True)
+    TeacherValuePreference, form=TeacherValuePreferenceForm,
+    extra=1, can_delete=True)
 
 TeacherDescriptivePreferenceFormset = forms.models.modelformset_factory(
-        TeacherDescriptivePreference, form=TeacherDescriptivePreferenceForm,
-        extra=1, can_delete=True)
+    TeacherDescriptivePreference, form=TeacherDescriptivePreferenceForm,
+    extra=1, can_delete=True)
 
 
 class ShortTVPForm(forms.models.ModelForm):
@@ -296,12 +295,13 @@ class ShortTVPForm(forms.models.ModelForm):
 
 
 ShortTVPFormset = forms.models.modelformset_factory(
-        TeacherValuePreference,
-        form=ShortTVPForm, extra=1, can_delete=True)
+    TeacherValuePreference,
+    form=ShortTVPForm, extra=1, can_delete=True)
 
 
 class ShortDVPForm(forms.models.ModelForm):
     value = forms.CharField(label='', widget=forms.Textarea())
+
     # level = forms.ChoiceField(
     #    initial='WANT', choices=PREFERENCELEVELS,
     #    widget=forms.HiddenInput())
@@ -350,22 +350,22 @@ class TeacherPreferenceForm(forms.Form):
             preferenceset=preferenceset)
         teacher = self.timePreferences.teacher()
         preferenceset = self.timePreferences.preferenceset()
-        valPrefs = TeacherValuePreference.objects.filter(
-                teacher=teacher, preferenceset=preferenceset)
-        descPrefs = TeacherDescriptivePreference.objects.filter(
-                teacher=teacher, preferenceset=preferenceset)
+        val_prefs = TeacherValuePreference.objects.filter(
+            teacher=teacher, preferenceset=preferenceset)
+        desc_prefs = TeacherDescriptivePreference.objects.filter(
+            teacher=teacher, preferenceset=preferenceset)
         initial['teacher'] = teacher.id
         initial['preferenceset'] = preferenceset.id
         foo_formset = ShortTDPFormset(
-            data=data, queryset=descPrefs,
+            data=data, queryset=desc_prefs,
             prefix=prefix + 'dp',
-            initial=[initial] * (len(descPrefs)+1))
+            initial=[initial] * (len(desc_prefs) + 1))
         self.descriptivePreferences = foo_formset
         # raise Exception("Bah!" + foo_formset.as_table())
         self.subforms = [self.timePreferences, self.descriptivePreferences]
 
     def as_table(self):
-        return mark_safe(u'\n'.join([f.as_table() for f in self.subforms]))
+        return mark_safe('\n'.join([f.as_table() for f in self.subforms]))
 
     def clean(self):
         for f in self.subforms:
@@ -378,7 +378,7 @@ class TeacherPreferenceForm(forms.Form):
 
     def is_valid(self):
         v = True
-#        print "validating preferences"
+        #        print "validating preferences"
         for f in self.subforms:
             if f.is_bound and not f.is_valid():
                 v = False
@@ -413,16 +413,16 @@ class GroupPreferenceForm(forms.Form):
                  initial=None, error_class=ErrorList, label_suffix=':',
                  empty_permitted=False, group=None, preferenceset=None):
         forms.Form.__init__(
-                self, data, files, auto_id, prefix, initial,
-                error_class, label_suffix, empty_permitted)
+            self, data, files, auto_id, prefix, initial,
+            error_class, label_suffix, empty_permitted)
         if prefix is None:
             prefix = ""
         initial = {}
         self.timePreferences = GroupTimetablePreferenceForm(
-                data=data, files=None, auto_id='id_%s', prefix=prefix + 'tp',
-                initial=None, error_class=ErrorList, label_suffix=':',
-                empty_permitted=False, group=group,
-                preferenceset=preferenceset)
+            data=data, files=None, auto_id='id_%s', prefix=prefix + 'tp',
+            initial=None, error_class=ErrorList, label_suffix=':',
+            empty_permitted=False, group=group,
+            preferenceset=preferenceset)
         group = self.timePreferences.group()
         preferenceset = self.timePreferences.preferenceset()
         initial['group'] = group.id
@@ -430,7 +430,7 @@ class GroupPreferenceForm(forms.Form):
         self.subforms = [self.timePreferences]
 
     def as_table(self):
-        return mark_safe(u'\n'.join([f.as_table() for f in self.subforms]))
+        return mark_safe('\n'.join([f.as_table() for f in self.subforms]))
 
     def clean(self):
         for f in self.subforms:
@@ -475,15 +475,15 @@ class TagPreferenceForm(forms.Form):
                  initial=None, error_class=ErrorList, label_suffix=':',
                  empty_permitted=False, tag=None, preferenceset=None):
         forms.Form.__init__(
-                self, data, files, auto_id, prefix, initial,
-                error_class, label_suffix, empty_permitted)
+            self, data, files, auto_id, prefix, initial,
+            error_class, label_suffix, empty_permitted)
         if prefix is None:
             prefix = ""
         initial = {}
         self.timePreferences = TagTimetablePreferenceForm(
-                data=data, files=None, auto_id='id_%s', prefix=prefix + 'tp',
-                initial=None, error_class=ErrorList, label_suffix=':',
-                empty_permitted=False, tag=tag, preferenceset=preferenceset)
+            data=data, files=None, auto_id='id_%s', prefix=prefix + 'tp',
+            initial=None, error_class=ErrorList, label_suffix=':',
+            empty_permitted=False, tag=tag, preferenceset=preferenceset)
         tag = self.timePreferences.tag()
         preferenceset = self.timePreferences.preferenceset()
         initial['tag'] = tag.id
@@ -491,7 +491,7 @@ class TagPreferenceForm(forms.Form):
         self.subforms = [self.timePreferences]
 
     def as_table(self):
-        return mark_safe(u'\n'.join([f.as_table() for f in self.subforms]))
+        return mark_safe('\n'.join([f.as_table() for f in self.subforms]))
 
     def clean(self):
         for f in self.subforms:
@@ -535,8 +535,8 @@ class ActivityLongRequirementsForm(forms.ModelForm):
     class Meta:
         model = Activity
         exclude = (
-                'groups', 'locations', 'mustNotOverlap',
-                'before', 'teachers')
+            'groups', 'locations', 'mustNotOverlap',
+            'before', 'teachers')
 
     class Media:
         js = ('js/jquery-1.7.1.min.js', 'js/activities.js')
@@ -545,8 +545,8 @@ class ActivityLongRequirementsForm(forms.ModelForm):
                  initial=None, error_class=ErrorList, label_suffix=':',
                  empty_permitted=False, instance=None):
         super(ActivityLongRequirementsForm, self).__init__(
-                data, files, auto_id, prefix, initial, error_class,
-                label_suffix, empty_permitted, instance)
+            data, files, auto_id, prefix, initial, error_class,
+            label_suffix, empty_permitted, instance)
 
 
 class ActivityLongRequirementRealizationForm(forms.ModelForm):
@@ -563,47 +563,47 @@ class ActivityLongRequirementRealizationForm(forms.ModelForm):
         if prefix is None:
             prefix = ''
         super(ActivityLongRequirementRealizationForm, self).__init__(
-                data, files, auto_id, prefix,
-                initial, error_class, label_suffix, empty_permitted, instance)
+            data, files, auto_id, prefix,
+            initial, error_class, label_suffix, empty_permitted, instance)
         if self.instance is None:
             groupsset = Group.objects.all().order_by('id')
             teachersset = Teacher.objects.all().order_by(
-                    'user__last_name', 'user__first_name')
+                'user__last_name', 'user__first_name')
             activityset = Activity.objects.all()
         else:
             instance = self.instance
             groupsset = instance.groups.all().order_by('id')
             teachersset = instance.teachers.all().order_by(
-                    'user__last_name', 'user__first_name')
+                'user__last_name', 'user__first_name')
             activityset = Activity.objects.filter(id=instance.id)
 
         class ARForm(forms.ModelForm):
             groups = forms.ModelMultipleChoiceField(queryset=groupsset)
             teachers = forms.ModelMultipleChoiceField(queryset=teachersset)
             activity = forms.ModelChoiceField(
-                    queryset=activityset, initial=instance.id,
-                    widget=forms.HiddenInput())
+                queryset=activityset, initial=instance.id,
+                widget=forms.HiddenInput())
 
             class Meta:
                 model = ActivityRealization
                 fields = '__all__'
 
         ARFormset = forms.models.modelformset_factory(
-                ActivityRealization, form=ARForm, extra=1,
-                can_delete=True)
+            ActivityRealization, form=ARForm, extra=1,
+            can_delete=True)
         if instance is not None:
             rs = instance.realizations.all()
         else:
             rs = None
         self.realizations_formset = ARFormset(
-                data=data, queryset=rs,
-                prefix=prefix + '-ar', initial=initial)
+            data=data, queryset=rs,
+            prefix=prefix + '-ar', initial=initial)
 
     def as_table(self):
-        return mark_safe(u'\n'.join(
-                (super(
-                    ActivityLongRequirementRealizationForm, self).as_table(),
-                    self.realizations_formset.as_table())))
+        return mark_safe('\n'.join(
+            (super(
+                ActivityLongRequirementRealizationForm, self).as_table(),
+             self.realizations_formset.as_table())))
 
     def clean(self):
         self.realizations_formset.clean()
@@ -616,7 +616,7 @@ class ActivityLongRequirementRealizationForm(forms.ModelForm):
     def is_valid(self):
         is_valid = True
         is_valid = is_valid and super(
-                ActivityLongRequirementRealizationForm, self).is_valid()
+            ActivityLongRequirementRealizationForm, self).is_valid()
         is_valid = is_valid and self.realizations_formset.is_valid()
         return is_valid
 
@@ -653,13 +653,13 @@ class ActivityRealizationForm(forms.ModelForm):
         if self.instance is None:
             groupsset = Group.objects.all().order_by('id')
             teachersset = Teacher.objects.all().order_by(
-                    'user__last_name', 'user__first_name')
+                'user__last_name', 'user__first_name')
             activityset = Activity.objects.all()
         else:
             instance = self.instance
             groupsset = instance.groups.all().order_by('id')
             teachersset = instance.teachers.all().order_by(
-                    'user__last_name', 'user__first_name')
+                'user__last_name', 'user__first_name')
             activityset = Activity.objects.filter(id=instance.id)
             # initial_locations = instance.locations.all()
             # print "instance:" + str(instance) + "(" + str(instance.id) + ")"
@@ -668,15 +668,15 @@ class ActivityRealizationForm(forms.ModelForm):
             groups = forms.ModelMultipleChoiceField(queryset=groupsset)
             teachers = forms.ModelMultipleChoiceField(queryset=teachersset)
             activity = forms.ModelChoiceField(
-                    queryset=activityset, initial=instance.id,
-                    widget=forms.HiddenInput())
+                queryset=activityset, initial=instance.id,
+                widget=forms.HiddenInput())
 
             class Meta:
                 fields = '__all__'
                 model = ActivityRealization
 
         ARFormset = forms.models.modelformset_factory(
-                ActivityRealization, form=ARForm, extra=1, can_delete=True)
+            ActivityRealization, form=ARForm, extra=1, can_delete=True)
         if instance is not None:
             rs = instance.realizations.all()
         else:
@@ -687,9 +687,9 @@ class ActivityRealizationForm(forms.ModelForm):
 
     def as_table(self):
         return mark_safe(
-            u'\n'.join(
+            '\n'.join(
                 (super(ActivityLongRequirementRealizationForm, self).as_table(),
-                    self.realizations_formset.as_table())
+                 self.realizations_formset.as_table())
             )
         )
 
@@ -704,8 +704,8 @@ class ActivityRealizationForm(forms.ModelForm):
     def is_valid(self):
         is_valid = True
         is_valid = is_valid and super(
-                ActivityLongRequirementRealizationForm, self
-            ).is_valid()
+            ActivityLongRequirementRealizationForm, self
+        ).is_valid()
         is_valid = is_valid and self.realizations_formset.is_valid()
         return is_valid
 
@@ -772,7 +772,7 @@ class ActivityMinimalForm(forms.ModelForm):
     class Media:
         extend = False  # remove this once django is fixed. See below.
         css = {
-            'all': ('admin/css/forms.css', )
+            'all': ('admin/css/forms.css',)
         }
         js = (
             'admin/js/jsi18n.js', 'admin/js/vendor/jquery/jquery.js',
@@ -785,8 +785,9 @@ class RealizationMultipleModelGroupChoiceField(forms.ModelMultipleChoiceField):
     """
     Override representation of objects in the MultipleModelChoiceField.
     """
+
     def label_from_instance(self, obj):
-        return u"{0} ({1})".format(obj.short_name, obj.size)
+        return "{0} ({1})".format(obj.short_name, obj.size)
 
 
 def realization_formset(activity, timetable=None):
@@ -850,7 +851,6 @@ def realization_formset(activity, timetable=None):
 
 
 ActivityRequirementsForm = ActivityMinimalRequirementsForm
-
 
 TeacherPreferenceFormset = forms.formsets.formset_factory(
     TeacherPreferenceForm)

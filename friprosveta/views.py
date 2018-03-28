@@ -1,34 +1,34 @@
-# -*- coding: utf-8 -*-
+import datetime
+import logging
+from bisect import bisect_left
+from collections import OrderedDict, defaultdict
 from collections import namedtuple
+
+import django.forms
 # from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth.decorators import login_required
-from django.utils.decorators import method_decorator
-from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.core import serializers
+from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q, Sum
-from django.utils.translation import ugettext as _
 from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseForbidden
-from django.urls import reverse
 from django.shortcuts import get_object_or_404, render_to_response, redirect, render
-from django.views.generic.list import ListView
-from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.urls import reverse
+from django.utils.decorators import method_decorator
+from django.utils.translation import ugettext as _
 from django.views.generic.detail import DetailView
-import django.forms
-from collections import OrderedDict, defaultdict
-import friprosveta.forms
-from friprosveta.forms import AssignmentForm, NajavePercentageForm
-import timetable.forms
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic.list import ListView
+
 import frinajave
+import friprosveta.forms
 import friprosveta.models
-from bisect import bisect_left
+import timetable.forms
+import timetable.views
+from friprosveta.forms import AssignmentForm, NajavePercentageForm
 from timetable.models import Timetable, Group, ActivityRealization, \
     Allocation, Activity, WORKHOURS, WEEKDAYS, \
-    Tag, defaultTimetable
-
-import timetable.views
-import logging
-import datetime
+    Tag, default_timetable
 
 logger = logging.getLogger(__name__)
 
@@ -80,12 +80,12 @@ def __timetable_visible(request, t):
 
 def __default_timetable_id():
     return friprosveta.models.Timetable.objects.filter(
-            public=True,
-            start__lte=datetime.datetime.now(),
-            end__gte=datetime.datetime.now()
-        ).order_by(
-            'start'
-        ).values_list('id', flatten=True)[0]
+        public=True,
+        start__lte=datetime.datetime.now(),
+        end__gte=datetime.datetime.now()
+    ).order_by(
+        'start'
+    ).values_list('id', flatten=True)[0]
 
 
 def __default_timetable(request):
@@ -149,22 +149,25 @@ class TagListView(ListView):
 
 
 def default_timetable_redirect(request):
-    slug = defaultTimetable().slug
+    slug = default_timetable().slug
     return redirect("/timetable/{}/".format(slug), permanent=False)
 
 
 # @cache_page(60 * 15)
 def results(request, timetable_slug):
-    class studentForm(django.forms.Form):
+    class StudentForm(django.forms.Form):
         student = django.forms.CharField(label='vpisna', max_length=8)
+
     selected_timetable = get_object_or_404(timetable.models.Timetable,
                                            slug=timetable_slug)
     try:
         groups = selected_timetable.groupset.groups.filter(parent=None)
     except:
         groups = timetable.models.Group.objects.none()
-    teachers = friprosveta.models.Teacher.objects.filter(activities__activityset=selected_timetable.activityset).distinct()
-    subjects = friprosveta.models.Subject.objects.filter(activities__activityset=selected_timetable.activityset).distinct()
+    teachers = friprosveta.models.Teacher.objects.filter(
+        activities__activityset=selected_timetable.activityset).distinct()
+    subjects = friprosveta.models.Subject.objects.filter(
+        activities__activityset=selected_timetable.activityset).distinct()
     if __is_teacher_or_staff(request.user):
         allocations_view = reverse('authenticated_allocations',
                                    kwargs={'timetable_slug': timetable_slug})
@@ -173,7 +176,7 @@ def results(request, timetable_slug):
                                    kwargs={'timetable_slug': timetable_slug})
     params = {
         'allocations_view': allocations_view,
-        'student_form': studentForm,
+        'student_form': StudentForm,
         'timetable_slug': timetable_slug,
         'teachers': teachers.order_by('user__last_name', 'user__first_name'),
         'classrooms': selected_timetable.classroomset.classrooms.order_by(
@@ -288,7 +291,7 @@ def _allocation_context_links(request):
     return contextlinks, param_ids
 
 
-def _activity_set(param_ids, filteredActivities):
+def _activity_set(param_ids, filtered_activities):
     allparams = set(['teacher', 'classroom', 'group', 'activity',
                      'type', 'student', 'realization', 'subject',
                      'timetable', 'timetable_slug'])
@@ -297,30 +300,30 @@ def _activity_set(param_ids, filteredActivities):
     if not_filtered:
         return Activity.objects.none()
     if 'timetable' in param_ids:
-        filteredActivities = filteredActivities.filter(
+        filtered_activities = filtered_activities.filter(
             activityset__timetable__id__in=param_ids['timetable'])
     if 'timetable_slug' in param_ids:
-        filteredActivities = filteredActivities.filter(
+        filtered_activities = filtered_activities.filter(
             activityset__timetable__slug__in=param_ids['timetable_slug'])
     # exclusiveparams = set(['teacher', 'classroom', 'group', 'activity', 'subject', 'student'])
     if 'teacher' in param_ids:
-        filteredActivities = filteredActivities.filter(teachers__id__in=param_ids['teacher'])
+        filtered_activities = filtered_activities.filter(teachers__id__in=param_ids['teacher'])
     # if 'classroom' in param_ids:
     #     filteredAllocations = filteredAllocations.filter(classroom__id__in=param_ids['classroom'])
     if 'activity' in param_ids:
         # contextlink += "&activity=" + "&activity=".join(l)
-        filteredActivities = filteredActivities.filter(id__in=param_ids['activity'])
+        filtered_activities = filtered_activities.filter(id__in=param_ids['activity'])
     if 'subject' in param_ids:
-        filteredActivities = filteredActivities.filter(activity__subject__code__in=param_ids['subject'])
+        filtered_activities = filtered_activities.filter(activity__subject__code__in=param_ids['subject'])
     if 'type' in param_ids:
-        filteredActivities = filteredActivities.filter(type__in=param_ids['type'])
+        filtered_activities = filtered_activities.filter(type__in=param_ids['type'])
     # done filtering the allocations.
     if 'group' in param_ids:
         # contextlink += "&group=" + "&group=".join(l)
         groups_listed_ids = []
         for g in Group.objects.filter(id__in=param_ids['group']).all():
             groups_listed_ids += [i.id for i in g.family()]
-        filteredActivities = filteredActivities.filter(
+        filtered_activities = filtered_activities.filter(
             groups__id__in=groups_listed_ids)
     realizations = set()
     if 'realization' in param_ids:
@@ -330,7 +333,7 @@ def _activity_set(param_ids, filteredActivities):
         sl = friprosveta.models.Student.objects.filter(studentId__in=param_ids['student'])
         logger.debug("Students: {}".format(sl))
         if len(sl) < 1:
-            filteredActivities = Activity.objects.none()
+            filtered_activities = Activity.objects.none()
         for s in sl:
             if len(s.follows.all()):
                 logger.debug("Follows")
@@ -344,45 +347,45 @@ def _activity_set(param_ids, filteredActivities):
                         realizations.add(r.id)
                 logger.debug("Realizations: {}".format(realizations))
     if len(realizations):
-        filteredActivities = filteredActivities.filter(realizations__id__in=realizations)
-    return filteredActivities
+        filtered_activities = filtered_activities.filter(realizations__id__in=realizations)
+    return filtered_activities
 
 
-def _realization_set(param_ids, filteredRealizations, allow_unfiltered=False):
+def _realization_set(param_ids, filtered_realizations, allow_unfiltered=False):
     allparams = set(['teacher', 'group', 'activity',
                      'type', 'student', 'realization', 'subject'])
     if 'timetable_slug' in param_ids:
         if param_ids.get('unallocated', [False])[0]:
-            filteredRealizations = filteredRealizations.filter(
+            filtered_realizations = filtered_realizations.filter(
                 activity__activityset__timetable__slug__in=param_ids['timetable_slug'],
                 allocations=None)
         else:
-            filteredRealizations = filteredRealizations.filter(
+            filtered_realizations = filtered_realizations.filter(
                 activity__activityset__timetable__slug__in=param_ids['timetable_slug'])
     if 'timetable' in param_ids:
         if param_ids.get('unallocated', [False])[0]:
-            filteredRealizations = filteredRealizations.filter(
+            filtered_realizations = filtered_realizations.filter(
                 activity__activityset__timetable__id__in=param_ids['timetable'],
                 allocations=None)
         else:
-            filteredRealizations = filteredRealizations.filter(
+            filtered_realizations = filtered_realizations.filter(
                 activity__activityset__timetable__id__in=param_ids['timetable'])
     # Do not allow unfiltered queries
     not_filtered = all([param not in param_ids for param in allparams])
     if not_filtered and not allow_unfiltered:
         return ActivityRealization.objects.none()
     if 'teacher' in param_ids:
-        filteredRealizations = filteredRealizations.filter(
+        filtered_realizations = filtered_realizations.filter(
             teachers__id__in=param_ids['teacher'])
     if 'activity' in param_ids:
         # contextlink += "&activity=" + "&activity=".join(l)
-        filteredRealizations = filteredRealizations.filter(
+        filtered_realizations = filtered_realizations.filter(
             activity__id__in=param_ids['activity'])
     if 'subject' in param_ids:
-        filteredRealizations = filteredRealizations.filter(
+        filtered_realizations = filtered_realizations.filter(
             activity__activity__subject__code__in=param_ids['subject'])
     if 'type' in param_ids:
-        filteredRealizations = filteredRealizations.filter(
+        filtered_realizations = filtered_realizations.filter(
             activity__type__in=param_ids['type'])
     realization_ids = set()
     if 'realization' in param_ids:
@@ -391,7 +394,7 @@ def _realization_set(param_ids, filteredRealizations, allow_unfiltered=False):
         sl = friprosveta.models.Student.objects.filter(
             studentId__in=param_ids['student'])
         if len(sl) < 1:
-            filteredRealizations = ActivityRealization.objects.none()
+            filtered_realizations = ActivityRealization.objects.none()
         for s in sl:
             if len(s.follows.all()):
                 realization_ids.add([ar.id for ar in s.follows.all()])
@@ -400,19 +403,19 @@ def _realization_set(param_ids, filteredRealizations, allow_unfiltered=False):
                     for r in g.realizations.all():
                         realization_ids.add(r.id)
     if len(realization_ids):
-        filteredRealizations = filteredRealizations.filter(
+        filtered_realizations = filtered_realizations.filter(
             id__in=realization_ids)
     if 'group' in param_ids:
         # contextlink += "&group=" + "&group=".join(l)
         groups_listed_ids = []
         for g in Group.objects.filter(id__in=param_ids['group']).all():
             groups_listed_ids += [i.id for i in g.family()]
-        filteredRealizations = filteredRealizations.filter(
+        filtered_realizations = filtered_realizations.filter(
             groups__id__in=groups_listed_ids)
-    return filteredRealizations
+    return filtered_realizations
 
 
-def _allocation_set(param_ids, filteredAllocations, is_staff=False):
+def _allocation_set(param_ids, filtered_allocations, is_staff=False):
     allparams = set(['teacher', 'classroom', 'group', 'activity',
                      'type', 'student', 'realization', 'subject'])
 
@@ -421,24 +424,24 @@ def _allocation_set(param_ids, filteredAllocations, is_staff=False):
     if not_filtered:
         return Allocation.objects.none()
     if 'timetable_slug' in param_ids:
-        filteredAllocations = filteredAllocations.filter(
+        filtered_allocations = filtered_allocations.filter(
             Q(timetable__slug__in=param_ids['timetable_slug']) |
             Q(timetable__respects__slug__in=param_ids['timetable_slug']))
     if 'timetable' in param_ids:
-        filteredAllocations = filteredAllocations.filter(
+        filtered_allocations = filtered_allocations.filter(
             Q(timetable__id__in=param_ids['timetable']) |
             Q(timetable__respects__id__in=param_ids['timetable']))
     if not is_staff:
-        filteredAllocations = filteredAllocations.filter(timetable__public=True)
+        filtered_allocations = filtered_allocations.filter(timetable__public=True)
     if 'day' in param_ids:
-        filteredAllocations = filteredAllocations.filter(day__in=param_ids['day'])
+        filtered_allocations = filtered_allocations.filter(day__in=param_ids['day'])
     if 'classroom' in param_ids:
-        filteredAllocations = filteredAllocations.filter(classroom_id__in=param_ids['classroom'])
+        filtered_allocations = filtered_allocations.filter(classroom_id__in=param_ids['classroom'])
     realizations = _realization_set(
         param_ids, ActivityRealization.objects.all(), allow_unfiltered=True)
-    filteredAllocations = filteredAllocations.filter(
+    filtered_allocations = filtered_allocations.filter(
         activityRealization__in=realizations)
-    return filteredAllocations
+    return filtered_allocations
 
 
 def _titles(param_ids):
@@ -450,26 +453,26 @@ def _titles(param_ids):
         tts = tts.filter(id__in=param_ids['timetable'])
     if 'timetable_slug' in param_ids:
         tts = tts.filter(slug__in=param_ids['timetable_slug'])
-    title = u"; ".join([i.name for i in tts])
+    title = "; ".join([i.name for i in tts])
     subtitle_map = {
         'student': (friprosveta.models.Student,
-            lambda x: x.studentId,
-            lambda l: Q(studentId__in=l)),
+                    lambda x: x.studentId,
+                    lambda l: Q(studentId__in=l)),
         'teacher': (timetable.models.Teacher,
-            lambda x: str(x),
-            lambda l: Q(id__in=l)),
+                    lambda x: str(x),
+                    lambda l: Q(id__in=l)),
         'group': (timetable.models.Group,
-            lambda x: x.name,
-            lambda l: Q(id__in=l)),
+                  lambda x: x.name,
+                  lambda l: Q(id__in=l)),
         'subject': (friprosveta.models.Subject,
-            lambda x: x.name,
-            lambda l: Q(code__in=l)),
+                    lambda x: x.name,
+                    lambda l: Q(code__in=l)),
         'activity': (friprosveta.models.Activity,
-            lambda x: x.name,
-            lambda l: Q(id__in=l)),
+                     lambda x: x.name,
+                     lambda l: Q(id__in=l)),
         'classroom': (timetable.models.Classroom,
-            lambda x: x.name,
-            lambda l: Q(id__in=l)),
+                      lambda x: x.name,
+                      lambda l: Q(id__in=l)),
     }
     subtitles = []
     for k, v in param_ids.items():
@@ -489,13 +492,13 @@ def allocations_json(request, timetable_slug=None):
     # Why would you increase the server load on each request
     # just in case you need to debug something?
     # logger.debug("Got filtered allocations")
-    # logger.debug("{}".format(filteredAllocations))
-    filteredAllocations = _allocation_set(param_ids,
-                                          tt.allocations,
-                                          request.user.is_staff)
+    # logger.debug("{}".format(filtered_allocations))
+    filtered_allocations = _allocation_set(param_ids,
+                                           tt.allocations,
+                                           request.user.is_staff)
     # logger.debug("Filtered allocations after _allocation_set")
-    # logger.debug("{}".format(filteredAllocations))
-    json_data = serializers.serialize("json", filteredAllocations)
+    # logger.debug("{}".format(filtered_allocations))
+    json_data = serializers.serialize("json", filtered_allocations)
     # logger.debug("Returning json data")
     # logger.debug("{}".format(json_data))
     # logger.info("Exiting allocations_json")
@@ -543,12 +546,12 @@ def problematic_allocations(request, timetable_slug=None):
             if busy:
                 individual_overlaps += 1
         object_list.append({"allocation": a,
-                    "n_students": realization.size,
-                    "total_overlaps": group_overlaps + individual_overlaps,
-                    "group_overlaps": group_overlaps,
-                    "individual_overlaps": individual_overlaps,
-                    "classroom_utilization": classroom_utilization,
-                    "css_class": css_class})
+                            "n_students": realization.size,
+                            "total_overlaps": group_overlaps + individual_overlaps,
+                            "group_overlaps": group_overlaps,
+                            "individual_overlaps": individual_overlaps,
+                            "classroom_utilization": classroom_utilization,
+                            "css_class": css_class})
     return render_to_response('friprosveta/problematic_allocations.html', locals())
 
 
@@ -560,46 +563,47 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
     contextlinks, param_ids = _allocation_context_links(request)
     tt = get_object_or_404(timetable.models.Timetable, slug=timetable_slug)
     param_ids = _allocation_context_links(request)[1]
-    filteredAllocations = _allocation_set(param_ids,
-                                          tt.allocations,
-                                          request.user.is_staff)
+    filtered_allocations = _allocation_set(param_ids,
+                                           tt.allocations,
+                                           request.user.is_staff)
     logger.info("Entering _allocations")
     logger.debug("R: {}".format(request))
     # done filtering the groups
     allocations_by_hour = OrderedDict()
-    groupsListed = set()
+    groups_listed = set()
     param_ids['timetable_slug'] = [timetable_slug]
     title, subtitles = _titles(param_ids)
 
-    maxOverlapsDay = []
+    max_overlaps_day = []
     whdict = dict([(WORKHOURS[i][0], i) for i in range(len(WORKHOURS))])
     for hour in [i[0] for i in WORKHOURS]:
         allocations_by_hour[hour] = [[] for j in WEEKDAYS]
-    spaceTakenList = []
+    space_taken_list = []
     Span = namedtuple('Span', ['start', 'duration', 'w', 'action', 'classes'])
     for day in range(len(WEEKDAYS)):
         # create the set of all activities for this day
         dayclass = WEEKDAYS[day][0]
-        fa = filteredAllocations.filter(day=WEEKDAYS[day][0]).distinct()
+        fa = filtered_allocations.filter(day=WEEKDAYS[day][0]).distinct()
         sa = set(fa)
-        allocationTab = []
-        startHours = []
+        allocation_tab = []
+        start_hours = []
         for a in sorted(sa, key=lambda x: whdict[x.start]):
             for g in a.activityRealization.groups.all():
-                groupsListed.add(g)
+                groups_listed.add(g)
             placed = False
             j = 0
-            while (j < len(allocationTab)) and not placed:
-                last = allocationTab[j][-1]
-                lastEnd = last.start + last.duration
-                newStart = whdict[a.start]
-                if lastEnd <= newStart:
-                    newPreLastDuration = newStart - lastEnd
-                    if newPreLastDuration > 0:
-                        allocationTab[j].append(Span(start=lastEnd, duration=newPreLastDuration,
-                                                     w=1, action=None, classes=[dayclass]))
-                    allocationTab[j].append(Span(start=newStart, duration=a.duration, w=1,
-                                                 action=a, classes=[dayclass, "allocated", a.activityRealization.activity.type]))
+            while (j < len(allocation_tab)) and not placed:
+                last = allocation_tab[j][-1]
+                last_end = last.start + last.duration
+                new_start = whdict[a.start]
+                if last_end <= new_start:
+                    new_pre_last_duration = new_start - last_end
+                    if new_pre_last_duration > 0:
+                        allocation_tab[j].append(Span(start=last_end, duration=new_pre_last_duration,
+                                                      w=1, action=None, classes=[dayclass]))
+                    allocation_tab[j].append(Span(start=new_start, duration=a.duration, w=1,
+                                                  action=a,
+                                                  classes=[dayclass, "allocated", a.activityRealization.activity.type]))
                     placed = True
                 j += 1
             if not placed:
@@ -609,17 +613,17 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
                          classes=[
                              dayclass, "allocated",
                              a.activityRealization.activity.type])]
-                startHours.append(whdict[a.start])
-                allocationTab.append(l)
+                start_hours.append(whdict[a.start])
+                allocation_tab.append(l)
         # expand the allocations and empty spaces
         # insert the heading and trailing empty spaces
-        if len(allocationTab) < 1:
-            allocationTab = [[Span(start=0, duration=len(whdict), w=1,
-                                   action=None, classes=[dayclass])]]
+        if len(allocation_tab) < 1:
+            allocation_tab = [[Span(start=0, duration=len(whdict), w=1,
+                                    action=None, classes=[dayclass])]]
         else:
-            for i, l in enumerate(allocationTab):
-                if startHours[i] > 0:
-                    l.insert(0, Span(start=0, duration=startHours[i], w=1,
+            for i, l in enumerate(allocation_tab):
+                if start_hours[i] > 0:
+                    l.insert(0, Span(start=0, duration=start_hours[i], w=1,
                                      action=None, classes=[dayclass]))
                 last = l[-1]
                 duration = len(whdict) - (last.start + last.duration)
@@ -629,27 +633,27 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
                              action=None, classes=[dayclass])
                     l.append(s)
 
-        # insert allocations from allocationTab into allocations_by_hour
-        for l in allocationTab:
+        # insert allocations from allocation_tab into allocations_by_hour
+        for l in allocation_tab:
             for j in l:
                 allocations_by_hour[
                     WORKHOURS[j.start][0]][day].append((j.w, j.duration,
                                                         j.action, j.classes))
-        spaceTakenList.append(allocationTab)
-        maxOverlapsDay.append(len(allocationTab))
+        space_taken_list.append(allocation_tab)
+        max_overlaps_day.append(len(allocation_tab))
     day_header = []
     for day in range(len(WEEKDAYS)):
         dayname = _(WEEKDAYS[day][1])
-        day_header.append((dayname, maxOverlapsDay[day]))
+        day_header.append((dayname, max_overlaps_day[day]))
 
     # logger.debug("Allocations by hours: {}".format(allocations_by_hour))
     response = render(request, 'friprosveta/allocations.html', {
-        # 'spaceTakenList': spaceTakenList,
+        # 'space_taken_list': space_taken_list,
         'is_teacher': is_teacher,
         'contextlinks': contextlinks,
         'title': title,
         'subtitles': subtitles,
-        'groups': groupsListed,
+        'groups': groups_listed,
         'day_header': day_header,
         'timetable': timetable,
         'timetable_slug': timetable_slug,
@@ -679,27 +683,27 @@ def allocations_edit(request, timetable_slug=None):
     contextlinks, param_ids = _allocation_context_links(request)
     param_ids['timetable_slug'] = [timetable_slug]
     title, subtitles = _titles(param_ids)
-    filteredAllocations = _allocation_set(param_ids,
-                                          Allocation.objects.all(),
-                                          request.user.is_staff)
+    filtered_allocations = _allocation_set(param_ids,
+                                           Allocation.objects.all(),
+                                           request.user.is_staff)
     activities = _activity_set(param_ids, Activity.objects.all())
     realizations = _realization_set(
         param_ids, ActivityRealization.objects.all())
     unplaced_realizations = realizations.exclude(
-        id__in=filteredAllocations.values_list(
+        id__in=filtered_allocations.values_list(
             'activityRealization_id', flat=True)
     )
     allocation_tabs = {}
     allocations_by_hour_day = defaultdict(lambda: defaultdict(list))
     for day, dayname in WEEKDAYS:
         allocation_tabs[day] = []
-        for a in filteredAllocations.filter(
-                    day=day
-                ).order_by(
-                    'start',
-                    '-activityRealization__activity__duration',
-                    'activityRealization__activity__name'
-                ):
+        for a in filtered_allocations.filter(
+                day=day
+        ).order_by(
+            'start',
+            '-activityRealization__activity__duration',
+            'activityRealization__activity__name'
+        ):
             placed = False
             for i, t in enumerate(allocation_tabs[day]):
                 if t[-1].end <= a.start:
@@ -779,9 +783,9 @@ def busy_students_admin(request, timetable_slug, realization_id):
     for g in realization.groups.all():
         for s in g.students.all():
             allocations = tt.allocations.filter(
-                    activityRealization__groups__students=s
-                ).exclude(
-                    activityRealization_id=realization_id).distinct()
+                activityRealization__groups__students=s
+            ).exclude(
+                activityRealization_id=realization_id).distinct()
             for a in allocations:
                 for h in a.hours:
                     busy_activity_dict[(a.day, h)][a] += 1
@@ -793,9 +797,9 @@ def busy_students_admin(request, timetable_slug, realization_id):
     teachers_preference_dict = defaultdict(lambda: defaultdict(set))
     for t in realization.teachers.all():
         allocations = tt.allocations.filter(
-                activityRealization__teachers=t
-            ).exclude(
-                activityRealization_id=realization_id).distinct()
+            activityRealization__teachers=t
+        ).exclude(
+            activityRealization_id=realization_id).distinct()
         for a in allocations:
             for h in a.hours:
                 busy_teachers_dict[(a.day, h)][t].append(a)
@@ -817,7 +821,7 @@ def busy_students_admin(request, timetable_slug, realization_id):
             c_dict = dict(classrooms_busy[(d, h)])
             c_free = set([c for c in rooms if c not in c_dict])
             c_semifree = set()
-            for h1 in hours[h_n+1:h_n + realization.activity.duration]:
+            for h1 in hours[h_n + 1:h_n + realization.activity.duration]:
                 for c_busy in dict(classrooms_busy[(d, h1)]):
                     if c_busy in c_free:
                         c_semifree.add(c_busy)
@@ -891,10 +895,10 @@ def busy_students(request, timetable_slug, realization_id):
     busy_dict = dict()
     for s in students:
         allocations = tt.allocations.filter(
-                activityRealization__groups__students=s
-            ).exclude(
-                activityRealization_id=realization.id
-            ).distinct()
+            activityRealization__groups__students=s
+        ).exclude(
+            activityRealization_id=realization.id
+        ).distinct()
         # Some students might have overlapping allocations.
         # Count each time a student is busy exactly once.
         busy_set = set()
@@ -908,7 +912,7 @@ def busy_students(request, timetable_slug, realization_id):
         for (day, h) in busy_set:
             h_dict = busy_dict.get(h, dict())
             d = h_dict.get(day, 0)
-            h_dict[day] = d+1
+            h_dict[day] = d + 1
             busy_dict[h] = h_dict
     classrooms_free = dict()
     for hour in WORKHOURS:
@@ -923,7 +927,7 @@ def busy_students(request, timetable_slug, realization_id):
                 try:
                     classrooms_free[h][a.day].remove(c)
                 except KeyError:
-                    pass # survive double-booking which causes multiple removes.
+                    pass  # survive double-booking which causes multiple removes.
     busy = list()
     for h in hours:
         l = []
@@ -933,25 +937,25 @@ def busy_students(request, timetable_slug, realization_id):
             l.append({'busy': busy_s, 'classrooms_free': classrooms})
         busy.append((h, l))
     return render(request, 'friprosveta/busy_students.html',
-        {'is_staff': request.user.is_staff,
-         'days': days, 'hours': hours, 'busy':busy,
-         'students': students,
-         'allocations': tt.allocations.filter(activityRealization=realization),
-         'preferred_rooms': preferred_rooms,
-         'realization': realization, 'timetable_slug': timetable_slug})
+                  {'is_staff': request.user.is_staff,
+                   'days': days, 'hours': hours, 'busy': busy,
+                   'students': students,
+                   'allocations': tt.allocations.filter(activityRealization=realization),
+                   'preferred_rooms': preferred_rooms,
+                   'realization': realization, 'timetable_slug': timetable_slug})
 
 
 @login_required
 def teacher_preference_login(request):
     return render(request, "friprosveta/timetable_teacherpreference_list.html",
-        {'object_list': visible_timetables(request)})
+                  {'object_list': __visible_timetables(request)})
 
 
 @login_required
 def teacher_preference_redirect(request, timetable_slug):
     return redirect('teacher_single_preferences',
-        timetable_slug=timetable_slug,
-        teacher_id=request.user.teacher.id)
+                    timetable_slug=timetable_slug,
+                    teacher_id=request.user.teacher.id)
 
 
 @login_required
@@ -961,10 +965,10 @@ def activity_requirements(request):
     except ObjectDoesNotExist:
         teacher = None
     if request.method == 'POST':
-        complete_formset = timetable.forms.ActivityRequirementFormset(request.POST, request.FILES, prefix="cmplt-" )
+        complete_formset = timetable.forms.ActivityRequirementFormset(request.POST, request.FILES, prefix="cmplt-")
         if complete_formset.is_valid():
             complete_formset.save()
-        user_formset = timetable.forms.ActivityRequirementFormset(request.POST, request.FILES, prefix="usr-" )
+        user_formset = timetable.forms.ActivityRequirementFormset(request.POST, request.FILES, prefix="usr-")
         if user_formset.is_valid():
             user_formset.save()
     complete_formset = timetable.forms.ActivityRequirementFormset(
@@ -975,21 +979,23 @@ def activity_requirements(request):
         activities = teacher.activities.all()
         for a in activities:
             l += a.groups.values_list('id', flat=True)
-        qs = Group.objects.filter(id__in = l)
+        qs = Group.objects.filter(id__in=l)
 
         class AFForm(django.forms.ModelForm):
             groups = django.forms.ModelMultipleChoiceField(queryset=qs)
 
             class Meta:
                 model = Activity
-        AFS = django.forms.models.modelformset_factory(Activity, form=timetable.forms.ActivityRequirementForm, extra=0, max_num = 5, can_delete=False)
+
+        AFS = django.forms.models.modelformset_factory(Activity, form=timetable.forms.ActivityRequirementForm, extra=0,
+                                                       max_num=5, can_delete=False)
         user_formset = AFS(queryset=teacher.activities.only('id', 'requirements'),
-            initial=[{}] * len(activities) + [{'teachers':[teacher]}], prefix="usr-" )
+                           initial=[{}] * len(activities) + [{'teachers': [teacher]}], prefix="usr-")
     else:
         user_formset = friprosveta.forms.ActivityRequirementFormset(prefix="usr-")
     return render(request, 'friprosveta/activity_requirements.html',
-        {'user_formset':user_formset, 'complete_formset':complete_formset,
-        'teacher': teacher})
+                  {'user_formset': user_formset, 'complete_formset': complete_formset,
+                   'teacher': teacher})
 
 
 @login_required
@@ -1004,7 +1010,7 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
         pset = tt.preferenceset
     except Exception as e:
         logger.error(e)
-        #raise Http404
+        # raise Http404
     # if request.user.is_staff:
     if True:
         own_activities = teacher.activities.filter(activityset=tt.activityset)
@@ -1015,8 +1021,8 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
         others_activities = teacher.others_activities.filter(
             activityset=tt.activityset).distinct().order_by('-short_name')
     problems = False
-    problemMsg = "?"
-    gotPostMsg = ""
+    problem_msg = "?"
+    got_post_msg = ""
     if request.method == 'POST':
         preference_form = timetable.forms.TeacherPreferenceForm(request.POST, prefix='pref-')
         # own_act_formset = timetable.forms.ActivityRequirementsFormset(request.POST, request.FILES, prefix="ownact-")
@@ -1026,16 +1032,16 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
         own_act_formset.full_clean()
         others_act_formset.full_clean()
         if preference_form.is_valid() and (
-                    not preference_form.preferenceset().locked\
-                    or request.user.is_staff)\
-                and own_act_formset.is_valid()\
+                not preference_form.preferenceset().locked \
+                or request.user.is_staff) \
+                and own_act_formset.is_valid() \
                 and others_act_formset.is_valid():
             preference_form.save()
             try:
                 own_act_formset.save()
                 others_act_formset.save()
             except ValueError as e:
-                problemMsg = "  Problem saving activity requirements" + str(e)
+                problem_msg = "  Problem saving activity requirements" + str(e)
                 problems = True
                 if request.user.is_staff:
                     own_activities = teacher.activities.filter(
@@ -1047,27 +1053,27 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
                     others_activities = teacher.others_activities.filter(
                         activityset=tt.activityset).distinct().order_by('-short_name')
         else:
-            problemMsg = "Problem v eni od form za aktivnosti"
-            problemMsg += str(own_act_formset.errors) + str(others_act_formset.errors)
+            problem_msg = "Problem v eni od form za aktivnosti"
+            problem_msg += str(own_act_formset.errors) + str(others_act_formset.errors)
             problems = True
         if not problems:
-            gotPostMsg = u"Zahteve uspešno vnešene"
+            got_post_msg = "Zahteve uspešno vnešene"
         else:
-            gotPostMsg = problemMsg
+            got_post_msg = problem_msg
     if not problems:
         # own_act_formset = timetable.forms.ActivityRequirementsFormset(queryset=own_activities, prefix="ownact-" )
         own_act_formset = timetable.forms.ActivityMinimalFormset(queryset=own_activities, prefix="ownact-")
         others_act_formset = timetable.forms.ActivityMinimalFormset(queryset=others_activities, prefix="act-")
         preference_form = timetable.forms.TeacherPreferenceForm(teacher=teacher, preferenceset=pset, prefix="pref-")
     return render(request, 'friprosveta/teacher_single_democratic_preferences.html',
-        {   'preference_set': pset,
-            'timetable_slug': timetable_slug,
-            'deadline': None,
-            'preference_form': preference_form,
-            'own_activity_formset': own_act_formset,
-            'others_activity_formset': others_act_formset,
-            'gotPostMsg': gotPostMsg,
-            })
+                  {'preference_set': pset,
+                   'timetable_slug': timetable_slug,
+                   'deadline': None,
+                   'preference_form': preference_form,
+                   'own_activity_formset': own_act_formset,
+                   'others_activity_formset': others_act_formset,
+                   'got_post_msg': got_post_msg,
+                   })
 
 
 @login_required
@@ -1120,8 +1126,10 @@ def teacher_preference_list(request, timetable_slug):
             context = super(FTeacherListView, self).get_context_data(**kwargs)
             context['timetable_slug'] = timetable_slug
             return context
+
         # model = FTeacher
         queryset = q
+
     return FTeacherListView.as_view()(request)
 
 
@@ -1137,13 +1145,13 @@ def group_single_preferences(request, timetable_slug, group_id=None):
     logger.debug("Getting preference set")
     pset = tt.preferenceset
     problems = False
-    gotPost = False
+    got_post = False
     if request.method == 'POST':
         logger.debug("POST")
         preference_form = timetable.forms.GroupPreferenceForm(request.POST, prefix='pref-')
         preference_form.full_clean()
         if preference_form.is_valid() and (
-            not preference_form.preferenceset().locked or request.user.is_staff):
+                not preference_form.preferenceset().locked or request.user.is_staff):
             preference_form.save()
         else:
             problems = True
@@ -1152,10 +1160,10 @@ def group_single_preferences(request, timetable_slug, group_id=None):
         logger.debug("Preparing preference set form")
         preference_form = timetable.forms.GroupPreferenceForm(group=group, preferenceset=pset, prefix="pref-")
     return render(request, 'friprosveta/group_preferences.html',
-        {   'form':preference_form,
-            'timetable_slug': timetable_slug,
-            'gotPost': gotPost,
-            })
+                  {'form': preference_form,
+                   'timetable_slug': timetable_slug,
+                   'got_post': got_post,
+                   })
 
 
 @login_required
@@ -1168,12 +1176,12 @@ def tag_time_preferences(request, timetable_slug, tag_id):
         logger.error(e)
         raise Http404
     problems = False
-    gotPost = False
+    got_post = False
     if request.method == 'POST':
         preference_form = timetable.forms.TagTimetablePreferenceForm(request.POST, prefix='pref-')
         preference_form.full_clean()
         if preference_form.is_valid() and (
-            not preference_form.preferenceset().locked or request.user.is_staff):
+                not preference_form.preferenceset().locked or request.user.is_staff):
             preference_form.save()
         else:
             problems = True
@@ -1185,7 +1193,7 @@ def tag_time_preferences(request, timetable_slug, tag_id):
         'friprosveta/tag_time_preferences.html', {
             'form': preference_form,
             'timetable_slug': timetable_slug,
-            'gotPost': gotPost})
+            'got_post': got_post})
 
 
 # NAJAVE
@@ -1201,7 +1209,7 @@ def assignments(request, timetable_slug, subject_code):
     user = request.user.teacher
     subject = friprosveta.models.Subject.objects.get(code=subject_code)
 
-    if not request.user.is_staff\
+    if not request.user.is_staff \
             and user.id not in subject.managers.values_list('id', flat=True):
         raise Http404
 
@@ -1229,7 +1237,9 @@ def assignments(request, timetable_slug, subject_code):
                 # timetable.models.ActivityPercentage.objects.filter(activity=activity).delete()
                 activity.teachers.clear()
                 # Get old najave entries
-                old_najave = frinajave.models.TeacherSubjectCycles.objects.filter(lecture_type=lecture_type, timetable_set=timetable_set, subject_code=subject_code)
+                old_najave = frinajave.models.TeacherSubjectCycles.objects.filter(lecture_type=lecture_type,
+                                                                                  timetable_set=timetable_set,
+                                                                                  subject_code=subject_code)
                 old_najave_ids = [entry.id for entry in old_najave.all()]
 
                 for teacher in form.cleaned_data.get('teachers'):
@@ -1241,7 +1251,9 @@ def assignments(request, timetable_slug, subject_code):
                     old_najave_teacher_period = old_najave.filter(
                         timetable_set=timetable_set, teacher_code=teacher.code)
                     # a teacher can have 2 
-                    assert len(old_najave_teacher_period) <= 1, u"At most one entry per subject/techer/timetable_set/lecture_type combination: {0}, timetable_set {1}: {2}".format(teacher, timetable_set, list(old_najave_teacher_period.all()))                                                
+                    assert len(
+                        old_najave_teacher_period) <= 1, "At most one entry per subject/techer/timetable_set/lecture_type combination: {0}, timetable_set {1}: {2}".format(
+                        teacher, timetable_set, list(old_najave_teacher_period.all()))
                     cycles = 1
                     instruction_type = None
                     teacher_comment = ''
@@ -1267,10 +1279,10 @@ def assignments(request, timetable_slug, subject_code):
         request,
         'friprosveta/assignments.html',
         {
-         'timetable_slug': timetable_slug,
-         'assignment_formset': assignment_formset,
-         'subject': subject,
-         'media': media,
+            'timetable_slug': timetable_slug,
+            'assignment_formset': assignment_formset,
+            'subject': subject,
+            'media': media,
         })
 
 
@@ -1281,8 +1293,8 @@ def subject(request, timetable_slug, subject_code):
     subject = friprosveta.models.Subject.objects.get(code=subject_code)
     # if not user.is_staff or not subject in user.managed_subjects:
     if not request.user.is_staff:  # \
-            # and user not in subject.managers.all() \
-            # and user not in subject.teachers(tt):
+        # and user not in subject.managers.all() \
+        # and user not in subject.teachers(tt):
         raise PermissionDenied
     activities = subject.activities.filter(activityset=tt.activityset).distinct().order_by("type")
     studies = subject.studiesOnTimetables([tt])
@@ -1295,25 +1307,26 @@ def subject(request, timetable_slug, subject_code):
         a.displayName = a.get_type_display()
 
     # razdeli forme v skupine glede na nacin izvajanja / kaste uciteljev
-    teacher_classes = {u'P': "Nosilec",
-                       u'AV': "Asistenti",
-                       u'LV': "Asistenti",
-                       u'LAB': "Laboranti",
-                       u'lab.': "Laboranti"}
+    teacher_classes = {'P': "Nosilec",
+                       'AV': "Asistenti",
+                       'LV': "Asistenti",
+                       'LAB': "Laboranti",
+                       'lab.': "Laboranti"}
     problems = False
-    problemMsg = "?"
-    gotPostMsg = ""
+    problem_msg = "?"
+    got_post_msg = ""
     najave_percentages = frinajave.models.TeacherSubjectCycles.objects.filter(
-            subject_code=subject.code,
-            timetable_set__timetables=tt).order_by("lecture_type")
-    teachers_formset = najave_percentage_formset(queryset = najave_percentages, prefix="prc-")
+        subject_code=subject.code,
+        timetable_set__timetables=tt).order_by("lecture_type")
+    teachers_formset = najave_percentage_formset(queryset=najave_percentages, prefix="prc-")
 
     if request.method == 'POST':
         # if not (user.id in subject.managers.values_list('id', flat=True)):
         #     raise PermissionDenied
         if not request.user.is_staff:
             raise PermissionDenied
-        teachers_formset = najave_percentage_formset(request.POST, request.FILES, queryset = najave_percentages, prefix="prc-")        
+        teachers_formset = najave_percentage_formset(request.POST, request.FILES, queryset=najave_percentages,
+                                                     prefix="prc-")
         realization_formsets = []
         for activity in activities:
             Formset = timetable.forms.realization_formset(activity, tt)
@@ -1331,16 +1344,16 @@ def subject(request, timetable_slug, subject_code):
                 for i in realization_formsets:
                     i.save()
             except ValueError as e:
-                problemMsg = "  Problem saving realizations" + str(e)
+                problem_msg = "  Problem saving realizations" + str(e)
                 problems = True
         else:
             if not realization_formsets_valid:
-                problemMsg = "Problem v enem od obrazcev za cikle:" + str(realization_formsets_errors)
+                problem_msg = "Problem v enem od obrazcev za cikle:" + str(realization_formsets_errors)
             problems = True
         if not problems:
-            gotPostMsg = u"Zahteve uspešno vnešene"
+            got_post_msg = "Zahteve uspešno vnešene"
         else:
-            gotPostMsg = problemMsg
+            got_post_msg = problem_msg
     media = None
 
     id_hack = -1
@@ -1360,7 +1373,8 @@ def subject(request, timetable_slug, subject_code):
             i.lecture_type = lecture_type
             current_activities = activities.filter(lecture_type=lecture_type)
             realization_hours = 0
-            for ar in timetable.models.ActivityRealization.objects.filter(activity__in=current_activities, teachers__exact=teacher).distinct():
+            for ar in timetable.models.ActivityRealization.objects.filter(activity__in=current_activities,
+                                                                          teachers__exact=teacher).distinct():
                 realization_hours += ar.duration
             realizations_number = 1.0 * realization_hours / lecture_type.duration
 
@@ -1384,7 +1398,7 @@ def subject(request, timetable_slug, subject_code):
         'subject': subject,
         'media': media,
         'realization_formsets': realization_formsets,
-        'gotPostMsg': gotPostMsg,
+        'got_post_msg': got_post_msg,
         'studies': studies, })
 
 
@@ -1414,7 +1428,7 @@ def subject_list(request, timetable_slug):
             return _("Teachers do not match with najave")
 
         for teacher_code in teachers_najave_cycles.keys():
-            najave_cycles =  teachers_najave_cycles[teacher_code]
+            najave_cycles = teachers_najave_cycles[teacher_code]
             realizations_number = teachers_realizations_number[teacher_code]
             if najave_cycles != realizations_number:
                 teacher = friprosveta.models.Teacher.objects.get(code=teacher_code)
@@ -1466,7 +1480,7 @@ def teacher_hours(request, timetable_set_slug):
             tt = friprosveta.models.Timetable.objects.get(id=tt.id)
             data = list()
             suma = dict()
-            subjects = tt.subjects.filter(activities__teachers = teacher).distinct()
+            subjects = tt.subjects.filter(activities__teachers=teacher).distinct()
             for frisubject in subjects:
                 for cycleType, long_cycleType in timetable.models.ACTIVITYTYPES:
                     suma_for_type = suma.get(cycleType, [0.0, 0.0])
@@ -1477,12 +1491,12 @@ def teacher_hours(request, timetable_set_slug):
                         try:
                             frilecture_type = friprosveta.models.LectureType.objects.get(short_name=cycleType)
                             najave_entry = frinajave.models.TeacherSubjectCycles.objects.filter(
-                                    teacher_code = teacher.code, subject_code = frisubject.code, timetable_set=timetable_set,
-                                    lecture_type = frilecture_type.id)
+                                teacher_code=teacher.code, subject_code=frisubject.code, timetable_set=timetable_set,
+                                lecture_type=frilecture_type.id)
                             if len(najave_entry) == 1:
                                 najave_entry = najave_entry[0]
                                 cycles_najave = najave_entry.cycles
-                                #percentage_najave = float(najave_entry.percentage)
+                                # percentage_najave = float(najave_entry.percentage)
                                 percentage_najave = 1
                         except:
                             pass
@@ -1494,6 +1508,7 @@ def teacher_hours(request, timetable_set_slug):
             # convert sums from dict to list, only keeping non-zeroes
             cycles_sums_by_tt[tt] = (data, [[key] + vals for key, vals in suma.items() if max(vals) > 0])
         return cycles_sums_by_tt
+
     # this is completely wrong for now.
     ttables = timetable_set.timetables.distinct().order_by('start')
     q = Q()
@@ -1511,10 +1526,10 @@ def teacher_hours(request, timetable_set_slug):
         'timetable_set_slug': timetable_set_slug})
 
 
-def binary_search(a, x, lo=0, hi=None):   # can't use a to specify default for hi
-    hi = hi if hi is not None else len(a) # hi defaults to len(a)   
-    pos = bisect_left(a,x,lo,hi)          # find insertion position
-    return (pos if pos != hi and a[pos] == x else -1) # don't walk off the end
+def binary_search(a, x, lo=0, hi=None):  # can't use a to specify default for hi
+    hi = hi if hi is not None else len(a)  # hi defaults to len(a)
+    pos = bisect_left(a, x, lo, hi)  # find insertion position
+    return pos if pos != hi and a[pos] == x else -1  # don't walk off the end
 
 
 @login_required
@@ -1525,7 +1540,8 @@ def teacher_hours_table(request, timetable_set_slug):
     def cycles_by_timetable_type(ttables, shown_activity_types):
         cycles_by_tt = dict()
         translate_activity_type = {'lab.': 'LAB'}
-        lecture_type_id_to_short_name = {lecture_type.id: lecture_type.short_name for lecture_type in friprosveta.models.LectureType.objects.all()}
+        lecture_type_id_to_short_name = {lecture_type.id: lecture_type.short_name for lecture_type in
+                                         friprosveta.models.LectureType.objects.all()}
         subject_codes = dict()
         tt_names = []
         for tt in ttables:
@@ -1536,28 +1552,33 @@ def teacher_hours_table(request, timetable_set_slug):
         for entry in frinajave.models.TeacherSubjectCycles.objects.filter(timetable_set=timetable_set):
             for tt in ttables:
                 tt_name = tt.name
-                if binary_search(subject_codes[tt_name], entry.subject_code) == -1: continue 
-                activity_type_short_name = lecture_type_id_to_short_name[entry.lecture_type]                
+                if binary_search(subject_codes[tt_name], entry.subject_code) == -1: continue
+                activity_type_short_name = lecture_type_id_to_short_name[entry.lecture_type]
                 if activity_type_short_name in translate_activity_type:
                     activity_type_short_name = translate_activity_type[activity_type_short_name]
                 if activity_type_short_name not in shown_activity_types: continue
-                if (entry.teacher_code not in cycles_by_tt[tt_name]):
+                if entry.teacher_code not in cycles_by_tt[tt_name]:
                     cycles_by_tt[tt_name][entry.teacher_code] = dict()
                     for activity_type in shown_activity_types:
                         cycles_by_tt[tt_name][entry.teacher_code][activity_type] = [0.0, 0.0]
                 # Real cycles hits the database preety bad
-                real_cycles = tt.realizations.filter(activity__type=activity_type_short_name, activity__activity__subject__code=entry.subject_code, teachers__code=entry.teacher_code).count()
-                cycles_by_tt[tt_name][entry.teacher_code][activity_type_short_name][0] += entry.cycles * float(entry.percentage)
-                cycles_by_tt[tt_name][entry.teacher_code][activity_type_short_name][1] += real_cycles * float(entry.percentage)
+                real_cycles = tt.realizations.filter(activity__type=activity_type_short_name,
+                                                     activity__activity__subject__code=entry.subject_code,
+                                                     teachers__code=entry.teacher_code).count()
+                cycles_by_tt[tt_name][entry.teacher_code][activity_type_short_name][0] += entry.cycles * float(
+                    entry.percentage)
+                cycles_by_tt[tt_name][entry.teacher_code][activity_type_short_name][1] += real_cycles * float(
+                    entry.percentage)
         return cycles_by_tt
+
     timetable_set = timetable.models.TimetableSet.objects.get(slug=timetable_set_slug)
     ttables = timetable_set.timetables.distinct().order_by('start')
     q = Q()
     for tt in ttables:
-        q = q | Q(activities__activity__subject__activities__teachers = user, activities__activityset__timetable=tt)
-    q = q | Q(activities__activity__subject__managers = user) 
+        q = q | Q(activities__activity__subject__activities__teachers=user, activities__activityset__timetable=tt)
+    q = q | Q(activities__activity__subject__managers=user)
     visible_teachers = friprosveta.models.Teacher.objects.filter(q).distinct()
-    shown_activity_types=['LV', 'AV', 'P']
+    shown_activity_types = ['LV', 'AV', 'P']
     cycles = cycles_by_timetable_type(ttables, shown_activity_types)
     teacher_data = []
     for teacher in visible_teachers.order_by('user__last_name'):
@@ -1573,19 +1594,19 @@ def teacher_hours_table(request, timetable_set_slug):
             for activity_type in shown_activity_types:
                 data.append(cycles[tt.name][teacher.code][activity_type])
                 for i in range(len(cycles[tt.name][teacher.code][activity_type])):
-                    suma[activity_type][i] += cycles[tt.name][teacher.code][activity_type][i]               
+                    suma[activity_type][i] += cycles[tt.name][teacher.code][activity_type][i]
         for activity_type in shown_activity_types:
             data.append(suma[activity_type])
-        data.append([suma['LV'][0]+suma['AV'][0], suma['LV'][1]+suma['AV'][1]])
+        data.append([suma['LV'][0] + suma['AV'][0], suma['LV'][1] + suma['AV'][1]])
         teacher_data.append([teacher, data])
     return render(request, 'friprosveta/teacher_hours_table.html',
-        {'teacher_data': teacher_data,
-         'timetables': ttables.all,
-         'timetable_colspan': 2 * len(shown_activity_types),
-         'activity_colspan': 2,
-         'activity_types': shown_activity_types,
-         'timetable_set_slug': timetable_set_slug,
-        })
+                  {'teacher_data': teacher_data,
+                   'timetables': ttables.all,
+                   'timetable_colspan': 2 * len(shown_activity_types),
+                   'activity_colspan': 2,
+                   'activity_types': shown_activity_types,
+                   'timetable_set_slug': timetable_set_slug,
+                   })
 
 
 @login_required
@@ -1615,13 +1636,13 @@ def place_realization(request, timetable_slug, realization_id):
             except:
                 # success_url = reverse('allocations')
                 success_url = reverse('allocations',
-                    timetable_slug=timetable_slug,
-                    ) + "?activity="+form.instance.activityRealization.activity
+                                      timetable_slug=timetable_slug,
+                                      ) + "?activity=" + form.instance.activityRealization.activity
             return HttpResponseRedirect(success_url)
     else:
         form = friprosveta.forms.AllocationNoIdPlaceForm()
     return render(request, 'friprosveta/place_realization.html',
-        {'form': form})
+                  {'form': form})
 
 
 @login_required
@@ -1638,13 +1659,13 @@ def move_allocation(request, timetable_slug, allocation_id):
             except:
                 # success_url = reverse('allocations')
                 success_url = reverse('allocations',
-                    timetable_slug=timetable_slug,
-                    ) + "?activity="+form.instance.activityRealization.activity
+                                      timetable_slug=timetable_slug,
+                                      ) + "?activity=" + form.instance.activityRealization.activity
             return HttpResponseRedirect(success_url)
     else:
         form = friprosveta.forms.AllocationMoveForm(instance=allocation)
     return render(request, 'friprosveta/move_allocation.html',
-        {'form': form})
+                  {'form': form})
 
 
 class SubjectActivityDetail(DetailView):

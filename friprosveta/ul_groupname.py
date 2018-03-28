@@ -2,7 +2,7 @@ from django_auth_ldap.config import NestedGroupOfNamesType
 
 
 class ULNestedGroupOfNamesType(NestedGroupOfNamesType):
-    
+
     def __init__(self, name_attr='cn'):
         super(ULNestedGroupOfNamesType, self).__init__(name_attr)
 
@@ -24,4 +24,3 @@ class ULNestedGroupOfNamesType(NestedGroupOfNamesType):
             name = None
 
         return name
-    

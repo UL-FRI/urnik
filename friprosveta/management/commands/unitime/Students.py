@@ -1,4 +1,4 @@
-from friprosveta.management.commands.unitime.CreateXML import createXML
+from friprosveta.management.commands.unitime.CreateXML import create_xml
 from friprosveta.models import StudentEnrollment
 
 
@@ -7,7 +7,7 @@ def students(tt, campus, term, year):
     export_groups_for_studies = ['BUN-RM', 'BM-RM', 'BUN-UI', 'BUN-MM', 'BM-PRI', 'BM-KO']
     # Timetable from last year
     for student in tt.students.all():
-        academicAreas = [
+        academic_areas = [
             "studentAcadAreaClass",
             dict(),
             [
@@ -52,9 +52,9 @@ def students(tt, campus, term, year):
                 student_groups += entry
                 exported_groupnames.append(groupname)
         if StudentEnrollment.objects.filter(
-             groupset=tt.groupset,
-             student=student,
-             regular_enrollment=False).count() > 0:
+                groupset=tt.groupset,
+                student=student,
+                regular_enrollment=False).count() > 0:
             entry = [
                 'studentGroup',
                 {'group': 'IZ'},
@@ -73,9 +73,9 @@ def students(tt, campus, term, year):
                 "firstName": student.name,
                 "lastName": student.surname,
                 "middleName": "",
-                "email": u"neznani@student.uni-lj.si",
+                "email": "neznani@student.uni-lj.si",
             },
-            academicAreas + majors + minors + groups
+            academic_areas + majors + minors + groups
         ]
         entries += entry
 
@@ -86,6 +86,7 @@ def students(tt, campus, term, year):
     ]
     return students
 
+
 if __name__ == "__main__":
-    doc = createXML(students())
+    doc = create_xml(students())
     print(doc.toprettyxml(indent="  ").encode('utf8').encode('utf8'))

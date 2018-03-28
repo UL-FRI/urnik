@@ -1,21 +1,19 @@
-from ldap3 import Server, Connection, ALL
-import time
-import sys
 import logging
+import sys
+import time
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
-from django_auth_ldap.config import LDAPSearch
 from django_auth_ldap.backend import LDAPBackend
+from ldap3 import Server, Connection, ALL
 
-
-from timetable.models import User
 from friprosveta.models import Teacher
+from timetable.models import User
 
 
-def createSingleUser(first_name=None, last_name=None,
-                     uid=None, code=None, teacher_code=None,
-                     write_to_db=False, out_stream=sys.stdout):
+def create_single_user(first_name=None, last_name=None,
+                       uid=None, code=None, teacher_code=None,
+                       write_to_db=False, out_stream=sys.stdout):
     """
     Add a new user, create a Teacher object.
     """
@@ -88,7 +86,7 @@ def createSingleUser(first_name=None, last_name=None,
             last_name = k[1].upper()
             logger.debug("Set last name to {0}".format(first_name))
 
-    logger.debug(u"Found {} {}: {}".format(
+    logger.debug("Found {} {}: {}".format(
         first_name, last_name, v))
 
     if ldap_backend is not None:
@@ -146,8 +144,8 @@ class Command(BaseCommand):
         username = options['username']
         name = options['name']
         if username:
-            createSingleUser(uid=username[0], write_to_db=self.WRITE_TO_DB)
+            create_single_user(uid=username[0], write_to_db=self.WRITE_TO_DB)
         elif name:
-            createSingleUser(first_name=name[0].upper(),
-                             last_name=name[1].upper(),
-                             write_to_db=self.WRITE_TO_DB, out_stream=self.stdout)
+            create_single_user(first_name=name[0].upper(),
+                               last_name=name[1].upper(),
+                               write_to_db=self.WRITE_TO_DB, out_stream=self.stdout)

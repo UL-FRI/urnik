@@ -1,11 +1,10 @@
 from django.conf.urls import url
+from django.views.generic import TemplateView
 from django.views.generic.list import ListView
-from django.views.generic import RedirectView, TemplateView
 
-from timetable.models import TimetableSet, defaultTimetable
+from timetable.models import TimetableSet
 from . import views
 from .restapi import SubjectDetailsView, SubjectsView
-
 
 urlpatterns = [
     url(r'^$', views.default_timetable_redirect, name='default_timetable'),

@@ -1,8 +1,9 @@
 from optparse import make_option
+
+from .unitime import ExportAll
 from django.core.management.base import BaseCommand, CommandError
 
 import friprosveta
-import unitime.ExportAll
 
 
 class Command(BaseCommand):
@@ -42,13 +43,13 @@ Possible exports are:
 Default export value is xml_all.
 """
     option_list = BaseCommand.option_list + \
-        (make_option(
-            '--export',
-            type='string',
-            dest='export',
-            default='xml_all',
-            help='What to export'),
-         )
+                  (make_option(
+                      '--export',
+                      type='string',
+                      dest='export',
+                      default='xml_all',
+                      help='What to export'),
+                  )
 
     def handle(self, *args, **options):
         if len(args) != 5:
@@ -56,5 +57,5 @@ Default export value is xml_all.
         timetable = friprosveta.models.Timetable.objects.get(slug=args[0])
         old_timetable = friprosveta.models.Timetable.objects.get(slug=args[1])
         campus, term, year = args[2:]
-        unitime.ExportAll.export(timetable, old_timetable,
-                                 campus, term, year, options['export'])
+        ExportAll.export(timetable, old_timetable,
+                         campus, term, year, options['export'])

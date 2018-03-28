@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-from CreateXML import createXML
+from .CreateXML import create_xml
 
 
 def groups(campus, term, year):
@@ -10,8 +9,8 @@ def groups(campus, term, year):
         for classyear in export_classyears:
             entry = ["studentGroup",
                      {
-                      "name": "{1}_{0}".format(group_name, classyear),
-                      "code": "{1}_{0}".format(group_name, classyear)
+                         "name": "{1}_{0}".format(group_name, classyear),
+                         "code": "{1}_{0}".format(group_name, classyear)
                      },
                      []]
             entries += entry
@@ -20,12 +19,13 @@ def groups(campus, term, year):
                 {"name": "IZ",
                  "code": "IZ"},
                 []]
-    studentGroups = ["studentGroups", {"campus": campus,
+    student_groups = ["studentGroups", {"campus": campus,
                                        "term": term,
                                        "year": year},
                      entries]
-    return studentGroups
+    return student_groups
+
 
 if __name__ == "__main__":
-    doc = createXML(groups())
-    print doc.toprettyxml(indent="  ").encode('utf8')
+    doc = create_xml(groups())
+    print(doc.toprettyxml(indent="  ").encode('utf8'))

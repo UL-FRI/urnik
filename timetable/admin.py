@@ -1,11 +1,11 @@
-from timetable.models import *
-from import_export.admin import ImportExportActionModelAdmin
 from django.contrib import admin
-# from autocomplete_light import shortcuts as al
+from import_export.admin import ImportExportActionModelAdmin
+
+from timetable.models import *
 
 
 class ActivityAdmin(ImportExportActionModelAdmin):
-    #filter_horizontal = ('groups', 'mustNotOverlap', 'before',)
+    # filter_horizontal = ('groups', 'mustNotOverlap', 'before',)
     exclude = ('groups', 'mustNotOverlap', 'before',)
     search_fields = ('name',)
     # form = autocomplete_light.modelform_factory(Activity)
@@ -26,7 +26,8 @@ class TeacherAdmin(ImportExportActionModelAdmin):
 class ClassroomNResourcesInline(admin.TabularInline):
     model = ClassroomNResources
 
-#class ResourcesInline(admin.TabularInline):
+
+# class ResourcesInline(admin.TabularInline):
 #    model = Resource
 
 
@@ -41,39 +42,39 @@ class ClassroomAdmin(ImportExportActionModelAdmin):
 class ClassroomSetAdmin(ImportExportActionModelAdmin):
     filter_horizontal = ('classrooms',)
 
-    
+
 class GroupAdmin(ImportExportActionModelAdmin):
-    search_fields = ('name','short_name')
+    search_fields = ('name', 'short_name')
     list_filter = ('groupset',)
 
 
 class AllocationAdmin(ImportExportActionModelAdmin):
-    search_fields = ('activityRealization__teachers__user__first_name', 'activityRealization__teachers__user__last_name',
+    search_fields = (
+        'activityRealization__teachers__user__first_name', 'activityRealization__teachers__user__last_name',
         'activityRealization__activity__name', 'activityRealization__activity__shortName', 'timetable__name')
-    
+
     list_filter = ('timetable__timetable_sets',)
 
-    
+
 class TeacherTimePreferenceAdmin(ImportExportActionModelAdmin):
     search_fields = ('teacher__user__first_name', 'teacher__user__last_name')
     list_filter = ('preferenceset',)
 
 
-    
 class TagAdmin(ImportExportActionModelAdmin):
     search_fields = ('name', 'teacher__user__first_name', 'teacher__user__last_name',
-        'activity__name', 'activity__shortName',
-        'activityRealization__activity__name', 'activityRealization__activity__shortName', 
-        'group__name', 'group__shortName')
+                     'activity__name', 'activity__shortName',
+                     'activityRealization__activity__name', 'activityRealization__activity__shortName',
+                     'group__name', 'group__shortName')
     filter_horizontal = ('teachers', 'activities', 'groups', 'activity_realizations')
 
 
 class ActivityRealizationAdmin(ImportExportActionModelAdmin):
     filter_horizontal = ('groups', 'teachers')
     search_fields = ('teachers__user__first_name', 'teachers__user__last_name',
-        'activity__name', 'activity__shortName', 'groups__name')
+                     'activity__name', 'activity__shortName', 'groups__name')
 
-    
+
 class TimetableSetAdmin(ImportExportActionModelAdmin):
     filter_horizontal = ('timetables',)
 
@@ -85,7 +86,7 @@ class TimetableAdmin(ImportExportActionModelAdmin):
 class PreferenceAdmin(ImportExportActionModelAdmin):
     list_filter = ('preferenceset',)
 
-    
+
 class GroupPreferenceAdmin(ImportExportActionModelAdmin):
     list_filter = ('preferenceset',)
 
@@ -93,7 +94,7 @@ class GroupPreferenceAdmin(ImportExportActionModelAdmin):
 class GroupValuePreferenceAdmin(ImportExportActionModelAdmin):
     list_filter = ('preferenceset',)
 
-    
+
 class GroupTimePreferenceAdmin(ImportExportActionModelAdmin):
     list_filter = ('preferenceset',)
 
@@ -130,7 +131,7 @@ admin.site.register(Resource)
 admin.site.register(NRequirementsPerStudent)
 
 admin.site.register(Heuristic)
-#admin.site.register(Activity, ActivityAutocompleteAdmin)
+# admin.site.register(Activity, ActivityAutocompleteAdmin)
 admin.site.register(Activity, ActivityAdmin)
 admin.site.register(ActivityRealization, ActivityRealizationAdmin)
 admin.site.register(ActivitySet)
@@ -156,7 +157,6 @@ admin.site.register(TeacherTimePreference, TeacherTimePreferenceAdmin)
 admin.site.register(TeacherValuePreference, TeacherValuePreferenceAdmin)
 admin.site.register(TeacherDescriptivePreference, TeacherDescriptivePreferenceAdmin)
 admin.site.register(Preference, PreferenceAdmin)
-
 
 admin.site.register(Tag, TagAdmin)
 admin.site.register(TagPreference, TagPreferenceAdmin)

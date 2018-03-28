@@ -1,6 +1,8 @@
-from django.conf import settings
-from urllib.request import Request, urlopen
 import json
+from urllib.request import Request, urlopen
+
+from django.conf import settings
+
 from timetable.models import Group
 
 
@@ -20,9 +22,9 @@ def get_group_name(predmetnik_id, predmetnik):
     # entry4 = predmetnik[entry3['parent']]
     study_short_name = entry3['short_title']
     study_name = entry3['title']['sl']
-    group_name = u'{0}. letnik, {1}'.format(class_year, study_name)
-    group_short_name = u'{0}_{1}'.format(class_year, study_short_name)
-    return (group_name, group_short_name)
+    group_name = '{0}. letnik, {1}'.format(class_year, study_name)
+    group_short_name = '{0}_{1}'.format(class_year, study_short_name)
+    return group_name, group_short_name
 
 
 def subject_groups(subject_code, izvajanja, predmetnik, tt):
@@ -48,11 +50,11 @@ def subject_groups(subject_code, izvajanja, predmetnik, tt):
             continue
         name, short_name = names
         group, _ = Group.objects.get_or_create(
-                    name=name,
-                    short_name=short_name,
-                    size=0,
-                    parent=None,
-                    groupset=tt.groupset)
+            name=name,
+            short_name=short_name,
+            size=0,
+            parent=None,
+            groupset=tt.groupset)
         groups.append(group)
     return groups
 
@@ -117,5 +119,5 @@ def get_izvajanja(year):
 def print_entry(key, ddict):
     e = ddict[key]
     if e['parent'] is not None:
-        print_entry(e['parent'], ddict)                                                                                                                                                                    
+        print_entry(e['parent'], ddict)
     print(e)

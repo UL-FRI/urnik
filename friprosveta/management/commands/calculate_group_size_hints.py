@@ -1,28 +1,28 @@
 from django.core.management.base import BaseCommand
+
 from friprosveta.models import GroupSizeHint, Timetable, ENROLMENTTYPES, StudentEnrollment
 
 
 class Command(BaseCommand):
-    '''
+    """
     Calculate group size hints from enrollments.
     It requires that:
     1) Groups for all lectures are already created.
     2) There exists one group named {{subject.code}}_PAD for every subject.
     Students with enrollment type 4, 26 are enrolled into
     'regular' groups, others into PAD group.
-    '''
+    """
     args = 'calculate_group_size_hint timetable method_name'
-    help = '''Usage:
-calculate_group_size_hint timetable_slug method_name
-
-Timetable represents the timetable students are enrolling into.
-
-Method name is the name of the method in GroupSizeHint object.
-If prior entries with this method name exist they will be overwritten.
-
-Groups with sizes 0 are not stored. It is not possible to know whether 
-enrollments are still missing or actually no student for this group is enrolled.  
-'''
+    help = ('Usage:\n'
+            'calculate_group_size_hint timetable_slug method_name\n'
+            '\n'
+            'Timetable represents the timetable students are enrolling into.\n'
+            '\n'
+            'Method name is the name of the method in GroupSizeHint object.\n'
+            'If prior entries with this method name exist they will be overwritten.\n'
+            '\n'
+            'Groups with sizes 0 are not stored. It is not possible to know whether \n'
+            'enrollments are still missing or actually no student for this group is enrolled.  \n')
 
     def add_arguments(self, parser):
         parser.add_argument('timetable_slug', type=str)

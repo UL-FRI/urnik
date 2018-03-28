@@ -1,6 +1,5 @@
 from django.conf.urls import *
-from django.views.generic.list import ListView
-from timetable.models import *
+
 from . import views
 
 urlpatterns = [

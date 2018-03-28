@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
-
-'''
-Created on 20. avg. 2012
-
+"""
 Important note from Unitime web page:
 
 Buildings and rooms are imported as external buildings and rooms,
@@ -12,15 +8,14 @@ for the buildings and rooms to show up in the application.
 
 Global room features need to be crated before this update,
 and their abbreviation must match the roomFeature.feature attribute.
-'''
+"""
 
-import friprosveta.models
+from .CreateXML import create_xml
+
 import timetable.models
 
-from CreateXML import createXML
 
-
-def buildingsAndRooms(tt, campus, term, year):
+def buildings_and_rooms(tt, campus, term, year):
     entries = []
     # TODO: zaenkrat nimamo koordinat učilnic
     # TODO: kasneje se jih lahko uporabi za optimizacijo,
@@ -31,7 +26,7 @@ def buildingsAndRooms(tt, campus, term, year):
 
     enlarge_factor = 1.2
     locations = timetable.models.Location.objects.all()
-    computer_resource_name = u"Računalnik"
+    computer_resource_name = "Računalnik"
     for location in locations:
         rooms = []
         for room in location.classroom_set.all():
@@ -40,48 +35,49 @@ def buildingsAndRooms(tt, campus, term, year):
             features = []
             for resource in room.resources.all():
                 features += ["roomFeature", {
-                             "feature": str(resource.id),
-                             "value": resource.name[:20],
-                             }, []]
+                    "feature": str(resource.id),
+                    "value": resource.name[:20],
+                }, []]
 
             # INFO:
             # scheduledRoomType = genClassroom, computingLab or departmental
             # instructional = T or F  {T ==> typically used for instruction}.
 
             is_computer_classroom = room.resources.filter(name=computer_resource_name).count() == 1
-            scheduledRoomType = "computingLab" if is_computer_classroom else "genClassroom"
+            scheduled_room_type = "computingLab" if is_computer_classroom else "genClassroom"
 
             roomarray = ["room", {
-                    "externalId": str(room.id),
-                    "locationX": "0",
-                    "locationY": "0",
-                    "roomNumber": room.short_name,
-                    "roomClassification": "classroom",
-                    "capacity": str(int(room.capacity * enlarge_factor)),
-                    "examCapacity": str(room.capacity/2),
-                    "instructional": "True",
-                    "scheduledRoomType": scheduledRoomType,
-                    "displayName": room.name,
-                    },
-                    [
-                      "roomDepartments", {}, ["assigned", {"departmentNumber": "1", "percent":"100"},[]],
-                      "roomFeatures", {}, features,
-                    ]
-                    ]
+                "externalId": str(room.id),
+                "locationX": "0",
+                "locationY": "0",
+                "roomNumber": room.short_name,
+                "roomClassification": "classroom",
+                "capacity": str(int(room.capacity * enlarge_factor)),
+                "examCapacity": str(room.capacity / 2),
+                "instructional": "True",
+                "scheduledRoomType": scheduled_room_type,
+                "displayName": room.name,
+            },
+                         [
+                             "roomDepartments", {}, ["assigned", {"departmentNumber": "1", "percent": "100"}, []],
+                             "roomFeatures", {}, features,
+                         ]
+                         ]
             rooms += roomarray
         entries += ["building", {
-                    "externalId": str(location.id),
-                    "abbreviation": location.name,
-                    "locationX": "0",  # See above at location
-                    "locationY": "0",
-                    "name": location.name
-                    },
+            "externalId": str(location.id),
+            "abbreviation": location.name,
+            "locationX": "0",  # See above at location
+            "locationY": "0",
+            "name": location.name
+        },
                     rooms]
     buildings = ["buildingsRooms",
                  {"campus": campus, "term": term, "year": year},
                  entries]
     return buildings
 
+
 if __name__ == "__main__":
-    doc = createXML(buildingsAndRooms())
-    print doc.toprettyxml(indent="  ").encode('utf8')
+    doc = create_xml(buildings_and_rooms())
+    print(doc.toprettyxml(indent="  ").encode('utf8'))

@@ -1,23 +1,18 @@
-'''
-Created on 20. avg. 2012
+from .CreateXML import create_xml
 
-@author: gregor
-'''
 
-from CreateXML import createXML
-
-#TODO: added campus, term, year arguments
+# TODO: added campus, term, year arguments
 def departments(campus, term, year):
-    department = ["department", 
-                  {"externalId": "Urnik", 
-                   "abbreviation": "Urnik", 
-                   "name": "Oddelek za izdelavo urnika", 
+    department = ["department",
+                  {"externalId": "Urnik",
+                   "abbreviation": "Urnik",
+                   "name": "Oddelek za izdelavo urnika",
                    "deptCode": "1"}, []]
-    
-    
+
     departments = ["departments", {"campus": campus, "term": term, "year": year}, department]
     return departments
 
+
 if __name__ == "__main__":
-    doc = createXML(departments())
-    print doc.toprettyxml(indent="  ").encode('utf8')
+    doc = create_xml(departments())
+    print(doc.toprettyxml(indent="  ").encode('utf8'))

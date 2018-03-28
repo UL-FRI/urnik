@@ -1,7 +1,7 @@
-from friprosveta.models import *
 from django.contrib import admin
-import timetable.admin
 from import_export.admin import ImportExportActionModelAdmin
+
+from friprosveta.models import *
 
 
 class ActivityAdmin(ImportExportActionModelAdmin):
@@ -9,7 +9,8 @@ class ActivityAdmin(ImportExportActionModelAdmin):
     search_fields = ('name', 'teachers__user__first_name', 'teachers__user__last_name', 'activityset__timetable__name')
     fieldsets = (
         (None, {
-            'fields':('name', 'activityset', 'short_name', 'type', 'locations', 'duration', 'requirements', 'subject', 'lecture_type'),
+            'fields': ('name', 'activityset', 'short_name', 'type', 'locations', 'duration', 'requirements', 'subject',
+                       'lecture_type'),
         }),
         ('Advanced options', {
             'classes': ('collapse',),
@@ -23,14 +24,14 @@ class StudentAdmin(ImportExportActionModelAdmin):
     filter_horizontal = ('groups',)
     search_fields = ('name', 'surname', 'id', 'groups__name', 'groups__shortName')
 
-    
+
 class CathedraAdmin(ImportExportActionModelAdmin):
-    filter_horizontal= ('heads', 'najave_deputies', 'members')
+    filter_horizontal = ('heads', 'najave_deputies', 'members')
 
 
 class SubjectAdmin(ImportExportActionModelAdmin):
     search_fields = ('short_name', 'name', 'code')
-    list_filter = ('activities__activityset__timetable', )
+    list_filter = ('activities__activityset__timetable',)
 
 
 class StudyAdmin(ImportExportActionModelAdmin):
@@ -42,7 +43,7 @@ class LectureTypeAdmin(ImportExportActionModelAdmin):
 
 
 class StudentEnrollmentAdmin(ImportExportActionModelAdmin):
-    list_filter = ('groupset', 'study', 'classyear' )
+    list_filter = ('groupset', 'study', 'classyear')
     search_fields = ('student__name', 'student__surname', 'student__studentId',
                      'subject__name', 'subject__code')
 
@@ -57,4 +58,3 @@ admin.site.register(LectureType, LectureTypeAdmin)
 admin.site.register(StudentEnrollment, StudentEnrollmentAdmin)
 # admin.site.register(CathedraHeads)
 admin.site.register(Student, StudentAdmin)
-

@@ -1,7 +1,5 @@
-import sys
-from _collections import defaultdict
 from django.core.management.base import BaseCommand
-import json
+
 from friprosveta.models import StudentEnrollment, Timetable, Study, Student
 from friprosveta.models import Subject
 from friprosveta.studis import Sifranti, Studij, Studenti
@@ -9,7 +7,7 @@ from friprosveta.studis import Sifranti, Studij, Studenti
 
 def get_study_classyear(studijsko_drevo, entry_id):
     if entry_id not in studijsko_drevo:
-        return ('PAD', 8)
+        return 'PAD', 8
     study_mapper = {'Upravna informatika': 'BUN-UI', 'Izmenjave': 'IZMENJAVE', 'BUN-ML': 'BUN-MM'}
     classyear_mapper = {'B': 8, 'D': 4}
     entry5 = studijsko_drevo[entry_id]
@@ -22,11 +20,11 @@ def get_study_classyear(studijsko_drevo, entry_id):
     assert (entry3['type'] == 3) and (entry3['short_title'] is None)
     entry2 = studijsko_drevo[entry3['parent']]
     assert (entry2['type'] == 2)
-    try: 
+    try:
         entry1 = studijsko_drevo[entry2['parent']]
         assert (entry1['type'] == 1)
         entry2_short = study_mapper.get(entry2['short_title'].strip(),
-                                 entry2['short_title'].strip())
+                                        entry2['short_title'].strip())
         study = "{}-{}".format(entry1['short_title'].strip(), entry2_short)
     except:
         study = "{}".format(study_mapper.get(entry2['short_title'].strip(), entry2['short_title'].strip()))
@@ -35,9 +33,9 @@ def get_study_classyear(studijsko_drevo, entry_id):
 
 
 class Command(BaseCommand):
-    '''
+    """
     Get StudentEnrollments from Studis
-    '''
+    """
     args = 'enroll_students timetable_slug year date'
     help = '''Enroll students to subjects from studis using
 enrollment data on the given date.
@@ -70,8 +68,6 @@ Year is the first part in current studijsko leto 2014/2015 -> 2014.'''
             help='Process preenrollments',
         )
 
- 
-
     def handle(self, *args, **options):
         timetable = Timetable.objects.get(slug=options['timetable_slug'][0])
         year = options['year'][0]
@@ -83,7 +79,9 @@ Year is the first part in current studijsko leto 2014/2015 -> 2014.'''
         studenti = Studenti()
 
         studijsko_drevo = studij.get_studijsko_drevo()
-        self.students = studenti.get_student_enrollments(date, unfinished=options['unfinished'], unconfirmed=options['unconfirmed'], preenrolment=options['preenrolment'])
+        self.students = studenti.get_student_enrollments(date, unfinished=options['unfinished'],
+                                                         unconfirmed=options['unconfirmed'],
+                                                         preenrolment=options['preenrolment'])
         self.stdout.write("got {} student enrollments".format(len(self.students)))
         self.enrollment_types = sifranti.get_tipi_vpisa()
         self.izredni_studij_id = sifranti.get_nacini_studija_izredni_studij_id
@@ -94,21 +92,20 @@ Year is the first part in current studijsko leto 2014/2015 -> 2014.'''
         self.subjects = {subject['id']: subject for subject in subjects}
         self.studijsko_drevo = {e['id']: e for e in studijsko_drevo}
         # self.stderr.write("{}".format(self.studijsko_drevo))
-        self.enrolStudents(timetable)
+        self.enrol_students(timetable)
         # regular_studies_subjects = self.getRegularSubjects(timetable)
         # Commented out by Gregor, not needed on UniTime
-        #$ padstudy = Study.objects.get(short_name="PAD")
+        # $ padstudy = Study.objects.get(short_name="PAD")
         # crossections.fixRegularSubjectsEnrollments(
         #     timetable, regular_studies_subjects, padstudy
         # )
 
-    def enrolStudents(self, currentTimetable,
-                      enrollment_types=[1, 4, 26, 41, 42, 43, 47]):
+    def enrol_students(self, current_timetable, enrollment_types=[1, 4, 26, 41, 42, 43, 47]):
         """
         Enroll students to subjects for current timetable.
         """
         # Remove current enrollments
-        groupset = currentTimetable.groupset
+        groupset = current_timetable.groupset
         StudentEnrollment.objects.filter(groupset=groupset).delete()
         subjects_not_found = []
 
@@ -130,13 +127,13 @@ Year is the first part in current studijsko leto 2014/2015 -> 2014.'''
             student_name = student['ime']
             student_surname = student['priimek']
             source = student.get('source', None)
-            databaseStudent = Student.objects.get_or_create(studentId=student_id)[0]
+            database_student = Student.objects.get_or_create(studentId=student_id)[0]
             # Update name and surname if changed
-            if (databaseStudent.name != student_name or
-                    databaseStudent.surname != student_surname):
-                databaseStudent.name = student_name
-                databaseStudent.surname = student_surname
-                databaseStudent.save()
+            if (database_student.name != student_name or
+                    database_student.surname != student_surname):
+                database_student.name = student_name
+                database_student.surname = student_surname
+                database_student.save()
             subjects_to_enroll = []
             for entry in student['predmetnik']:
                 if (not entry['opravlja_vaje']) and (not entry['opravlja_predavanja']):
@@ -147,9 +144,8 @@ Year is the first part in current studijsko leto 2014/2015 -> 2014.'''
                     continue
                 assert studis_subject['sifra'] == entry['sifra_predmeta']
 
-
                 subject = Subject.objects.filter(code=studis_subject['sifra'])
-                assert len(subject) <= 1, u"More than one subject\
+                assert len(subject) <= 1, "More than one subject\
 with code {0} in database.".format(subject.code)
                 if len(subject) == 0:
                     self.stderr.write("Student {} - missing subject {}".format(
@@ -159,26 +155,26 @@ with code {0} in database.".format(subject.code)
                     continue
                 subject = subject[0]
                 subjects_to_enroll.append(subject)
-                #subjects = currentTimetable.subjects.filter(code=subject.code)
-                #if subjects.count() == 0:
+                # subjects = currentTimetable.subjects.filter(code=subject.code)
+                # if subjects.count() == 0:
                 #    self.stdout.write("Subject with code {0} missing from the current timetable".format(subject))
                 #    continue
             StudentEnrollment.objects.filter(groupset=groupset,
-                                     student=databaseStudent).delete()
+                                             student=database_student).delete()
             if student_id == '63160433':
                 print("here i am")
             for subject in subjects_to_enroll:
                 se = StudentEnrollment(groupset=groupset,
-                                  student=databaseStudent,
-                                  subject=subject,
-                                  source=source,
-                                  enrollment_type=studis_enrollment_type_id,
-                                  study=study,
-                                  classyear=int(classyear),
-                                  regular_enrollment=not izredni)
-                                  
+                                       student=database_student,
+                                       subject=subject,
+                                       source=source,
+                                       enrollment_type=studis_enrollment_type_id,
+                                       study=study,
+                                       classyear=int(classyear),
+                                       regular_enrollment=not izredni)
+
                 se.save()
-                #self.stderr.write("enroll {} on {}({}) under {}_{} -> {}".format(
+                # self.stderr.write("enroll {} on {}({}) under {}_{} -> {}".format(
                 #    student_id, subject.short_name, subject.code, classyear, study, se.id))
                 if student_id == '63160433':
-                    print (se)
+                    print(se)

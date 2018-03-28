@@ -1,10 +1,11 @@
+import logging
+
 from django.core.management.base import BaseCommand
+
 from frinajave.models import TeacherSubjectCycles
-from timetable.models import TimetableSet
 from friprosveta.models import LectureType, Subject
 from friprosveta.studis import Najave
-
-import logging
+from timetable.models import TimetableSet
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +22,9 @@ tip_izv_map = {
 
 
 class Command(BaseCommand):
-    '''
+    """
     Get najave from studis.
-    '''
+    """
     args = 'import_studis_najave timetable_slug year semester_id'
     help = '''Usage:
 import_studis_najave timetable_slug year semester_id
@@ -57,7 +58,7 @@ Semester can be 1 (zimski), 2(poletni), 3(celoletni) or 4(blocni).
         if options['subject'] is not None:
             subject_codes.add(options['subject'][0])
         else:
-            #for timetable in timetable_set.timetables.all():
+            # for timetable in timetable_set.timetables.all():
             #    timetable = Timetable.objects.get(id=timetable.id)
             #    subjects = timetable.subjects
             #    subject_codes.update(subject.code for subject in subjects)

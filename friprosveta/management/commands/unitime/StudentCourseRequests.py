@@ -1,7 +1,7 @@
 from friprosveta.models import StudentEnrollment
 
 
-def studentCourseRequests(timetable, campus, term, year):
+def student_course_requests(timetable, campus, term, year):
     entries = []
     enrollments = StudentEnrollment.objects.filter(groupset=timetable.groupset)
     # Hack: enroll external students to subjects to indicate
@@ -23,20 +23,20 @@ def studentCourseRequests(timetable, campus, term, year):
             demands += [
                 "courseOffering",
                 {
-                    "subjectArea": u"{0}".format(subject.code),
+                    "subjectArea": "{0}".format(subject.code),
                     "courseNumber": "101",
                 },
                 []
             ]
             if enrollment.study.short_name in external_studies_short_names and \
-               external is False and enrollment.classyear in classes:
+                    external is False and enrollment.classyear in classes:
                 external = True
                 subject_name = 'z_{0}_{1}'.format(enrollment.classyear,
                                                   enrollment.study.short_name)
                 demands += [
                     "courseOffering",
                     {
-                        "subjectArea": u"{0}".format(subject_name.lower()),
+                        "subjectArea": "{0}".format(subject_name.lower()),
                         "courseNumber": "101",
                     },
                     []

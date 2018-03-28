@@ -1,27 +1,20 @@
-# -*- coding: utf-8 -*-
+from .CreateXML import create_xml
 
 
-'''
-Created on 20. avg. 2012
-
-@author: gregor
-'''
-from CreateXML import createXML
-
-
-#TODO: added campus, term, year as arguments
-def accomodations(campus, term, year):
-    entries = ["studentAccomodation", 
-               {"externalId": "WCh", "abbreviation":u"Voziček", "name":u"Uporablja invalidski voziček"}, 
+# TODO: added campus, term, year as arguments
+def accommodations(campus, term, year):
+    entries = ["studentAccomodation",
+               {"externalId": "WCh", "abbreviation": "Voziček", "name": "Uporablja invalidski voziček"},
                [],
-               "studentAccomodation", 
-               {"externalId": "Hear", "abbreviation":"Sluh", "name":u"Težave s sluhom"}, 
-               [],         
+               "studentAccomodation",
+               {"externalId": "Hear", "abbreviation": "Sluh", "name": "Težave s sluhom"},
+               [],
                ]
-    
-    studentAccomodations = ["studentAccomodations", {"campus": campus, "term": term, "year": year}, entries]
-    return studentAccomodations
+
+    student_accomodations = ["studentAccomodations", {"campus": campus, "term": term, "year": year}, entries]
+    return student_accomodations
+
 
 if __name__ == "__main__":
-    doc = createXML(accomodations())
-    print doc.toprettyxml(indent="  ").encode('utf8')
+    doc = create_xml(accommodations())
+    print(doc.toprettyxml(indent="  ").encode('utf8'))

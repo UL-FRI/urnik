@@ -1,14 +1,13 @@
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-import friprosveta.models
 import timetable.models
 
 
 class Command(BaseCommand):
-    '''
+    """
     Split group into multiple groups of the size 1.
-    '''
+    """
     args = 'group_id'
     help = 'Split group. Group should be assigned to exactly 1 activity. New group will be assigned to the same activity.'
 
@@ -27,7 +26,7 @@ class Command(BaseCommand):
         start = max([int(g.groupnum) for g in groups]) + 1
         parent = group.parent
         groupset = group.groupset
-        for i in range(group.size-1):
+        for i in range(group.size - 1):
             short_name = '{0}_{1:02}'.format(basename, start + i)
             name = '{0} {1}'.format(baselongname, start + i)
             g = timetable.models.Group(name=name, short_name=short_name, parent=parent, groupset=groupset, size=1)
@@ -35,4 +34,3 @@ class Command(BaseCommand):
             g.activities.add(*group.activities.all())
         group.size = 1
         group.save()
-
