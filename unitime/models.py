@@ -14,7 +14,7 @@ from django.db import models
 
 class AcademicArea(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    session = models.ForeignKey('Sessions', blank=True, null=True)
+    session = models.ForeignKey('Sessions', blank=True, null=True, on_delete=models.CASCADE)
     academic_area_abbreviation = models.CharField(max_length=10, blank=True)
     long_title = models.CharField(max_length=100, blank=True)
     external_uid = models.CharField(max_length=40, blank=True)
@@ -26,7 +26,7 @@ class AcademicArea(models.Model):
 
 class AcademicClassification(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    session = models.ForeignKey('Sessions', blank=True, null=True)
+    session = models.ForeignKey('Sessions', blank=True, null=True, on_delete=models.CASCADE)
     code = models.CharField(max_length=10, blank=True)
     name = models.CharField(max_length=50, blank=True)
     external_uid = models.CharField(max_length=40, blank=True)
@@ -47,8 +47,8 @@ class ApplicationConfig(models.Model):
 
 
 class AssignedInstructors(models.Model):
-    assignment = models.ForeignKey('Assignment')
-    instructor = models.ForeignKey('DepartmentalInstructor')
+    assignment = models.ForeignKey('Assignment', on_delete=models.CASCADE)
+    instructor = models.ForeignKey('DepartmentalInstructor', on_delete=models.CASCADE)
     last_modified_time = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -57,8 +57,8 @@ class AssignedInstructors(models.Model):
 
 
 class AssignedRooms(models.Model):
-    assignment = models.ForeignKey('Assignment')
-    room = models.ForeignKey('Room')
+    assignment = models.ForeignKey('Assignment', on_delete=models.CASCADE)
+    room = models.ForeignKey('Room', on_delete=models.CASCADE)
     last_modified_time = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -70,12 +70,12 @@ class Assignment(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     days = models.BigIntegerField(blank=True, null=True)
     slot = models.BigIntegerField(blank=True, null=True)
-    time_pattern = models.ForeignKey('TimePattern', blank=True, null=True)
-    solution = models.ForeignKey('Solution', blank=True, null=True)
-    class_field = models.ForeignKey('Class', db_column='class_id', blank=True, null=True)  # Field renamed because it was a Python reserved word.
+    time_pattern = models.ForeignKey('TimePattern', blank=True, null=True, on_delete=models.CASCADE)
+    solution = models.ForeignKey('Solution', blank=True, null=True, on_delete=models.CASCADE)
+    class_field = models.ForeignKey('Class', db_column='class_id', blank=True, null=True, on_delete=models.CASCADE)  # Field renamed because it was a Python reserved word.
     class_name = models.CharField(max_length=100, blank=True)
     last_modified_time = models.DateTimeField(blank=True, null=True)
-    date_pattern = models.ForeignKey('DatePattern', blank=True, null=True)
+    date_pattern = models.ForeignKey('DatePattern', blank=True, null=True, on_delete=models.CASCADE)
     rooms = models.ManyToManyField('Room', through='AssignedRooms')
     instructors = models.ManyToManyField('DepartmentalInstructor',
                                          through='AssignedInstructors')
@@ -99,7 +99,7 @@ class AttachmentType(models.Model):
 
 class Building(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    session = models.ForeignKey('Sessions', blank=True, null=True)
+    session = models.ForeignKey('Sessions', blank=True, null=True, on_delete=models.CASCADE)
     abbreviation = models.CharField(max_length=10, blank=True)
     name = models.CharField(max_length=100, blank=True)
     coordinate_x = models.FloatField(blank=True, null=True)
@@ -114,8 +114,8 @@ class Building(models.Model):
 class BuildingPref(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     owner_id = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
-    pref_level = models.ForeignKey('PreferenceLevel', blank=True, null=True)
-    bldg = models.ForeignKey(Building, blank=True, null=True)
+    pref_level = models.ForeignKey('PreferenceLevel', blank=True, null=True, on_delete=models.CASCADE)
+    bldg = models.ForeignKey(Building, blank=True, null=True, on_delete=models.CASCADE)
     distance_from = models.IntegerField(blank=True, null=True)
     last_modified_time = models.DateTimeField(blank=True, null=True)
 
@@ -126,14 +126,14 @@ class BuildingPref(models.Model):
 
 class ChangeLog(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    session = models.ForeignKey('Sessions', blank=True, null=True)
-    manager = models.ForeignKey('TimetableManager', blank=True, null=True)
+    session = models.ForeignKey('Sessions', blank=True, null=True, on_delete=models.CASCADE)
+    manager = models.ForeignKey('TimetableManager', blank=True, null=True, on_delete=models.CASCADE)
     time_stamp = models.DateTimeField(blank=True, null=True)
     obj_type = models.CharField(max_length=255, blank=True)
     obj_uid = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
     obj_title = models.CharField(max_length=255, blank=True)
-    subj_area = models.ForeignKey('SubjectArea', blank=True, null=True)
-    department = models.ForeignKey('Department', blank=True, null=True)
+    subj_area = models.ForeignKey('SubjectArea', blank=True, null=True, on_delete=models.CASCADE)
+    department = models.ForeignKey('Department', blank=True, null=True, on_delete=models.CASCADE)
     source = models.CharField(max_length=50, blank=True)
     operation = models.CharField(max_length=50, blank=True)
     detail = models.TextField(blank=True)
@@ -145,14 +145,14 @@ class ChangeLog(models.Model):
 
 class Class(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    subpart = models.ForeignKey('SchedulingSubpart', blank=True, null=True)
+    subpart = models.ForeignKey('SchedulingSubpart', blank=True, null=True, on_delete=models.CASCADE)
     expected_capacity = models.IntegerField(blank=True, null=True)
     nbr_rooms = models.IntegerField(blank=True, null=True)
-    parent_class = models.ForeignKey('self', blank=True, null=True)
+    parent_class = models.ForeignKey('self', blank=True, null=True, on_delete=models.CASCADE)
     owner_id = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
     room_capacity = models.IntegerField(blank=True, null=True)
     notes = models.CharField(max_length=1000, blank=True)
-    date_pattern = models.ForeignKey('DatePattern', blank=True, null=True)
+    date_pattern = models.ForeignKey('DatePattern', blank=True, null=True, on_delete=models.CASCADE)
     managing_dept = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
     display_instructor = models.IntegerField(blank=True, null=True)
     sched_print_note = models.CharField(max_length=2000, blank=True)
@@ -174,8 +174,8 @@ class Class(models.Model):
 
 class ClassInstructor(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    class_field = models.ForeignKey(Class, db_column='class_id', blank=True, null=True)  # Field renamed because it was a Python reserved word.
-    instructor = models.ForeignKey('DepartmentalInstructor', blank=True, null=True)
+    class_field = models.ForeignKey(Class, db_column='class_id', blank=True, null=True, on_delete=models.CASCADE)  # Field renamed because it was a Python reserved word.
+    instructor = models.ForeignKey('DepartmentalInstructor', blank=True, null=True, on_delete=models.CASCADE)
     percent_share = models.IntegerField(blank=True, null=True)
     is_lead = models.IntegerField(blank=True, null=True)
     last_modified_time = models.DateTimeField(blank=True, null=True)
@@ -187,9 +187,9 @@ class ClassInstructor(models.Model):
 
 class ClassWaitlist(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    student = models.ForeignKey('Student', blank=True, null=True)
-    course_request = models.ForeignKey('CourseRequest', blank=True, null=True)
-    class_field = models.ForeignKey(Class, db_column='class_id', blank=True, null=True)  # Field renamed because it was a Python reserved word.
+    student = models.ForeignKey('Student', blank=True, null=True, on_delete=models.CASCADE)
+    course_request = models.ForeignKey('CourseRequest', blank=True, null=True, on_delete=models.CASCADE)
+    class_field = models.ForeignKey(Class, db_column='class_id', blank=True, null=True, on_delete=models.CASCADE)  # Field renamed because it was a Python reserved word.
     type = models.BigIntegerField(blank=True, null=True)
     timestamp = models.DateTimeField(blank=True, null=True)
 
@@ -210,8 +210,8 @@ class ClusterDiscovery(models.Model):
 
 
 class ConstraintInfo(models.Model):
-    assignment = models.ForeignKey(Assignment)
-    solver_info = models.ForeignKey('SolverInfo')
+    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE)
+    solver_info = models.ForeignKey('SolverInfo', on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -257,8 +257,8 @@ class CourseCreditType(models.Model):
 class CourseCreditUnitConfig(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     credit_format = models.CharField(max_length=20, blank=True)
-    owner = models.ForeignKey('SchedulingSubpart', blank=True, null=True)
-    credit_type = models.ForeignKey(CourseCreditType, db_column='credit_type', blank=True, null=True)
+    owner = models.ForeignKey('SchedulingSubpart', blank=True, null=True, on_delete=models.CASCADE)
+    credit_type = models.ForeignKey(CourseCreditType, db_column='credit_type', blank=True, null=True, on_delete=models.CASCADE)
     credit_unit_type = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
     defines_credit_at_course_level = models.IntegerField(blank=True, null=True)
     fixed_units = models.FloatField(blank=True, null=True)
@@ -266,7 +266,7 @@ class CourseCreditUnitConfig(models.Model):
     max_units = models.FloatField(blank=True, null=True)
     fractional_incr_allowed = models.IntegerField(blank=True, null=True)
     last_modified_time = models.DateTimeField(blank=True, null=True)
-    course = models.ForeignKey('CourseOffering', blank=True, null=True)
+    course = models.ForeignKey('CourseOffering', blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -286,12 +286,12 @@ class CourseCreditUnitType(models.Model):
 
 class CourseDemand(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    student = models.ForeignKey('Student', blank=True, null=True)
+    student = models.ForeignKey('Student', blank=True, null=True, on_delete=models.CASCADE)
     priority = models.BigIntegerField(blank=True, null=True)
     waitlist = models.IntegerField(blank=True, null=True)
     is_alternative = models.IntegerField(blank=True, null=True)
     timestamp = models.DateTimeField(blank=True, null=True)
-    free_time = models.ForeignKey('FreeTime', blank=True, null=True)
+    free_time = models.ForeignKey('FreeTime', blank=True, null=True, on_delete=models.CASCADE)
     changed_by = models.CharField(max_length=40, blank=True)
 
     class Meta:
@@ -305,11 +305,11 @@ class CourseOffering(models.Model):
     is_control = models.IntegerField(blank=True, null=True)
     perm_id = models.CharField(max_length=20, blank=True)
     proj_demand = models.BigIntegerField(blank=True, null=True)
-    instr_offr = models.ForeignKey('InstructionalOffering', blank=True, null=True)
-    subject_area = models.ForeignKey('SubjectArea', blank=True, null=True)
+    instr_offr = models.ForeignKey('InstructionalOffering', blank=True, null=True, on_delete=models.CASCADE)
+    subject_area = models.ForeignKey('SubjectArea', blank=True, null=True, on_delete=models.CASCADE)
     title = models.CharField(max_length=90, blank=True)
     schedule_book_note = models.CharField(max_length=1000, blank=True)
-    demand_offering = models.ForeignKey('self', blank=True, null=True)
+    demand_offering = models.ForeignKey('self', blank=True, null=True, on_delete=models.CASCADE)
     demand_offering_type = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
     nbr_expected_stdents = models.BigIntegerField(blank=True, null=True)
     external_uid = models.CharField(max_length=40, blank=True)
@@ -318,8 +318,8 @@ class CourseOffering(models.Model):
     lastlike_demand = models.BigIntegerField(blank=True, null=True)
     enrollment = models.BigIntegerField(blank=True, null=True)
     reservation = models.BigIntegerField(blank=True, null=True)
-    course_type = models.ForeignKey('CourseType', blank=True, null=True)
-    consent_type = models.ForeignKey('OffrConsentType', db_column='consent_type', blank=True, null=True)
+    course_type = models.ForeignKey('CourseType', blank=True, null=True, on_delete=models.CASCADE)
+    consent_type = models.ForeignKey('OffrConsentType', db_column='consent_type', blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -328,8 +328,8 @@ class CourseOffering(models.Model):
 
 class CourseRequest(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    course_demand = models.ForeignKey(CourseDemand, blank=True, null=True)
-    course_offering = models.ForeignKey(CourseOffering, blank=True, null=True)
+    course_demand = models.ForeignKey(CourseDemand, blank=True, null=True, on_delete=models.CASCADE)
+    course_offering = models.ForeignKey(CourseOffering, blank=True, null=True, on_delete=models.CASCADE)
     ord = models.BigIntegerField(blank=True, null=True)
     allow_overlap = models.IntegerField(blank=True, null=True)
     credit = models.BigIntegerField(blank=True, null=True)
@@ -341,7 +341,7 @@ class CourseRequest(models.Model):
 
 class CourseRequestOption(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    course_request = models.ForeignKey(CourseRequest, blank=True, null=True)
+    course_request = models.ForeignKey(CourseRequest, blank=True, null=True, on_delete=models.CASCADE)
     option_type = models.BigIntegerField(blank=True, null=True)
     value = models.TextField(blank=True)
 
@@ -352,7 +352,7 @@ class CourseRequestOption(models.Model):
 
 class CourseSubpartCredit(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    course_catalog = models.ForeignKey(CourseCatalog, blank=True, null=True)
+    course_catalog = models.ForeignKey(CourseCatalog, blank=True, null=True, on_delete=models.CASCADE)
     subpart_id = models.CharField(max_length=10, blank=True)
     credit_type = models.CharField(max_length=20, blank=True)
     credit_unit_type = models.CharField(max_length=20, blank=True)
@@ -391,8 +391,8 @@ class Curriculum(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     abbv = models.CharField(max_length=20)
     name = models.CharField(max_length=60)
-    acad_area = models.ForeignKey(AcademicArea, blank=True, null=True)
-    dept = models.ForeignKey('Department')
+    acad_area = models.ForeignKey(AcademicArea, blank=True, null=True, on_delete=models.CASCADE)
+    dept = models.ForeignKey('Department', on_delete=models.CASCADE)
     multiple_majors = models.IntegerField()
 
     class Meta:
@@ -402,9 +402,9 @@ class Curriculum(models.Model):
 
 class CurriculumClasf(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    curriculum = models.ForeignKey(Curriculum)
+    curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE)
     name = models.CharField(max_length=20)
-    acad_clasf = models.ForeignKey(AcademicClassification, blank=True, null=True)
+    acad_clasf = models.ForeignKey(AcademicClassification, blank=True, null=True, on_delete=models.CASCADE)
     nr_students = models.BigIntegerField()
     ord = models.BigIntegerField()
     students = models.TextField(blank=True)
@@ -416,8 +416,8 @@ class CurriculumClasf(models.Model):
 
 class CurriculumCourse(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    course = models.ForeignKey(CourseOffering)
-    cur_clasf = models.ForeignKey(CurriculumClasf)
+    course = models.ForeignKey(CourseOffering, on_delete=models.CASCADE)
+    cur_clasf = models.ForeignKey(CurriculumClasf, on_delete=models.CASCADE)
     pr_share = models.FloatField()
     ord = models.BigIntegerField()
 
@@ -427,8 +427,8 @@ class CurriculumCourse(models.Model):
 
 
 class CurriculumCourseGroup(models.Model):
-    group = models.ForeignKey('CurriculumGroup')
-    cur_course = models.ForeignKey(CurriculumCourse)
+    group = models.ForeignKey('CurriculumGroup', on_delete=models.CASCADE)
+    cur_course = models.ForeignKey(CurriculumCourse, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -440,7 +440,7 @@ class CurriculumGroup(models.Model):
     name = models.CharField(max_length=20)
     color = models.CharField(max_length=20, blank=True)
     type = models.BigIntegerField()
-    curriculum = models.ForeignKey(Curriculum)
+    curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -448,8 +448,8 @@ class CurriculumGroup(models.Model):
 
 
 class CurriculumMajor(models.Model):
-    curriculum = models.ForeignKey(Curriculum)
-    major = models.ForeignKey('PosMajor')
+    curriculum = models.ForeignKey(Curriculum, on_delete=models.CASCADE)
+    major = models.ForeignKey('PosMajor', on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -458,9 +458,9 @@ class CurriculumMajor(models.Model):
 
 class CurriculumRule(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    acad_area = models.ForeignKey(AcademicArea)
-    major = models.ForeignKey('PosMajor', blank=True, null=True)
-    acad_clasf = models.ForeignKey(AcademicClassification)
+    acad_area = models.ForeignKey(AcademicArea, on_delete=models.CASCADE)
+    major = models.ForeignKey('PosMajor', blank=True, null=True, on_delete=models.CASCADE)
+    acad_clasf = models.ForeignKey(AcademicClassification, on_delete=models.CASCADE)
     projection = models.FloatField()
 
     class Meta:
@@ -470,7 +470,7 @@ class CurriculumRule(models.Model):
 
 class DateMapping(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    session = models.ForeignKey('Sessions')
+    session = models.ForeignKey('Sessions', on_delete=models.CASCADE)
     class_date = models.BigIntegerField()
     event_date = models.BigIntegerField()
     note = models.CharField(max_length=1000, blank=True)
@@ -487,7 +487,7 @@ class DatePattern(models.Model):
     offset = models.BigIntegerField(blank=True, null=True)
     type = models.BigIntegerField(blank=True, null=True)
     visible = models.IntegerField(blank=True, null=True)
-    session = models.ForeignKey('Sessions', blank=True, null=True)
+    session = models.ForeignKey('Sessions', blank=True, null=True, on_delete=models.CASCADE)
     nr_weeks = models.FloatField(blank=True, null=True)
 
     class Meta:
@@ -496,8 +496,8 @@ class DatePattern(models.Model):
 
 
 class DatePatternDept(models.Model):
-    dept = models.ForeignKey('Department')
-    pattern = models.ForeignKey(DatePattern)
+    dept = models.ForeignKey('Department', on_delete=models.CASCADE)
+    pattern = models.ForeignKey(DatePattern, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -505,8 +505,8 @@ class DatePatternDept(models.Model):
 
 
 class DatePatternParent(models.Model):
-    date_pattern = models.ForeignKey(DatePattern)
-    parent = models.ForeignKey(DatePattern, related_name='child_set')
+    date_pattern = models.ForeignKey(DatePattern, on_delete=models.CASCADE)
+    parent = models.ForeignKey(DatePattern, related_name='child_set', on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -516,8 +516,8 @@ class DatePatternParent(models.Model):
 class DatePatternPref(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     owner_id = models.DecimalField(max_digits=20, decimal_places=0)
-    pref_level = models.ForeignKey('PreferenceLevel')
-    date_pattern = models.ForeignKey(DatePattern)
+    pref_level = models.ForeignKey('PreferenceLevel', on_delete=models.CASCADE)
+    date_pattern = models.ForeignKey(DatePattern, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -545,8 +545,8 @@ class Department(models.Model):
     external_manager = models.IntegerField(blank=True, null=True)
     external_mgr_label = models.CharField(max_length=30, blank=True)
     external_mgr_abbv = models.CharField(max_length=10, blank=True)
-    solver_group = models.ForeignKey('SolverGroup', blank=True, null=True)
-    status_type = models.ForeignKey('DeptStatusType', db_column='status_type', blank=True, null=True)
+    solver_group = models.ForeignKey('SolverGroup', blank=True, null=True, on_delete=models.CASCADE)
+    status_type = models.ForeignKey('DeptStatusType', db_column='status_type', blank=True, null=True, on_delete=models.CASCADE)
     dist_priority = models.BigIntegerField(blank=True, null=True)
     allow_req_time = models.IntegerField(blank=True, null=True)
     allow_req_room = models.IntegerField(blank=True, null=True)
@@ -568,13 +568,13 @@ class DepartmentalInstructor(models.Model):
     lname = models.CharField(max_length=100, blank=True)
     fname = models.CharField(max_length=100, blank=True)
     mname = models.CharField(max_length=100, blank=True)
-    pos_code_type = models.ForeignKey('PositionType', db_column='pos_code_type', blank=True, null=True)
+    pos_code_type = models.ForeignKey('PositionType', db_column='pos_code_type', blank=True, null=True, on_delete=models.CASCADE)
     note = models.CharField(max_length=2048, blank=True)
-    department_uniqueid = models.ForeignKey(Department, db_column='department_uniqueid', blank=True, null=True)
+    department_uniqueid = models.ForeignKey(Department, db_column='department_uniqueid', blank=True, null=True, on_delete=models.CASCADE)
     ignore_too_far = models.IntegerField(blank=True, null=True)
     last_modified_time = models.DateTimeField(blank=True, null=True)
     email = models.CharField(max_length=200, blank=True)
-    role = models.ForeignKey('Roles', blank=True, null=True)
+    role = models.ForeignKey('Roles', blank=True, null=True, on_delete=models.CASCADE)
     acad_title = models.CharField(max_length=50, blank=True)
 
     class Meta:
@@ -596,8 +596,8 @@ class DeptStatusType(models.Model):
 
 
 class DeptToTtMgr(models.Model):
-    timetable_mgr = models.ForeignKey('TimetableManager')
-    department = models.ForeignKey(Department)
+    timetable_mgr = models.ForeignKey('TimetableManager', on_delete=models.CASCADE)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -606,8 +606,8 @@ class DeptToTtMgr(models.Model):
 
 class Designator(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    subject_area = models.ForeignKey('SubjectArea', blank=True, null=True)
-    instructor = models.ForeignKey(DepartmentalInstructor, blank=True, null=True)
+    subject_area = models.ForeignKey('SubjectArea', blank=True, null=True, on_delete=models.CASCADE)
+    instructor = models.ForeignKey(DepartmentalInstructor, blank=True, null=True, on_delete=models.CASCADE)
     code = models.CharField(max_length=3, blank=True)
     last_modified_time = models.DateTimeField(blank=True, null=True)
 
@@ -617,8 +617,8 @@ class Designator(models.Model):
 
 
 class DistTypeDept(models.Model):
-    dist_type = models.ForeignKey('DistributionType')
-    dept = models.ForeignKey(Department)
+    dist_type = models.ForeignKey('DistributionType', on_delete=models.CASCADE)
+    dept = models.ForeignKey(Department, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -627,7 +627,7 @@ class DistTypeDept(models.Model):
 
 class DistributionObject(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    dist_pref = models.ForeignKey('DistributionPref', blank=True, null=True)
+    dist_pref = models.ForeignKey('DistributionPref', blank=True, null=True, on_delete=models.CASCADE)
     sequence_number = models.IntegerField(blank=True, null=True)
     pref_group_id = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
     last_modified_time = models.DateTimeField(blank=True, null=True)
@@ -640,8 +640,8 @@ class DistributionObject(models.Model):
 class DistributionPref(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     owner_id = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
-    pref_level = models.ForeignKey('PreferenceLevel', blank=True, null=True)
-    dist_type = models.ForeignKey('DistributionType', blank=True, null=True)
+    pref_level = models.ForeignKey('PreferenceLevel', blank=True, null=True, on_delete=models.CASCADE)
+    dist_type = models.ForeignKey('DistributionType', blank=True, null=True, on_delete=models.CASCADE)
     grouping = models.BigIntegerField(blank=True, null=True)
     last_modified_time = models.DateTimeField(blank=True, null=True)
     uid_rolled_fwd_from = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
@@ -689,13 +689,13 @@ class Event(models.Model):
     min_capacity = models.BigIntegerField(blank=True, null=True)
     max_capacity = models.BigIntegerField(blank=True, null=True)
     sponsoring_org = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
-    main_contact = models.ForeignKey('EventContact', blank=True, null=True)
-    class_field = models.ForeignKey(Class, db_column='class_id', blank=True, null=True)  # Field renamed because it was a Python reserved word.
-    exam = models.ForeignKey('Exam', blank=True, null=True)
+    main_contact = models.ForeignKey('EventContact', blank=True, null=True, on_delete=models.CASCADE)
+    class_field = models.ForeignKey(Class, db_column='class_id', blank=True, null=True, on_delete=models.CASCADE)  # Field renamed because it was a Python reserved word.
+    exam = models.ForeignKey('Exam', blank=True, null=True, on_delete=models.CASCADE)
     event_type = models.BigIntegerField(blank=True, null=True)
     req_attd = models.IntegerField(blank=True, null=True)
     email = models.CharField(max_length=1000, blank=True)
-    sponsor_org = models.ForeignKey('SponsoringOrganization', blank=True, null=True)
+    sponsor_org = models.ForeignKey('SponsoringOrganization', blank=True, null=True, on_delete=models.CASCADE)
     expiration_date = models.DateField(blank=True, null=True)
 
     class Meta:
@@ -719,8 +719,8 @@ class EventContact(models.Model):
 
 
 class EventJoinEventContact(models.Model):
-    event = models.ForeignKey(Event)
-    event_contact = models.ForeignKey(EventContact)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
+    event_contact = models.ForeignKey(EventContact, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -729,7 +729,7 @@ class EventJoinEventContact(models.Model):
 
 class EventNote(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    event = models.ForeignKey(Event)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
     text_note = models.CharField(max_length=1000, blank=True)
     time_stamp = models.DateTimeField(blank=True, null=True)
     note_type = models.BigIntegerField()
@@ -746,8 +746,8 @@ class EventNote(models.Model):
 
 
 class EventNoteMeeting(models.Model):
-    note = models.ForeignKey(EventNote)
-    meeting = models.ForeignKey('Meeting')
+    note = models.ForeignKey(EventNote, on_delete=models.CASCADE)
+    meeting = models.ForeignKey('Meeting', on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -768,19 +768,19 @@ class ExactTimeMins(models.Model):
 
 class Exam(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    session = models.ForeignKey('Sessions')
+    session = models.ForeignKey('Sessions', on_delete=models.CASCADE)
     name = models.CharField(max_length=100, blank=True)
     note = models.CharField(max_length=1000, blank=True)
     length = models.BigIntegerField()
     max_nbr_rooms = models.BigIntegerField()
     seating_type = models.BigIntegerField()
-    assigned_period = models.ForeignKey('ExamPeriod', db_column='assigned_period', blank=True, null=True)
+    assigned_period = models.ForeignKey('ExamPeriod', db_column='assigned_period', blank=True, null=True, on_delete=models.CASCADE)
     assigned_pref = models.CharField(max_length=100, blank=True)
     avg_period = models.BigIntegerField(blank=True, null=True)
     uid_rolled_fwd_from = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
     exam_size = models.BigIntegerField(blank=True, null=True)
     print_offset = models.BigIntegerField(blank=True, null=True)
-    exam_type = models.ForeignKey('ExamType')
+    exam_type = models.ForeignKey('ExamType', on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -788,8 +788,8 @@ class Exam(models.Model):
 
 
 class ExamInstructor(models.Model):
-    exam = models.ForeignKey(Exam)
-    instructor = models.ForeignKey(DepartmentalInstructor)
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE)
+    instructor = models.ForeignKey(DepartmentalInstructor, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -799,8 +799,8 @@ class ExamInstructor(models.Model):
 class ExamLocationPref(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     location_id = models.DecimalField(max_digits=20, decimal_places=0)
-    pref_level = models.ForeignKey('PreferenceLevel')
-    period = models.ForeignKey('ExamPeriod')
+    pref_level = models.ForeignKey('PreferenceLevel', on_delete=models.CASCADE)
+    period = models.ForeignKey('ExamPeriod', on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -808,9 +808,9 @@ class ExamLocationPref(models.Model):
 
 
 class ExamManagers(models.Model):
-    session = models.ForeignKey('ExamStatus')
-    type = models.ForeignKey('ExamStatus', related_name='exam_manager_type_set')
-    manager = models.ForeignKey('TimetableManager')
+    session = models.ForeignKey('ExamStatus', on_delete=models.CASCADE)
+    type = models.ForeignKey('ExamStatus', related_name='exam_manager_type_set', on_delete=models.CASCADE)
+    manager = models.ForeignKey('TimetableManager', on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -819,10 +819,10 @@ class ExamManagers(models.Model):
 
 class ExamOwner(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    exam = models.ForeignKey(Exam)
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE)
     owner_id = models.DecimalField(max_digits=20, decimal_places=0)
     owner_type = models.BigIntegerField()
-    course = models.ForeignKey(CourseOffering, blank=True, null=True)
+    course = models.ForeignKey(CourseOffering, blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -831,14 +831,14 @@ class ExamOwner(models.Model):
 
 class ExamPeriod(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    session = models.ForeignKey('Sessions')
+    session = models.ForeignKey('Sessions', on_delete=models.CASCADE)
     date_ofs = models.BigIntegerField()
     start_slot = models.BigIntegerField()
     length = models.BigIntegerField()
-    pref_level = models.ForeignKey('PreferenceLevel')
+    pref_level = models.ForeignKey('PreferenceLevel', on_delete=models.CASCADE)
     event_start_offset = models.BigIntegerField()
     event_stop_offset = models.BigIntegerField()
-    exam_type = models.ForeignKey('ExamType')
+    exam_type = models.ForeignKey('ExamType', on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -848,8 +848,8 @@ class ExamPeriod(models.Model):
 class ExamPeriodPref(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     owner_id = models.DecimalField(max_digits=20, decimal_places=0)
-    pref_level = models.ForeignKey('PreferenceLevel')
-    period = models.ForeignKey(ExamPeriod)
+    pref_level = models.ForeignKey('PreferenceLevel', on_delete=models.CASCADE)
+    period = models.ForeignKey(ExamPeriod, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -857,7 +857,7 @@ class ExamPeriodPref(models.Model):
 
 
 class ExamRoomAssignment(models.Model):
-    exam = models.ForeignKey(Exam)
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE)
     location_id = models.DecimalField(max_digits=20, decimal_places=0)
 
     class Meta:
@@ -866,9 +866,9 @@ class ExamRoomAssignment(models.Model):
 
 
 class ExamStatus(models.Model):
-    session = models.ForeignKey('Sessions')
-    type = models.ForeignKey('ExamType')
-    status = models.ForeignKey(DeptStatusType, blank=True, null=True)
+    session = models.ForeignKey('Sessions', on_delete=models.CASCADE)
+    type = models.ForeignKey('ExamType', on_delete=models.CASCADE)
+    status = models.ForeignKey(DeptStatusType, blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -903,7 +903,7 @@ class ExternalBuilding(models.Model):
 
 class ExternalRoom(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    external_bldg = models.ForeignKey(ExternalBuilding, blank=True, null=True)
+    external_bldg = models.ForeignKey(ExternalBuilding, blank=True, null=True, on_delete=models.CASCADE)
     external_uid = models.CharField(max_length=40, blank=True)
     room_number = models.CharField(max_length=10, blank=True)
     coordinate_x = models.FloatField(blank=True, null=True)
@@ -913,7 +913,7 @@ class ExternalRoom(models.Model):
     instructional = models.IntegerField(blank=True, null=True)
     display_name = models.CharField(max_length=100, blank=True)
     exam_capacity = models.BigIntegerField(blank=True, null=True)
-    room_type = models.ForeignKey('RoomType', db_column='room_type', blank=True, null=True)
+    room_type = models.ForeignKey('RoomType', db_column='room_type', blank=True, null=True, on_delete=models.CASCADE)
     area = models.FloatField(blank=True, null=True)
 
     class Meta:
@@ -923,7 +923,7 @@ class ExternalRoom(models.Model):
 
 class ExternalRoomDepartment(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    external_room = models.ForeignKey(ExternalRoom, blank=True, null=True)
+    external_room = models.ForeignKey(ExternalRoom, blank=True, null=True, on_delete=models.CASCADE)
     department_code = models.CharField(max_length=50, blank=True)
     percent = models.BigIntegerField(blank=True, null=True)
     assignment_type = models.CharField(max_length=20, blank=True)
@@ -935,7 +935,7 @@ class ExternalRoomDepartment(models.Model):
 
 class ExternalRoomFeature(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    external_room = models.ForeignKey(ExternalRoom, blank=True, null=True)
+    external_room = models.ForeignKey(ExternalRoom, blank=True, null=True, on_delete=models.CASCADE)
     name = models.CharField(max_length=20, blank=True)
     value = models.CharField(max_length=20, blank=True)
 
@@ -962,7 +962,7 @@ class FreeTime(models.Model):
     start_slot = models.BigIntegerField(blank=True, null=True)
     length = models.BigIntegerField(blank=True, null=True)
     category = models.BigIntegerField(blank=True, null=True)
-    session = models.ForeignKey('Sessions', blank=True, null=True)
+    session = models.ForeignKey('Sessions', blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -996,7 +996,7 @@ class History(models.Model):
     new_value = models.CharField(max_length=20, blank=True)
     old_number = models.CharField(max_length=20, blank=True)
     new_number = models.CharField(max_length=20, blank=True)
-    session = models.ForeignKey('Sessions', blank=True, null=True)
+    session = models.ForeignKey('Sessions', blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1006,13 +1006,13 @@ class History(models.Model):
 class InstrOfferingConfig(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     config_limit = models.BigIntegerField(blank=True, null=True)
-    instr_offr = models.ForeignKey('InstructionalOffering', blank=True, null=True)
+    instr_offr = models.ForeignKey('InstructionalOffering', blank=True, null=True, on_delete=models.CASCADE)
     unlimited_enrollment = models.IntegerField(blank=True, null=True)
     name = models.CharField(max_length=10, blank=True)
     last_modified_time = models.DateTimeField(blank=True, null=True)
     uid_rolled_fwd_from = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
-    duration_type = models.ForeignKey(DurationType, blank=True, null=True)
-    instr_method = models.ForeignKey('InstructionalMethod', blank=True, null=True)
+    duration_type = models.ForeignKey(DurationType, blank=True, null=True, on_delete=models.CASCADE)
+    instr_method = models.ForeignKey('InstructionalMethod', blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1067,9 +1067,9 @@ class ItypeDesc(models.Model):
 class Jenrl(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     jenrl = models.FloatField(blank=True, null=True)
-    solution = models.ForeignKey('Solution', blank=True, null=True)
-    class1 = models.ForeignKey(Class, blank=True, null=True, related_name='jenrl1_set')
-    class2 = models.ForeignKey(Class, blank=True, null=True, related_name='jentl2_set')
+    solution = models.ForeignKey('Solution', blank=True, null=True, on_delete=models.CASCADE)
+    class1 = models.ForeignKey(Class, blank=True, null=True, related_name='jenrl1_set', on_delete=models.CASCADE)
+    class2 = models.ForeignKey(Class, blank=True, null=True, related_name='jentl2_set', on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1078,8 +1078,8 @@ class Jenrl(models.Model):
 
 class LastlikeCourseDemand(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    student = models.ForeignKey('Student', blank=True, null=True)
-    subject_area = models.ForeignKey('SubjectArea', blank=True, null=True)
+    student = models.ForeignKey('Student', blank=True, null=True, on_delete=models.CASCADE)
+    subject_area = models.ForeignKey('SubjectArea', blank=True, null=True, on_delete=models.CASCADE)
     course_nbr = models.CharField(max_length=10, blank=True)
     priority = models.BigIntegerField(blank=True, null=True)
     course_perm_id = models.CharField(max_length=20, blank=True)
@@ -1091,12 +1091,12 @@ class LastlikeCourseDemand(models.Model):
 
 class LocationPicture(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    location = models.ForeignKey('NonUniversityLocation')
+    location = models.ForeignKey('NonUniversityLocation', on_delete=models.CASCADE)
     data_file = models.TextField()
     file_name = models.CharField(max_length=260)
     content_type = models.CharField(max_length=260)
     time_stamp = models.DateTimeField()
-    type = models.ForeignKey(AttachmentType, blank=True, null=True)
+    type = models.ForeignKey(AttachmentType, blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1105,9 +1105,9 @@ class LocationPicture(models.Model):
 
 class ManagerSettings(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    key = models.ForeignKey('Settings', blank=True, null=True)
+    key = models.ForeignKey('Settings', blank=True, null=True, on_delete=models.CASCADE)
     value = models.CharField(max_length=100, blank=True)
-    user_uniqueid = models.ForeignKey('TimetableManager', db_column='user_uniqueid', blank=True, null=True)
+    user_uniqueid = models.ForeignKey('TimetableManager', db_column='user_uniqueid', blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1116,7 +1116,7 @@ class ManagerSettings(models.Model):
 
 class Meeting(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    event = models.ForeignKey(Event)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
     meeting_date = models.DateField()
     start_period = models.BigIntegerField()
     start_offset = models.BigIntegerField(blank=True, null=True)
@@ -1149,7 +1149,7 @@ class MessageLog(models.Model):
 
 class NonUniversityLocation(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    session = models.ForeignKey('Sessions', blank=True, null=True)
+    session = models.ForeignKey('Sessions', blank=True, null=True, on_delete=models.CASCADE)
     name = models.CharField(max_length=20, blank=True)
     capacity = models.BigIntegerField(blank=True, null=True)
     coordinate_x = models.FloatField(blank=True, null=True)
@@ -1161,8 +1161,8 @@ class NonUniversityLocation(models.Model):
     display_name = models.CharField(max_length=100, blank=True)
     exam_capacity = models.BigIntegerField(blank=True, null=True)
     permanent_id = models.DecimalField(max_digits=20, decimal_places=0)
-    room_type = models.ForeignKey('RoomType', db_column='room_type', blank=True, null=True)
-    event_dept = models.ForeignKey(Department, blank=True, null=True)
+    room_type = models.ForeignKey('RoomType', db_column='room_type', blank=True, null=True, on_delete=models.CASCADE)
+    event_dept = models.ForeignKey(Department, blank=True, null=True, on_delete=models.CASCADE)
     area = models.FloatField(blank=True, null=True)
     break_time = models.BigIntegerField(blank=True, null=True)
     event_status = models.BigIntegerField(blank=True, null=True)
@@ -1177,8 +1177,8 @@ class NonUniversityLocation(models.Model):
 
 
 class OfferingCoordinator(models.Model):
-    offering = models.ForeignKey(InstructionalOffering)
-    instructor = models.ForeignKey(DepartmentalInstructor)
+    offering = models.ForeignKey(InstructionalOffering, on_delete=models.CASCADE)
+    instructor = models.ForeignKey(DepartmentalInstructor, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1198,10 +1198,10 @@ class OffrConsentType(models.Model):
 
 class OffrGroup(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    session = models.ForeignKey('Sessions', blank=True, null=True)
+    session = models.ForeignKey('Sessions', blank=True, null=True, on_delete=models.CASCADE)
     name = models.CharField(max_length=20, blank=True)
     description = models.CharField(max_length=200, blank=True)
-    department = models.ForeignKey(Department, blank=True, null=True)
+    department = models.ForeignKey(Department, blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1209,8 +1209,8 @@ class OffrGroup(models.Model):
 
 
 class OffrGroupOffering(models.Model):
-    offr_group = models.ForeignKey(OffrGroup)
-    instr_offering = models.ForeignKey(InstructionalOffering)
+    offr_group = models.ForeignKey(OffrGroup, on_delete=models.CASCADE)
+    instr_offering = models.ForeignKey(InstructionalOffering, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1218,8 +1218,8 @@ class OffrGroupOffering(models.Model):
 
 
 class PosAcadAreaMajor(models.Model):
-    academic_area = models.ForeignKey(AcademicArea)
-    major = models.ForeignKey('PosMajor')
+    academic_area = models.ForeignKey(AcademicArea, on_delete=models.CASCADE)
+    major = models.ForeignKey('PosMajor', on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1227,8 +1227,8 @@ class PosAcadAreaMajor(models.Model):
 
 
 class PosAcadAreaMinor(models.Model):
-    academic_area = models.ForeignKey(AcademicArea)
-    minor = models.ForeignKey('PosMinor')
+    academic_area = models.ForeignKey(AcademicArea, on_delete=models.CASCADE)
+    minor = models.ForeignKey('PosMinor', on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1240,7 +1240,7 @@ class PosMajor(models.Model):
     code = models.CharField(max_length=10, blank=True)
     name = models.CharField(max_length=50, blank=True)
     external_uid = models.CharField(max_length=20, blank=True)
-    session = models.ForeignKey('Sessions', blank=True, null=True)
+    session = models.ForeignKey('Sessions', blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1252,7 +1252,7 @@ class PosMinor(models.Model):
     code = models.CharField(max_length=10, blank=True)
     name = models.CharField(max_length=50, blank=True)
     external_uid = models.CharField(max_length=40, blank=True)
-    session = models.ForeignKey('Sessions', blank=True, null=True)
+    session = models.ForeignKey('Sessions', blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1300,10 +1300,10 @@ class QueryLog(models.Model):
 
 class RelatedCourseInfo(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    event = models.ForeignKey(Event)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE)
     owner_id = models.DecimalField(max_digits=20, decimal_places=0)
     owner_type = models.BigIntegerField()
-    course = models.ForeignKey(CourseOffering)
+    course = models.ForeignKey(CourseOffering, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1315,10 +1315,10 @@ class Reservation(models.Model):
     reservation_type = models.BigIntegerField()
     expiration_date = models.DateField(blank=True, null=True)
     reservation_limit = models.BigIntegerField(blank=True, null=True)
-    offering = models.ForeignKey(InstructionalOffering)
-    group = models.ForeignKey('StudentGroup', blank=True, null=True)
-    area = models.ForeignKey(AcademicArea, blank=True, null=True)
-    course = models.ForeignKey(CourseOffering, blank=True, null=True, related_name='reservation_set')
+    offering = models.ForeignKey(InstructionalOffering, on_delete=models.CASCADE)
+    group = models.ForeignKey('StudentGroup', blank=True, null=True, on_delete=models.CASCADE)
+    area = models.ForeignKey(AcademicArea, blank=True, null=True, on_delete=models.CASCADE)
+    course = models.ForeignKey(CourseOffering, blank=True, null=True, related_name='reservation_set', on_delete=models.CASCADE)
     override_type = models.BigIntegerField(blank=True, null=True)
 
     class Meta:
@@ -1327,8 +1327,8 @@ class Reservation(models.Model):
 
 
 class ReservationClasf(models.Model):
-    reservation = models.ForeignKey(Reservation)
-    acad_clasf = models.ForeignKey(AcademicClassification)
+    reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE)
+    acad_clasf = models.ForeignKey(AcademicClassification, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1336,8 +1336,8 @@ class ReservationClasf(models.Model):
 
 
 class ReservationClass(models.Model):
-    reservation = models.ForeignKey(Reservation)
-    class_field = models.ForeignKey(Class, db_column='class_id')  # Field renamed because it was a Python reserved word.
+    reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE)
+    class_field = models.ForeignKey(Class, db_column='class_id', on_delete=models.CASCADE)  # Field renamed because it was a Python reserved word.
 
     class Meta:
         managed = False
@@ -1345,8 +1345,8 @@ class ReservationClass(models.Model):
 
 
 class ReservationConfig(models.Model):
-    reservation = models.ForeignKey(Reservation)
-    config = models.ForeignKey(InstrOfferingConfig)
+    reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE)
+    config = models.ForeignKey(InstrOfferingConfig, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1354,8 +1354,8 @@ class ReservationConfig(models.Model):
 
 
 class ReservationMajor(models.Model):
-    reservation = models.ForeignKey(Reservation)
-    major = models.ForeignKey(PosMajor)
+    reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE)
+    major = models.ForeignKey(PosMajor, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1363,8 +1363,8 @@ class ReservationMajor(models.Model):
 
 
 class ReservationStudent(models.Model):
-    reservation = models.ForeignKey(Reservation)
-    student = models.ForeignKey('Student')
+    reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE)
+    student = models.ForeignKey('Student', on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1372,7 +1372,7 @@ class ReservationStudent(models.Model):
 
 
 class Rights(models.Model):
-    role = models.ForeignKey('Roles')
+    role = models.ForeignKey('Roles', on_delete=models.CASCADE)
     value = models.CharField(max_length=200)
 
     class Meta:
@@ -1396,8 +1396,8 @@ class Roles(models.Model):
 class Room(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     external_uid = models.CharField(max_length=40, blank=True)
-    session = models.ForeignKey('Sessions', blank=True, null=True)
-    building = models.ForeignKey(Building, blank=True, null=True)
+    session = models.ForeignKey('Sessions', blank=True, null=True, on_delete=models.CASCADE)
+    building = models.ForeignKey(Building, blank=True, null=True, on_delete=models.CASCADE)
     room_number = models.CharField(max_length=10, blank=True)
     capacity = models.BigIntegerField(blank=True, null=True)
     coordinate_x = models.FloatField(blank=True, null=True)
@@ -1410,8 +1410,8 @@ class Room(models.Model):
     display_name = models.CharField(max_length=100, blank=True)
     exam_capacity = models.BigIntegerField(blank=True, null=True)
     permanent_id = models.DecimalField(max_digits=20, decimal_places=0)
-    room_type = models.ForeignKey('RoomType', db_column='room_type', blank=True, null=True)
-    event_dept = models.ForeignKey(Department, blank=True, null=True)
+    room_type = models.ForeignKey('RoomType', db_column='room_type', blank=True, null=True, on_delete=models.CASCADE)
+    event_dept = models.ForeignKey(Department, blank=True, null=True, on_delete=models.CASCADE)
     area = models.FloatField(blank=True, null=True)
     break_time = models.BigIntegerField(blank=True, null=True)
     event_status = models.BigIntegerField(blank=True, null=True)
@@ -1427,7 +1427,7 @@ class Room(models.Model):
 class RoomDept(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     room_id = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
-    department = models.ForeignKey(Department, blank=True, null=True)
+    department = models.ForeignKey(Department, blank=True, null=True, on_delete=models.CASCADE)
     is_control = models.IntegerField(blank=True, null=True)
 
     class Meta:
@@ -1437,7 +1437,7 @@ class RoomDept(models.Model):
 
 class RoomExamType(models.Model):
     location_id = models.DecimalField(max_digits=20, decimal_places=0)
-    exam_type = models.ForeignKey(ExamType)
+    exam_type = models.ForeignKey(ExamType, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1450,10 +1450,10 @@ class RoomFeature(models.Model):
     label = models.CharField(max_length=60, blank=True)
     sis_reference = models.CharField(max_length=20, blank=True)
     sis_value = models.CharField(max_length=20, blank=True)
-    department = models.ForeignKey(Department, blank=True, null=True)
+    department = models.ForeignKey(Department, blank=True, null=True, on_delete=models.CASCADE)
     abbv = models.CharField(max_length=60, blank=True)
-    session = models.ForeignKey('Sessions', blank=True, null=True)
-    feature_type = models.ForeignKey(FeatureType, blank=True, null=True)
+    session = models.ForeignKey('Sessions', blank=True, null=True, on_delete=models.CASCADE)
+    feature_type = models.ForeignKey(FeatureType, blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1463,8 +1463,8 @@ class RoomFeature(models.Model):
 class RoomFeaturePref(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     owner_id = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
-    pref_level = models.ForeignKey(PreferenceLevel, blank=True, null=True)
-    room_feature = models.ForeignKey(RoomFeature, blank=True, null=True)
+    pref_level = models.ForeignKey(PreferenceLevel, blank=True, null=True, on_delete=models.CASCADE)
+    room_feature = models.ForeignKey(RoomFeature, blank=True, null=True, on_delete=models.CASCADE)
     last_modified_time = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -1474,12 +1474,12 @@ class RoomFeaturePref(models.Model):
 
 class RoomGroup(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    session = models.ForeignKey('Sessions', blank=True, null=True)
+    session = models.ForeignKey('Sessions', blank=True, null=True, on_delete=models.CASCADE)
     name = models.CharField(max_length=60, blank=True)
     description = models.CharField(max_length=200, blank=True)
     global_field = models.IntegerField(db_column='global', blank=True, null=True)  # Field renamed because it was a Python reserved word.
     default_group = models.IntegerField(blank=True, null=True)
-    department = models.ForeignKey(Department, blank=True, null=True)
+    department = models.ForeignKey(Department, blank=True, null=True, on_delete=models.CASCADE)
     abbv = models.CharField(max_length=60, blank=True)
 
     class Meta:
@@ -1490,8 +1490,8 @@ class RoomGroup(models.Model):
 class RoomGroupPref(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     owner_id = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
-    pref_level = models.ForeignKey(PreferenceLevel, blank=True, null=True)
-    room_group = models.ForeignKey(RoomGroup, blank=True, null=True)
+    pref_level = models.ForeignKey(PreferenceLevel, blank=True, null=True, on_delete=models.CASCADE)
+    room_group = models.ForeignKey(RoomGroup, blank=True, null=True, on_delete=models.CASCADE)
     last_modified_time = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -1500,7 +1500,7 @@ class RoomGroupPref(models.Model):
 
 
 class RoomGroupRoom(models.Model):
-    room_group = models.ForeignKey(RoomGroup)
+    room_group = models.ForeignKey(RoomGroup, on_delete=models.CASCADE)
     room_id = models.DecimalField(max_digits=20, decimal_places=0)
 
     class Meta:
@@ -1510,7 +1510,7 @@ class RoomGroupRoom(models.Model):
 
 class RoomJoinRoomFeature(models.Model):
     room_id = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
-    feature = models.ForeignKey(RoomFeature, blank=True, null=True)
+    feature = models.ForeignKey(RoomFeature, blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1519,12 +1519,12 @@ class RoomJoinRoomFeature(models.Model):
 
 class RoomPicture(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    location = models.ForeignKey(Room)
+    location = models.ForeignKey(Room, on_delete=models.CASCADE)
     data_file = models.TextField()
     file_name = models.CharField(max_length=260)
     content_type = models.CharField(max_length=260)
     time_stamp = models.DateTimeField()
-    type = models.ForeignKey(AttachmentType, blank=True, null=True)
+    type = models.ForeignKey(AttachmentType, blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1534,7 +1534,7 @@ class RoomPicture(models.Model):
 class RoomPref(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     owner_id = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
-    pref_level = models.ForeignKey(PreferenceLevel, blank=True, null=True)
+    pref_level = models.ForeignKey(PreferenceLevel, blank=True, null=True, on_delete=models.CASCADE)
     room_id = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
     last_modified_time = models.DateTimeField(blank=True, null=True)
 
@@ -1556,11 +1556,11 @@ class RoomType(models.Model):
 
 
 class RoomTypeOption(models.Model):
-    room_type = models.ForeignKey(RoomType, db_column='room_type')
+    room_type = models.ForeignKey(RoomType, db_column='room_type', on_delete=models.CASCADE)
     status = models.BigIntegerField()
     message = models.CharField(max_length=2048, blank=True)
     break_time = models.BigIntegerField()
-    department = models.ForeignKey(Department)
+    department = models.ForeignKey(Department, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1582,10 +1582,10 @@ class SavedHql(models.Model):
 class SchedulingSubpart(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     min_per_wk = models.IntegerField(blank=True, null=True)
-    parent = models.ForeignKey('self', db_column='parent', blank=True, null=True)
-    config = models.ForeignKey(InstrOfferingConfig, blank=True, null=True)
-    itype = models.ForeignKey(ItypeDesc, db_column='itype', blank=True, null=True)
-    date_pattern = models.ForeignKey(DatePattern, blank=True, null=True)
+    parent = models.ForeignKey('self', db_column='parent', blank=True, null=True, on_delete=models.CASCADE)
+    config = models.ForeignKey(InstrOfferingConfig, blank=True, null=True, on_delete=models.CASCADE)
+    itype = models.ForeignKey(ItypeDesc, db_column='itype', blank=True, null=True, on_delete=models.CASCADE)
+    date_pattern = models.ForeignKey(DatePattern, blank=True, null=True, on_delete=models.CASCADE)
     auto_time_spread = models.IntegerField(blank=True, null=True)
     subpart_suffix = models.CharField(max_length=5, blank=True)
     student_allow_overlap = models.IntegerField(blank=True, null=True)
@@ -1611,7 +1611,7 @@ class Script(models.Model):
 
 
 class ScriptParameter(models.Model):
-    script = models.ForeignKey(Script)
+    script = models.ForeignKey(Script, on_delete=models.CASCADE)
     name = models.CharField(max_length=128)
     label = models.CharField(max_length=256, blank=True)
     type = models.CharField(max_length=2048)
@@ -1623,8 +1623,8 @@ class ScriptParameter(models.Model):
 
 
 class SectioningCourseTypes(models.Model):
-    sectioning_status = models.ForeignKey('SectioningStatus')
-    course_type = models.ForeignKey(CourseType)
+    sectioning_status = models.ForeignKey('SectioningStatus', on_delete=models.CASCADE)
+    course_type = models.ForeignKey(CourseType, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1633,7 +1633,7 @@ class SectioningCourseTypes(models.Model):
 
 class SectioningInfo(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    class_field = models.ForeignKey(Class, db_column='class_id', blank=True, null=True)  # Field renamed because it was a Python reserved word.
+    class_field = models.ForeignKey(Class, db_column='class_id', blank=True, null=True, on_delete=models.CASCADE)  # Field renamed because it was a Python reserved word.
     nbr_exp_students = models.FloatField(blank=True, null=True)
     nbr_hold_students = models.FloatField(blank=True, null=True)
 
@@ -1646,7 +1646,7 @@ class SectioningLog(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     time_stamp = models.DateTimeField()
     student = models.CharField(max_length=40)
-    session = models.ForeignKey('Sessions')
+    session = models.ForeignKey('Sessions', on_delete=models.CASCADE)
     operation = models.CharField(max_length=20)
     action = models.TextField()
     result = models.BigIntegerField(blank=True, null=True)
@@ -1682,7 +1682,7 @@ class SectioningStatus(models.Model):
 
 
 class SessionConfig(models.Model):
-    session = models.ForeignKey('Sessions')
+    session = models.ForeignKey('Sessions', on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     value = models.CharField(max_length=4000, blank=True)
     description = models.CharField(max_length=500, blank=True)
@@ -1699,19 +1699,19 @@ class Sessions(models.Model):
     session_end_date_time = models.DateTimeField(blank=True, null=True)
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     holidays = models.CharField(max_length=400, blank=True)
-    def_datepatt = models.ForeignKey(DatePattern, blank=True, null=True)
-    status_type = models.ForeignKey(DeptStatusType, db_column='status_type', blank=True, null=True)
+    def_datepatt = models.ForeignKey(DatePattern, blank=True, null=True, on_delete=models.CASCADE)
+    status_type = models.ForeignKey(DeptStatusType, db_column='status_type', blank=True, null=True, on_delete=models.CASCADE)
     last_modified_time = models.DateTimeField(blank=True, null=True)
     academic_year = models.CharField(max_length=4, blank=True)
     academic_term = models.CharField(max_length=20, blank=True)
     exam_begin_date = models.DateTimeField(blank=True, null=True)
     event_begin_date = models.DateTimeField(blank=True, null=True)
     event_end_date = models.DateTimeField(blank=True, null=True)
-    sect_status = models.ForeignKey(SectioningStatus, db_column='sect_status', blank=True, null=True)
+    sect_status = models.ForeignKey(SectioningStatus, db_column='sect_status', blank=True, null=True, on_delete=models.CASCADE)
     wk_enroll = models.BigIntegerField()
     wk_change = models.BigIntegerField()
     wk_drop = models.BigIntegerField()
-    duration_type = models.ForeignKey(DurationType, blank=True, null=True)
+    duration_type = models.ForeignKey(DurationType, blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1738,7 +1738,7 @@ class Solution(models.Model):
     commit_date = models.DateTimeField(blank=True, null=True)
     note = models.CharField(max_length=1000, blank=True)
     creator = models.CharField(max_length=250, blank=True)
-    owner = models.ForeignKey('SolverGroup', blank=True, null=True)
+    owner = models.ForeignKey('SolverGroup', blank=True, null=True, on_delete=models.CASCADE)
     last_modified_time = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -1747,8 +1747,8 @@ class Solution(models.Model):
 
 
 class SolverGrToTtMgr(models.Model):
-    solver_group = models.ForeignKey('SolverGroup')
-    timetable_mgr = models.ForeignKey('TimetableManager')
+    solver_group = models.ForeignKey('SolverGroup', on_delete=models.CASCADE)
+    timetable_mgr = models.ForeignKey('TimetableManager', on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1759,7 +1759,7 @@ class SolverGroup(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     name = models.CharField(max_length=50, blank=True)
     abbv = models.CharField(max_length=50, blank=True)
-    session = models.ForeignKey(Sessions, blank=True, null=True)
+    session = models.ForeignKey(Sessions, blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1771,9 +1771,9 @@ class SolverInfo(models.Model):
     type = models.BigIntegerField(blank=True, null=True)
     value = models.TextField(blank=True)
     opt = models.CharField(max_length=250, blank=True)
-    solver_info_def = models.ForeignKey('SolverInfoDef', blank=True, null=True)
-    solution = models.ForeignKey(Solution, blank=True, null=True)
-    assignment = models.ForeignKey(Assignment, blank=True, null=True)
+    solver_info_def = models.ForeignKey('SolverInfoDef', blank=True, null=True, on_delete=models.CASCADE)
+    solution = models.ForeignKey(Solution, blank=True, null=True, on_delete=models.CASCADE)
+    assignment = models.ForeignKey(Assignment, blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1794,9 +1794,9 @@ class SolverInfoDef(models.Model):
 class SolverParameter(models.Model):
     uniqueid = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
     value = models.CharField(max_length=2048, blank=True)
-    solver_param_def = models.ForeignKey('SolverParameterDef', blank=True, null=True)
-    solution = models.ForeignKey(Solution, blank=True, null=True)
-    solver_predef_setting = models.ForeignKey('SolverPredefSetting', blank=True, null=True)
+    solver_param_def = models.ForeignKey('SolverParameterDef', blank=True, null=True, on_delete=models.CASCADE)
+    solution = models.ForeignKey(Solution, blank=True, null=True, on_delete=models.CASCADE)
+    solver_predef_setting = models.ForeignKey('SolverPredefSetting', blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1811,7 +1811,7 @@ class SolverParameterDef(models.Model):
     type = models.CharField(max_length=250, blank=True)
     ord = models.BigIntegerField(blank=True, null=True)
     visible = models.IntegerField(blank=True, null=True)
-    solver_param_group = models.ForeignKey('SolverParameterGroup', blank=True, null=True)
+    solver_param_group = models.ForeignKey('SolverParameterGroup', blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1861,7 +1861,7 @@ class Staff(models.Model):
     pos_code = models.CharField(max_length=20, blank=True)
     dept = models.CharField(max_length=50, blank=True)
     email = models.CharField(max_length=200, blank=True)
-    pos_type = models.ForeignKey(PositionType, db_column='pos_type', blank=True, null=True)
+    pos_type = models.ForeignKey(PositionType, db_column='pos_type', blank=True, null=True, on_delete=models.CASCADE)
     acad_title = models.CharField(max_length=50, blank=True)
 
     class Meta:
@@ -1874,8 +1874,8 @@ class StandardEventNote(models.Model):
     reference = models.CharField(max_length=20, blank=True)
     note = models.CharField(max_length=1000, blank=True)
     discriminator = models.CharField(max_length=10, blank=True)
-    session = models.ForeignKey(Sessions, blank=True, null=True)
-    department = models.ForeignKey(Department, blank=True, null=True)
+    session = models.ForeignKey(Sessions, blank=True, null=True, on_delete=models.CASCADE)
+    department = models.ForeignKey(Department, blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1891,8 +1891,8 @@ class Student(models.Model):
     email = models.CharField(max_length=200, blank=True)
     free_time_cat = models.BigIntegerField(blank=True, null=True)
     schedule_preference = models.BigIntegerField(blank=True, null=True)
-    session = models.ForeignKey(Sessions, blank=True, null=True)
-    sect_status = models.ForeignKey(SectioningStatus, db_column='sect_status', blank=True, null=True)
+    session = models.ForeignKey(Sessions, blank=True, null=True, on_delete=models.CASCADE)
+    sect_status = models.ForeignKey(SectioningStatus, db_column='sect_status', blank=True, null=True, on_delete=models.CASCADE)
     schedule_emailed = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -1902,9 +1902,9 @@ class Student(models.Model):
 
 class StudentAcadArea(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    student = models.ForeignKey(Student, blank=True, null=True)
-    acad_clasf = models.ForeignKey(AcademicClassification, blank=True, null=True)
-    acad_area = models.ForeignKey(AcademicArea, blank=True, null=True)
+    student = models.ForeignKey(Student, blank=True, null=True, on_delete=models.CASCADE)
+    acad_clasf = models.ForeignKey(AcademicClassification, blank=True, null=True, on_delete=models.CASCADE)
+    acad_area = models.ForeignKey(AcademicArea, blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1916,7 +1916,7 @@ class StudentAccomodation(models.Model):
     name = models.CharField(max_length=50, blank=True)
     abbreviation = models.CharField(max_length=20, blank=True)
     external_uid = models.CharField(max_length=40, blank=True)
-    session = models.ForeignKey(Sessions, blank=True, null=True)
+    session = models.ForeignKey(Sessions, blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1925,11 +1925,11 @@ class StudentAccomodation(models.Model):
 
 class StudentClassEnrl(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    student = models.ForeignKey(Student, blank=True, null=True)
-    course_request = models.ForeignKey(CourseRequest, blank=True, null=True)
-    class_field = models.ForeignKey(Class, db_column='class_id', blank=True, null=True)  # Field renamed because it was a Python reserved word.
+    student = models.ForeignKey(Student, blank=True, null=True, on_delete=models.CASCADE)
+    course_request = models.ForeignKey(CourseRequest, blank=True, null=True, on_delete=models.CASCADE)
+    class_field = models.ForeignKey(Class, db_column='class_id', blank=True, null=True, on_delete=models.CASCADE)  # Field renamed because it was a Python reserved word.
     timestamp = models.DateTimeField(blank=True, null=True)
-    course_offering = models.ForeignKey(CourseOffering, blank=True, null=True)
+    course_offering = models.ForeignKey(CourseOffering, blank=True, null=True, on_delete=models.CASCADE)
     approved_date = models.DateTimeField(blank=True, null=True)
     approved_by = models.CharField(max_length=40, blank=True)
     changed_by = models.CharField(max_length=40, blank=True)
@@ -1942,8 +1942,8 @@ class StudentClassEnrl(models.Model):
 class StudentEnrl(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     student_id = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
-    solution = models.ForeignKey(Solution, blank=True, null=True)
-    class_field = models.ForeignKey(Class, db_column='class_id', blank=True, null=True)  # Field renamed because it was a Python reserved word.
+    solution = models.ForeignKey(Solution, blank=True, null=True, on_delete=models.CASCADE)
+    class_field = models.ForeignKey(Class, db_column='class_id', blank=True, null=True, on_delete=models.CASCADE)  # Field renamed because it was a Python reserved word.
     last_modified_time = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -1957,7 +1957,7 @@ class StudentEnrlMsg(models.Model):
     msg_level = models.BigIntegerField(blank=True, null=True)
     type = models.BigIntegerField(blank=True, null=True)
     timestamp = models.DateTimeField(blank=True, null=True)
-    course_demand = models.ForeignKey(CourseDemand, blank=True, null=True)
+    course_demand = models.ForeignKey(CourseDemand, blank=True, null=True, on_delete=models.CASCADE)
     ord = models.BigIntegerField(blank=True, null=True)
 
     class Meta:
@@ -1967,7 +1967,7 @@ class StudentEnrlMsg(models.Model):
 
 class StudentGroup(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    session = models.ForeignKey(Sessions, blank=True, null=True)
+    session = models.ForeignKey(Sessions, blank=True, null=True, on_delete=models.CASCADE)
     group_abbreviation = models.CharField(max_length=30, blank=True)
     group_name = models.CharField(max_length=90, blank=True)
     external_uid = models.CharField(max_length=40, blank=True)
@@ -1978,8 +1978,8 @@ class StudentGroup(models.Model):
 
 
 class StudentMajor(models.Model):
-    student = models.ForeignKey(Student)
-    major = models.ForeignKey(PosMajor)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    major = models.ForeignKey(PosMajor, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1987,8 +1987,8 @@ class StudentMajor(models.Model):
 
 
 class StudentMinor(models.Model):
-    student = models.ForeignKey(Student)
-    minor = models.ForeignKey(PosMinor)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    minor = models.ForeignKey(PosMinor, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -1997,7 +1997,7 @@ class StudentMinor(models.Model):
 
 class StudentSectHist(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    student = models.ForeignKey(Student, blank=True, null=True)
+    student = models.ForeignKey(Student, blank=True, null=True, on_delete=models.CASCADE)
     data = models.TextField(blank=True)
     type = models.BigIntegerField(blank=True, null=True)
     timestamp = models.DateTimeField(blank=True, null=True)
@@ -2008,8 +2008,8 @@ class StudentSectHist(models.Model):
 
 
 class StudentToAcomodation(models.Model):
-    student = models.ForeignKey(Student)
-    accomodation = models.ForeignKey(StudentAccomodation)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    accomodation = models.ForeignKey(StudentAccomodation, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -2017,8 +2017,8 @@ class StudentToAcomodation(models.Model):
 
 
 class StudentToGroup(models.Model):
-    student = models.ForeignKey(Student)
-    group = models.ForeignKey(StudentGroup)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    group = models.ForeignKey(StudentGroup, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -2030,7 +2030,7 @@ class SubjectArea(models.Model):
     session_id = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
     subject_area_abbreviation = models.CharField(max_length=10, blank=True)
     long_title = models.CharField(max_length=100, blank=True)
-    department_uniqueid = models.ForeignKey(Department, db_column='department_uniqueid', blank=True, null=True)
+    department_uniqueid = models.ForeignKey(Department, db_column='department_uniqueid', blank=True, null=True, on_delete=models.CASCADE)
     external_uid = models.CharField(max_length=40, blank=True)
     last_modified_time = models.DateTimeField(blank=True, null=True)
 
@@ -2048,7 +2048,7 @@ class TimePattern(models.Model):
     visible = models.IntegerField(blank=True, null=True)
     type = models.BigIntegerField(blank=True, null=True)
     break_time = models.IntegerField(blank=True, null=True)
-    session = models.ForeignKey(Sessions, blank=True, null=True)
+    session = models.ForeignKey(Sessions, blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -2058,7 +2058,7 @@ class TimePattern(models.Model):
 class TimePatternDays(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     day_code = models.BigIntegerField(blank=True, null=True)
-    time_pattern = models.ForeignKey(TimePattern, blank=True, null=True)
+    time_pattern = models.ForeignKey(TimePattern, blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -2066,8 +2066,8 @@ class TimePatternDays(models.Model):
 
 
 class TimePatternDept(models.Model):
-    dept = models.ForeignKey(Department)
-    pattern = models.ForeignKey(TimePattern)
+    dept = models.ForeignKey(Department, on_delete=models.CASCADE)
+    pattern = models.ForeignKey(TimePattern, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -2077,7 +2077,7 @@ class TimePatternDept(models.Model):
 class TimePatternTime(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     start_slot = models.BigIntegerField(blank=True, null=True)
-    time_pattern = models.ForeignKey(TimePattern, blank=True, null=True)
+    time_pattern = models.ForeignKey(TimePattern, blank=True, null=True, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -2087,9 +2087,9 @@ class TimePatternTime(models.Model):
 class TimePref(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     owner_id = models.DecimalField(max_digits=20, decimal_places=0, blank=True, null=True)
-    pref_level = models.ForeignKey(PreferenceLevel, blank=True, null=True)
+    pref_level = models.ForeignKey(PreferenceLevel, blank=True, null=True, on_delete=models.CASCADE)
     preference = models.CharField(max_length=2048, blank=True)
-    time_pattern = models.ForeignKey(TimePattern, blank=True, null=True)
+    time_pattern = models.ForeignKey(TimePattern, blank=True, null=True, on_delete=models.CASCADE)
     last_modified_time = models.DateTimeField(blank=True, null=True)
 
     class Meta:
@@ -2113,8 +2113,8 @@ class TimetableManager(models.Model):
 
 
 class TmtblMgrToRoles(models.Model):
-    manager = models.ForeignKey(TimetableManager, blank=True, null=True)
-    role = models.ForeignKey(Roles, blank=True, null=True)
+    manager = models.ForeignKey(TimetableManager, blank=True, null=True, on_delete=models.CASCADE)
+    role = models.ForeignKey(Roles, blank=True, null=True, on_delete=models.CASCADE)
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
     is_primary = models.IntegerField(blank=True, null=True)
     receive_emails = models.IntegerField(blank=True, null=True)
@@ -2126,7 +2126,7 @@ class TmtblMgrToRoles(models.Model):
 
 class TravelTime(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    session = models.ForeignKey(Sessions)
+    session = models.ForeignKey(Sessions, on_delete=models.CASCADE)
     loc1_id = models.DecimalField(max_digits=20, decimal_places=0)
     loc2_id = models.DecimalField(max_digits=20, decimal_places=0)
     distance = models.DecimalField(max_digits=10, decimal_places=0)
@@ -2158,8 +2158,8 @@ class Users(models.Model):
 
 class Waitlist(models.Model):
     uniqueid = models.DecimalField(primary_key=True, max_digits=20, decimal_places=0)
-    student = models.ForeignKey(Student, blank=True, null=True)
-    course_offering = models.ForeignKey(CourseOffering, blank=True, null=True)
+    student = models.ForeignKey(Student, blank=True, null=True, on_delete=models.CASCADE)
+    course_offering = models.ForeignKey(CourseOffering, blank=True, null=True, on_delete=models.CASCADE)
     type = models.BigIntegerField(blank=True, null=True)
     timestamp = models.DateTimeField(blank=True, null=True)
 
@@ -2179,8 +2179,8 @@ class Xconflict(models.Model):
 
 
 class XconflictExam(models.Model):
-    conflict = models.ForeignKey(Xconflict)
-    exam = models.ForeignKey(Exam)
+    conflict = models.ForeignKey(Xconflict, on_delete=models.CASCADE)
+    exam = models.ForeignKey(Exam, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -2188,8 +2188,8 @@ class XconflictExam(models.Model):
 
 
 class XconflictInstructor(models.Model):
-    conflict = models.ForeignKey(Xconflict)
-    instructor = models.ForeignKey(DepartmentalInstructor)
+    conflict = models.ForeignKey(Xconflict, on_delete=models.CASCADE)
+    instructor = models.ForeignKey(DepartmentalInstructor, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
@@ -2197,8 +2197,8 @@ class XconflictInstructor(models.Model):
 
 
 class XconflictStudent(models.Model):
-    conflict = models.ForeignKey(Xconflict)
-    student = models.ForeignKey(Student)
+    conflict = models.ForeignKey(Xconflict, on_delete=models.CASCADE)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
 
     class Meta:
         managed = False
