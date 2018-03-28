@@ -42,7 +42,7 @@ class BaseTestCase(TestCase):
     (--natural-primary and --natural-foreign need to be specified for integrity reasons, see the dumpdata docs)
     """
 
-    PERSISTENT_FIXTURE = "../test_fixtures/urnik-2017-11-09-00-00-02.json"
+    PERSISTENT_FIXTURE = "../test_fixtures/urnik-2017-11-09-00-00-02-shortnamerename.json"
     """A django dump of the whole database. Must NOT be inside `cls.fixtures` because we use a different strategy."""
 
     TESTING_TIMETABLE_SLUG = "fri-2017_2018-zimski"

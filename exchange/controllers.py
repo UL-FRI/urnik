@@ -554,7 +554,7 @@ def get_allocation_exchange_group(allocation):
     Returns:
         (Optional[Group]): The matching timetable group or None if no such group exists.
     """
-    groups = allocation.activityRealization.groups.filter(shortName__startswith=TIMETABLE_EXCHANGE_GROUP_PREFIX)
+    groups = allocation.activityRealization.groups.filter(short_name__startswith=TIMETABLE_EXCHANGE_GROUP_PREFIX)
     return groups.first()
 
 
