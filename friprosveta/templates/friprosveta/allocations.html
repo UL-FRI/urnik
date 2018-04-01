@@ -39,6 +39,11 @@
     </style>
 </head>
 <body>
+{% if is_internet_explorer %}
+    <h1>Internet Explorer is old and does not support the latest web standards.</h1>
+    <h2>Please use another browser: Firefox, Edge, Opera, Safari, Chrome.</h2>
+{% endif %}
+
 <div class="header">
     <div class="titles">
         <span class="title">{{ title }}</span>

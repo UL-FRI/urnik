@@ -579,6 +579,7 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
                            key=lambda g: g.short_name)
     param_ids['timetable_slug'] = [timetable_slug]
     title, subtitles = _titles(param_ids)
+    is_internet_explorer = "trident" in request.META["HTTP_USER_AGENT"].lower()
 
     # not necessarily needed, but this helps make labs of the same subject be closer when looking at a huge timetable
     filtered_allocations = filtered_allocations.order_by('activityRealization__activity')
@@ -625,7 +626,8 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
         'day_keys': [wd[0] for wd in WEEKDAYS],
         'day_strings': [wd[1] for wd in WEEKDAYS],
         'hour_strings': [wh[1] for wh in WORKHOURS],
-        'allocations_by_day': allocations_by_day
+        'allocations_by_day': allocations_by_day,
+        'is_internet_explorer': is_internet_explorer
     })
 
     return response
