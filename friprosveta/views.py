@@ -30,6 +30,14 @@ from timetable.models import Timetable, Group, ActivityRealization, \
     Allocation, Activity, WORKHOURS, WEEKDAYS, \
     Tag, default_timetable
 
+import timetable.views
+import logging
+import datetime
+import itertools
+import colorsys
+
+import palettable
+
 logger = logging.getLogger(__name__)
 
 
@@ -560,108 +568,66 @@ def allocations(request, timetable_slug=None):
 
 
 def _allocations(request, timetable_slug=None, is_teacher=False):
-    contextlinks, param_ids = _allocation_context_links(request)
+    context_links, param_ids = _allocation_context_links(request)
     tt = get_object_or_404(timetable.models.Timetable, slug=timetable_slug)
     param_ids = _allocation_context_links(request)[1]
     filtered_allocations = _allocation_set(param_ids,
                                            tt.allocations,
                                            request.user.is_staff)
-    logger.info("Entering _allocations")
-    logger.debug("R: {}".format(request))
-    # done filtering the groups
-    allocations_by_hour = OrderedDict()
-    groups_listed = set()
+
+    groups_listed = sorted(set(g for a in filtered_allocations for g in a.activityRealization.groups.all()),
+                           key=lambda g: g.short_name)
     param_ids['timetable_slug'] = [timetable_slug]
     title, subtitles = _titles(param_ids)
 
-    max_overlaps_day = []
-    whdict = dict([(WORKHOURS[i][0], i) for i in range(len(WORKHOURS))])
-    for hour in [i[0] for i in WORKHOURS]:
-        allocations_by_hour[hour] = [[] for j in WEEKDAYS]
-    space_taken_list = []
-    Span = namedtuple('Span', ['start', 'duration', 'w', 'action', 'classes'])
-    for day in range(len(WEEKDAYS)):
-        # create the set of all activities for this day
-        dayclass = WEEKDAYS[day][0]
-        fa = filtered_allocations.filter(day=WEEKDAYS[day][0]).distinct()
-        sa = set(fa)
-        allocation_tab = []
-        start_hours = []
-        for a in sorted(sa, key=lambda x: whdict[x.start]):
-            for g in a.activityRealization.groups.all():
-                groups_listed.add(g)
-            placed = False
-            j = 0
-            while (j < len(allocation_tab)) and not placed:
-                last = allocation_tab[j][-1]
-                last_end = last.start + last.duration
-                new_start = whdict[a.start]
-                if last_end <= new_start:
-                    new_pre_last_duration = new_start - last_end
-                    if new_pre_last_duration > 0:
-                        allocation_tab[j].append(Span(start=last_end, duration=new_pre_last_duration,
-                                                      w=1, action=None, classes=[dayclass]))
-                    allocation_tab[j].append(Span(start=new_start, duration=a.duration, w=1,
-                                                  action=a,
-                                                  classes=[dayclass, "allocated", a.activityRealization.activity.type]))
-                    placed = True
-                j += 1
-            if not placed:
-                l = [
-                    Span(start=whdict[a.start], duration=a.duration, w=1,
-                         action=a,
-                         classes=[
-                             dayclass, "allocated",
-                             a.activityRealization.activity.type])]
-                start_hours.append(whdict[a.start])
-                allocation_tab.append(l)
-        # expand the allocations and empty spaces
-        # insert the heading and trailing empty spaces
-        if len(allocation_tab) < 1:
-            allocation_tab = [[Span(start=0, duration=len(whdict), w=1,
-                                    action=None, classes=[dayclass])]]
-        else:
-            for i, l in enumerate(allocation_tab):
-                if start_hours[i] > 0:
-                    l.insert(0, Span(start=0, duration=start_hours[i], w=1,
-                                     action=None, classes=[dayclass]))
-                last = l[-1]
-                duration = len(whdict) - (last.start + last.duration)
-                if duration > 0:
-                    s = Span(start=last.start + last.duration,
-                             duration=duration, w=1,
-                             action=None, classes=[dayclass])
-                    l.append(s)
+    # not necessarily needed, but this helps make labs of the same subject be closer when looking at a huge timetable
+    filtered_allocations = filtered_allocations.order_by('activityRealization__activity')
 
-        # insert allocations from allocation_tab into allocations_by_hour
-        for l in allocation_tab:
-            for j in l:
-                allocations_by_hour[
-                    WORKHOURS[j.start][0]][day].append((j.w, j.duration,
-                                                        j.action, j.classes))
-        space_taken_list.append(allocation_tab)
-        max_overlaps_day.append(len(allocation_tab))
-    day_header = []
-    for day in range(len(WEEKDAYS)):
-        dayname = _(WEEKDAYS[day][1])
-        day_header.append((dayname, max_overlaps_day[day]))
+    # generate nice colours for each subject, then allocation
+    # colours repeat if there are too many subjects
+    color_palette = palettable.colorbrewer.get_map("Set3", "qualitative", 12)
+    allocation_subjects = {a: friprosveta.models.Activity.from_timetable_activity(a.activityRealization.activity).subject
+                           for a in filtered_allocations}
+    subject_ids = set(s.id for s in allocation_subjects.values())
+    subject_colours = {s: color_palette.colors[i % color_palette.number] for i, s in enumerate(subject_ids)}
+    # colours are in HSL for easier manipulation
+    allocation_colours = {a: colorsys.rgb_to_hls(*(c / 256 for c in subject_colours[allocation_subjects[a].id]))
+                          for a in filtered_allocations}
 
-    # logger.debug("Allocations by hours: {}".format(allocations_by_hour))
+    AllocationVM = namedtuple('AllocationVM', ['object', 'subject', 'day_index', 'hour_index', 'duration', 'colour'])
+    ColourVM = namedtuple('ColourVM', ['h', 's', 'l'])
+    weekday_mapping = {wd[0]: i for i, wd in enumerate(WEEKDAYS)}
+    hour_mapping = {wh[0]: i for i, wh in enumerate(WORKHOURS)}
+    allocation_vms = [AllocationVM(
+        object=a,
+        subject=allocation_subjects[a],
+        day_index=weekday_mapping[a.day],
+        hour_index=hour_mapping[a.start],
+        duration=a.duration,
+        colour=ColourVM(h=allocation_colours[a][0] * 360,
+                        l="{:.2f}%".format(100 * allocation_colours[a][1]),
+                        # emphasise lectures and slightly de-emphasise labs for more clarity
+                        s="{:.2f}%".format(100 * allocation_colours[a][2] * (0.8 if a.activityRealization.activity.type != "P" else 1.4)))
+    ) for a in filtered_allocations]
+    # sorting required for groupby
+    allocation_vms = sorted(allocation_vms, key=lambda avm: avm.day_index)
+    allocations_by_day = [(d, list(avm_grouper))
+                          for d, avm_grouper in itertools.groupby(allocation_vms, lambda avm: avm.object.day)]
+
     response = render(request, 'friprosveta/allocations.html', {
-        # 'space_taken_list': space_taken_list,
         'is_teacher': is_teacher,
-        'contextlinks': contextlinks,
+        'context_links': context_links,
         'title': title,
         'subtitles': subtitles,
         'groups': groups_listed,
-        'day_header': day_header,
         'timetable': timetable,
         'timetable_slug': timetable_slug,
-        'allocations_by_hour': allocations_by_hour.items()})
+        'day_keys': [wd[0] for wd in WEEKDAYS],
+        'day_strings': [wd[1] for wd in WEEKDAYS],
+        'hour_strings': [wh[1] for wh in WORKHOURS],
+        'allocations_by_day': allocations_by_day
+    })
 
-    # if len(realizations) > 0:
-    #     response.set_cookie("realizations", "&".join(map(str, realizations)),
-    #                          expires=last_timetable_end)
     return response
 
 

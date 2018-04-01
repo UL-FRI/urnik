@@ -27,3 +27,4 @@ pyodbc
 ldap
 ldap3
 pyldap
+palettable
