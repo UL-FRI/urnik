@@ -8,49 +8,15 @@ import pytz
 from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import F, Q, Model
-from django.core.cache import cache
-from django.conf import settings
 
 from friprosveta.models import Student, Timetable, Subject, Teacher, Activity
-from friprosveta.studis import Studenti
 from timetable.models import Allocation, Group
 from .models import Exchange, SubjectPreference, FormProcessingError, TIMETABLE_EXCHANGE_GROUP_PREFIX, ExchangeType
 
 logger = logging.getLogger(__name__)
 
 
-def get_student_from_user(user):
-    """Get a `Student` object from a `User`.
 
-    Args:
-        user (User): The user to fetch student data for.
-    Returns:
-        Student: Student object.
-    Raises:
-        Student.DoesNotExist: If there is no such student.
-        IOError: If something goes wrong with the API.
-    """
-    # email is more correct than username, so use that
-    email = user.username
-
-    # this isn't really testable, but let's avoid overengineering for now
-    if settings.STUDENT_MAPPER_PRODUCTION:
-        # initialise if no cached values
-        print("REAL")
-        mapping = cache.get("cached_user_student_map")
-        if mapping is None:
-            s = Studenti()
-            data = s.get_confirmed_enrollments(datetime.utcnow().isoformat()[:10], unfinished=True)
-            if not data:
-                raise IOError("Error getting api data.")
-            mapping = {a["upn"].strip(): a["vpisna_stevilka"].strip() for a in data if a["upn"] is not None}
-            cache.set("cached_user_student_map", mapping)
-
-        student_id = mapping.get(email, "this string is definitely not a student id")
-
-        return Student.objects.get(studentId=student_id)
-    else:
-        return Student.objects.get(name__iexact=user.first_name, surname__iexact=user.last_name)
 
 
 def get_available_exchanges(timetable, student):
@@ -217,7 +183,7 @@ def parse_student_from_ambiguous_identifier(student_string):
         # it may be an email
         try:
             user = User.objects.get(email=student_string)
-            student = get_student_from_user(user)
+            student = Student.from_user(user)
         except User.DoesNotExist:
             raise FormProcessingError("Student not found.", "'{}' is not a valid e-mail or "
                                                             "enrollment number.".format(student_string))

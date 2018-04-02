@@ -4,15 +4,28 @@
 {% block body %}
 <h1>Urnik</h1>
 
-<form action="/timetable/{{timetable_slug}}/allocations" method="GET">
+
+
+<form action="/timetable/{{timetable_slug}}/allocations" method="GET" style="display: inline-block;">
 {% trans "Student number" %} {{student_form.student}}
-<input type="submit" value='{% trans "My timetable" %}'/> 
-</form> 
+<input type="submit" value='{% trans "Show timetable" %}'/>
+</form>
+
+{% if accessing_student or accessing_teacher %}
+<form method="get" action="{% url 'allocations' timetable_slug %}" style="display: inline-block;">
+    {% if accessing_student %}<input type="hidden" name="student" value="{{ accessing_student.studentId }}"/>{% endif %}
+    {% if accessing_teacher %}<input type="hidden" name="teacher" value="{{ accessing_teacher.id }}"/>{% endif %}
+    <input type="submit" value="{% trans "Show personal timetable" %}"/>
+</form>
+{% else %}
+<br>
+<small style="color: #5c5c5c; font-style: italic;">{% trans "Log in for easier access to your personal timetable" %}</small>
+{% endif %}
 
 <p>
     <br/>
     {% blocktrans %}<strong>IŠRM</strong>, <strong>UI</strong>, <strong>PRI</strong> and <strong>MM</strong>
-student must consult tha timetable at your originating faculty (FMF, UI, PEF and FE) to obtain the complete
+student must consult the timetable at your originating faculty (FMF, UI, PEF and FE) to obtain the complete
 personal timetable.{% endblocktrans %}
 </p>
 

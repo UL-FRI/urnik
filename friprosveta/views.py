@@ -174,6 +174,17 @@ def results(request, timetable_slug):
     else:
         allocations_view = reverse('allocations',
                                    kwargs={'timetable_slug': timetable_slug})
+
+    if request.user.is_authenticated():
+        try:
+            accessing_student = friprosveta.models.Student.from_user(request.user)
+        except friprosveta.models.Student.DoesNotExist:
+            accessing_student = None
+        accessing_teacher = request.user.teacher if hasattr(request.user, "teacher") else None
+    else:
+        accessing_student = None
+        accessing_teacher = None
+
     params = {
         'allocations_view': allocations_view,
         'student_form': StudentForm,
@@ -182,7 +193,10 @@ def results(request, timetable_slug):
         'classrooms': selected_timetable.classroomset.classrooms.order_by(
             "name"),
         'studyGroups': groups,
-        'subjects': subjects.order_by("name")}
+        'subjects': subjects.order_by("name"),
+        'accessing_student': accessing_student,
+        'accessing_teacher': accessing_teacher
+    }
     return render(request, 'friprosveta/results.html', params)
 
 
