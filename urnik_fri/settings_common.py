@@ -129,7 +129,6 @@ INSTALLED_APPS = (
     'unitime',
     'exchange',
     'django.contrib.admin',
-    'cookielaw',
     'rest_framework',
     'impersonate',
     'import_export',

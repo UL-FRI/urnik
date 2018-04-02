@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Urnik - Cookies{% endblock %}
+
+{% block body %}
+    <h1>Obvestilo o uporabi piškotkov</h1>
+
+    <p>
+        Urnik uporablja piškotke z namenom zagotavljanja spletne storitve.
+        Z uporabo spletnega portala Urnik FRI se strinjate, da se na vašo napravo smejo shraniti piškotki, opisani v naslednjem razdelku.
+        Če izključite piškotke, so lahko nekatere funkcionalnosti spletišča onemogočene.
+    </p>
+    <p>
+        Več o vaših pravicah glede piškotkov si lahko preberete v <a href="https://www.uradni-list.si/glasilo-uradni-list-rs/vsebina/111442">ZEKom-1</a>
+    </p>
+
+    <h2>Opis piškotkov</h2>
+    <table>
+    <thead>
+        <tr style="font-weight: 600;">
+            <td>Ime piškotka</td>
+            <td>Domena</td>
+            <td>Opis</td>
+            <td>Izvor</td>
+            <td>Trajanje</td>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>csrftoken</td>
+            <td>urnik.fri.uni-lj.si</td>
+            <td>V namen preprečevanja napadov pri pošiljanju podakov.</td>
+            <td>urnik</td>
+            <td>1 leto</td>
+        </tr>
+        <tr>
+            <td>sessionid</td>
+            <td>urnik.fri.uni-lj.si</td>
+            <td>Povezovanje uporabniških sej.</td>
+            <td>urnik</td>
+            <td>seja, 14 dni</td>
+        </tr>
+        <tr>
+            <td>realizations</td>
+            <td>urnik.fri.uni-lj.si</td>
+            <td>Podpora izboru urniških realizacij.</td>
+            <td>urnik</td>
+            <td>do konca veljavnosti urnika</td>
+        </tr>
+    </tbody>
+    </table>
+{% endblock %}
