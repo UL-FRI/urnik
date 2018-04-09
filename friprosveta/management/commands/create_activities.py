@@ -1,21 +1,14 @@
-# -*- coding: utf-8 -*-
-import sys
-import json
+import logging
 from collections import defaultdict
 
-from django.db import transaction
-from django.core.management.base import BaseCommand
 from django.core.exceptions import ObjectDoesNotExist
-from django.conf import settings
+from django.core.management.base import BaseCommand
+from django.db import transaction
 
-
-from optparse import make_option
-import logging
-
-from timetable.models import Timetable, ActivitySet
-from timetable.models import PreferenceSet, Location
 from friprosveta.models import Teacher, Activity, Subject, LectureType
 from friprosveta.studis import Sifranti, Studij, Najave
+from timetable.models import PreferenceSet, Location
+from timetable.models import Timetable, ActivitySet
 
 logger = logging.getLogger(__name__)
 
@@ -94,11 +87,11 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
         semester_id = int(options["semester_id"][0])
         semester = self.get_semester(year, semester_id)
         logger.debug("Gor semester {}".format(semester))
-        self.syncActivitiesWithFRINajave(tt, semester, year, location, subject)
+        self.sync_activities_with_fri_najave(tt, semester, year, location, subject)
         logger.info("Exiting handle")
 
     @transaction.commit_on_success
-    def syncActivitiesWithFRINajave(self, timetable, semester, year, location, update_subject):
+    def sync_activities_with_fri_najave(self, timetable, semester, year, location, update_subject):
         """
         Sinhronizira učitelje v najavah z učitelji v aktivnostih.
         Če je potrebno, ustvari nove aktivnosti.
@@ -107,6 +100,7 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
         Ce je koda predmeta None, potem se posodobijo vse aktivnosti.
         """
         logger.info("Entering syncActivitiesWithFRINajave")
+
         def activity_name(subject, lecture_type):
             name = "{0}({1})_{2}".format(subject.name, subject.code, lecture_type.short_name)
             logger.debug("Generated name {}".format(name))
@@ -130,14 +124,14 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
         def subject_lecture_types(cikel):
             # id from studis to our system
             # Studis:
-            # [{u'id': 1, u'title': {u'en': None, u'sl': u'Predavanja'}},
-            # {u'id': 2, u'title': {u'en': None, u'sl': u'Avditorne vaje'}},
-            # {u'id': 3, u'title': {u'en': None, u'sl': u'Laboratorijske vaje'}},
-            # {u'id': 4, u'title': {u'en': None, u'sl': u'Seminar'}},
-            # {u'id': 5, u'title': {u'en': None, u'sl': u'Poobla\u0161\u010denec'}},
-            # {u'id': 6, u'title': {u'en': None, u'sl': u'Koordinator'}},
-            # {u'id': 7, u'title': {u'en': None, u'sl': u'Nosilec'}},
-            # {u'id': 8, u'title': {u'en': None, u'sl': u'Laborant'}}]
+            # [{u'id': 1, 'title': {u'en': None, 'sl': 'Predavanja'}},
+            # {u'id': 2, 'title': {u'en': None, 'sl': 'Avditorne vaje'}},
+            # {u'id': 3, 'title': {u'en': None, 'sl': 'Laboratorijske vaje'}},
+            # {u'id': 4, 'title': {u'en': None, 'sl': 'Seminar'}},
+            # {u'id': 5, 'title': {u'en': None, 'sl': 'Poobla\u0161\u010denec'}},
+            # {u'id': 6, 'title': {u'en': None, 'sl': 'Koordinator'}},
+            # {u'id': 7, 'title': {u'en': None, 'sl': 'Nosilec'}},
+            # {u'id': 8, 'title': {u'en': None, 'sl': 'Laborant'}}]
             mapping_studis_urnik = {1: 1, 2: 3, 3: 2, 4: 6, 5: None, 6: None, 7: 1, 8: 2}
             lecture_types_ids = set(mapping_studis_urnik[t['tip_izvajanja']['id']] for t in cikel['izvajalci'])
             lecture_types_ids.discard(None)
@@ -159,7 +153,7 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
             if izvajanje['st_ur_seminarja'] is not None and lecture_type_id != 6:
                 add_duration = izvajanje['st_ur_seminarja']
             total_duration = add_duration + izvajanje[mapping_urnik_studis[lecture_type_id]]
-            return total_duration/15
+            return total_duration / 15
 
         semester_id = semester['id']
         studij = Studij(2017)
@@ -185,11 +179,11 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
                 if str(cikel["izvajanje_id"]) == izvajanje_id:
                     found = True
             if not found:
-                logger.info(u"No matching izvajanje for cikel {0}, skipping".format(cikel).encode("utf-8"))
+                logger.info("No matching izvajanje for cikel {0}, skipping".format(cikel).encode("utf-8"))
                 continue
 
             izvajanje = izvajanja[0]
-            logger.info(u"Looking for subject code {0}".format(subject_code).encode("utf-8"))
+            logger.info("Looking for subject code {0}".format(subject_code).encode("utf-8"))
             try:
                 subject = Subject.objects.get(code=subject_code)
             except Exception:
@@ -217,7 +211,8 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
                         teacher = Teacher.objects.get(code=code)
                         teachers.append(teacher)
                     except ObjectDoesNotExist as e:
-                        logger.Exception("Teacher with code {0} on subject {1} does not exist".format(code, subject.code))
+                        logger.Exception(
+                            "Teacher with code {0} on subject {1} does not exist".format(code, subject.code))
 
                 if activities.count() == 0:
                     logger.debug("Activity of type {0} for {1} not found. Creating one.".format(lecture_type, subject))
@@ -233,7 +228,7 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
                     )
                     activity.save()
                     activity.locations.add(location)
-                    logger.debug(u"Created activity {0}.".format(activity))
+                    logger.debug("Created activity {0}.".format(activity))
                     activities = [activity]
                 for activity in activities:
                     activity.name = activity_name(subject, lecture_type),

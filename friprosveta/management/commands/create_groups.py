@@ -1,22 +1,23 @@
 from django.core.management.base import BaseCommand
-from friprosveta.studis import Najave, Studij
+
 from friprosveta.models import Subject, Timetable
+from friprosveta.studis import Najave, Studij
 from timetable.models import Group
 
 
 class Command(BaseCommand):
-    '''
+    """
     Create top level groups from Studis izvajanja for the given timetable.
-    '''
+    """
     args = 'create_groups timetable_slug year semester_id'
-    help = '''Usage:
-create_groups timetable_slug year semester_id
+    help = ('Usage:\n'
+            'create_groups timetable_slug year semester_id\n'
+            '\n'
+            'Year is the first part in the study year:\n'
+            '2015/2016 -> 2015\n'
+            '\n'
+            'Semester can be 1 (zimski), 2(poletni), 3(celoletni) or 4(blocni).\n')
 
-Year is the first part in the study year:
-2015/2016 -> 2015
-
-Semester can be 1 (zimski), 2(poletni), 3(celoletni) or 4(blocni).
-'''
     def add_arguments(self, parser):
         parser.add_argument('timetable_slug', nargs=1, type=str)
         parser.add_argument('year', nargs=1, type=str)
@@ -33,6 +34,7 @@ Semester can be 1 (zimski), 2(poletni), 3(celoletni) or 4(blocni).
         izvajanja = studis_najave.get_izvajanja(year)
         create_regular_groups(izvajanja, studijsko_drevo, timetable.groupset)
 
+
 def group_name(self, predmetnik):
     """Generate tuple (name, short_name) from Studis predmetnik entry."""
     assert len(predmetnik) == 5, "Predmetnik not complete " + str(predmetnik)
@@ -41,12 +43,13 @@ def group_name(self, predmetnik):
         predmetnik[1]['short_title'],
         predmetnik[2]['short_title'],
     )
-    name = u"{0}, {1}, {2}".format(
+    name = "{0}, {1}, {2}".format(
         predmetnik[5]['title']['sl'],
         predmetnik[2]['title']['sl'],
         predmetnik[1]['title']['sl'],
     )
     return short_name, name
+
 
 def create_regular_groups(izvajanja, semestri, studijsko_drevo, groupset):
     najave = Najave()

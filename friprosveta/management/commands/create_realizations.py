@@ -1,15 +1,17 @@
-# -*- coding: utf-8 -*-
 import heapq
+
 from django.core.management.base import BaseCommand
+
 from friprosveta.models import ActivityRealization
 from friprosveta.models import Timetable, REALIZATIONSIZES
 from timetable.models import TimetableSet
 
 
 class Command(BaseCommand):
-    '''
+    """
     Create realizations for a given timetable and timetableset.
-    '''
+    """
+
     def handle(self, *args, **options):
         if len(args) != 2:
             print("Usage: create_realizations timetable_slug timetable_set_slug")
@@ -18,27 +20,27 @@ class Command(BaseCommand):
         tt = Timetable.objects.get(slug=args[0])
         timetable_set = TimetableSet.objects.get(slug=args[1])
         for activity in tt.activities.all():
-            self.createRealizationsForActivity(activity.activity, tt, timetable_set, True)
+            self.create_realizations_for_activity(activity.activity, tt, timetable_set, True)
 
-    def createRealizationsForActivity(self, activity, timetable, timetable_set, force=False):
+    def create_realizations_for_activity(self, activity, timetable, timetable_set, force=False):
         """
         Create realizations for activity.
         If force flag is enabled, old activities are erased.
         """
-        print u"Creating realizations for {0}".format(activity).encode("utf-8")
+        print("Creating realizations for {0}".format(activity).encode("utf-8"))
         if force:
             for realization in activity.realizations.all():
                 realization.delete()
         elif activity.realizations.count() > 0:
-            print u"Activity {0} already has realizations and force\
-flag is disabled. Aborting.".format(activity).encode("utf-8")
+            print("Activity {0} already has realizations and force flag is disabled. Aborting.".format(activity).encode(
+                "utf-8"))
             return
         if activity.type == 'P':
-            self.createRealizationsForPredavanje(activity, timetable, timetable_set)
+            self.create_realizations_for_predavanje(activity, timetable, timetable_set)
         if activity.type == 'LV' or activity.type == 'AV':
-            self.createRealizationsForVaje(activity, timetable, timetable_set)
+            self.create_realizations_for_vaje(activity, timetable, timetable_set)
 
-    def _addSingleRealization(self, activity, flat_teachers, groups):
+    def _add_single_realization(self, activity, flat_teachers, groups):
         assert len(flat_teachers) > 0, "No teachers available for cycle"
         current_teachers = flat_teachers[0]
         ar = ActivityRealization(activity=activity)
@@ -47,30 +49,30 @@ flag is disabled. Aborting.".format(activity).encode("utf-8")
         ar.groups.add(*groups)
         return flat_teachers[1:]
 
-    def createRealizationsForPredavanje(self, activity, timetable, timetable_set):
+    def create_realizations_for_predavanje(self, activity, timetable, timetable_set):
         """
         Create realizations for activity of type predavanje.
         Does not modify old realizations.
         """
         # This one is easy: just add one realization with all groups selected
         try:
-            self._addSingleRealization(activity, [list(activity.teachers.all())],
-                                       list(activity.groups.all()))
+            self._add_single_realization(activity, [list(activity.teachers.all())],
+                                         list(activity.groups.all()))
         except Exception:
             return
 
-    def vsiNaciniIzvajanja(self, activity):
+    def vsi_nacini_izvajanja(self, activity):
         """
         Vrne vse načine izvajanja predmeta v vseh aktivnostih istega tipa,
         kjer se pojavlja (v vseh urnikih).
         """
-        tipiIzvajanja = set()
+        tipi_izvajanja = set()
         for activity in activity.subject.activities.filter(type=activity.type):
-            for tip in activity.naciniIzvajanja:
-                tipiIzvajanja.add(tip)
-        return list(tipiIzvajanja)
+            for tip in activity.nacini_izvajanja:
+                tipi_izvajanja.add(tip)
+        return list(tipi_izvajanja)
 
-    def createRealizationsForVaje(self, activity, timetable, timetable_set):
+    def create_realizations_for_vaje(self, activity, timetable, timetable_set):
         """
         Create realizations for activity of type avditorne vaje.
         Does not modify old realizations.
@@ -80,14 +82,14 @@ flag is disabled. Aborting.".format(activity).encode("utf-8")
         teachers.sort(key=lambda e: -e[0])
 
         max_size = 30
-        if activity.type == 'LV' and REALIZATIONSIZES[1] not in self.vsiNaciniIzvajanja(activity):
+        if activity.type == 'LV' and REALIZATIONSIZES[1] not in self.vsi_nacini_izvajanja(activity):
             max_size = 15
-        if activity.type == 'LV' and REALIZATIONSIZES[1] in self.vsiNaciniIzvajanja(activity):
+        if activity.type == 'LV' and REALIZATIONSIZES[1] in self.vsi_nacini_izvajanja(activity):
             flat_teachers = self._velike_cikle_asistentom(teachers)
         else:
             flat_teachers = []
             for (cycles, teacher) in teachers:
-                flat_teachers += cycles*[[teacher]]
+                flat_teachers += cycles * [[teacher]]
         current_groups, current_groups_size = [], 0
 
         def _cmp(g1, g2):
@@ -95,18 +97,19 @@ flag is disabled. Aborting.".format(activity).encode("utf-8")
                 return g2.size - g1.size
             else:
                 return g1.short_name < g2.short_name
+
         group_list = sorted(activity.groups.all(), cmp=_cmp)
         try:
             for group in group_list:
                 if group.size + current_groups_size > max_size:
-                    flat_teachers = self._addSingleRealization(activity, flat_teachers,
-                                                               current_groups)
+                    flat_teachers = self._add_single_realization(activity, flat_teachers,
+                                                                 current_groups)
                     current_groups = []
                     current_groups_size = 0
                 current_groups.append(group)
                 current_groups_size += group.size
             if current_groups_size > 0:
-                self._addSingleRealization(activity, flat_teachers, current_groups)
+                self._add_single_realization(activity, flat_teachers, current_groups)
         except Exception:
             return
 
@@ -131,5 +134,5 @@ flag is disabled. Aborting.".format(activity).encode("utf-8")
             cycles, teacher = heapq.heappop(teachers_cycles)
             for i in xrange(-cycles):
                 cycles_l.append([teacher])
-        assert len(teachers_cycles) == 0, u"NAPAKA - odvecni cikli!"
+        assert len(teachers_cycles) == 0, "NAPAKA - odvecni cikli!"
         return cycles_l

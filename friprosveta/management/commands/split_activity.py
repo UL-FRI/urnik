@@ -6,9 +6,9 @@ import timetable.models
 
 
 class Command(BaseCommand):
-    '''
+    """
     Split activity into multiple parts.
-    '''
+    """
     args = 'timetable_slug activity_id duration_1 duration_2 ...'
     help = 'Split activity.'
 
@@ -16,7 +16,6 @@ class Command(BaseCommand):
         parser.add_argument('tt_slug', nargs=1, type=str, help="timetable slug")
         parser.add_argument('activity_id', nargs=1, type=int, help="activity id")
         parser.add_argument('durations', nargs='+', type=int, help="durations of splits")
-
 
     def handle(self, *args, **options):
         timetable = friprosveta.models.Timetable.objects.get(slug=options['tt_slug'][0])
@@ -27,8 +26,8 @@ class Command(BaseCommand):
 
     def split_activity(self, tt, activity, splits):
         if activity.duration != sum(splits):
-            raise Exception("Activity {0} with duration {1} cannot be\
-split into {3}".format(activity, activity.duration, splits))
+            raise Exception(
+                "Activity {0} with duration {1} cannot be split into {3}".format(activity, activity.duration, splits))
 
         with transaction.atomic():
             activity.duration = splits[0]
@@ -58,10 +57,10 @@ split into {3}".format(activity, activity.duration, splits))
                     nar.teachers.add(*act.teachers.all())
                 all_activities.append(activity)
 
-            t12urmed = timetable.models.Tag(name=u"12 ur med {0}".format(act.subject.short_name))
+            t12urmed = timetable.models.Tag(name="12 ur med {0}".format(act.subject.short_name))
             t12urmed.save()
             t12urmed.activities.add(*all_activities)
             tvp = timetable.models.TagValuePreference(tag=t12urmed, value=13, weight=1.0,
-                                                      level=u"WANT", name=u'MINACTIVITYGAP',
+                                                      level="WANT", name='MINACTIVITYGAP',
                                                       preferenceset=tt.preferenceset)
             tvp.save()

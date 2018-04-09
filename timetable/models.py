@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
-from django.db import models
-from django.db.models import Count, Q
-from django.contrib.auth.models import User
 import datetime
 from _collections import defaultdict
+
+from django.contrib.auth.models import User
+from django.db import models
+from django.db.models import Count, Q
 
 WEEKDAYS = (
     ('MON', 'ponedeljek'),
@@ -56,7 +56,6 @@ PEOPLEVALUEPREFERENCES = (
     ('MINCHANGEGAP', 'Min gap between changes'),
 )
 
-
 TAGVALUEPREFERENCES = (
     ('MAXDAYSWEEK', 'Max days per week for a tag'),
     ('MINDAYSWEEK', 'Min days per week for a tag'),
@@ -95,18 +94,21 @@ ACTIVITYTYPES = (
 class Resource(models.Model):
     def __str__(self):
         return self.name
+
     name = models.CharField(max_length=255)
 
 
 class Heuristic(models.Model):
     def __str__(self):
         return self.name
+
     name = models.CharField(max_length=255)
 
 
 class ActivitySet(models.Model):
     def __str__(self):
         return self.name
+
     created = models.DateTimeField(default=datetime.datetime.now)
     slug = models.SlugField()
     name = models.CharField(max_length=64)
@@ -124,6 +126,7 @@ class ActivitySet(models.Model):
 class PreferenceSet(models.Model):
     def __str__(self):
         return self.name
+
     # children = models.ManyToManyField(PreferenceSet, symetrical = False)
     created = models.DateTimeField(default=datetime.datetime.now)
     slug = models.SlugField()
@@ -134,6 +137,7 @@ class PreferenceSet(models.Model):
 class ClassroomSet(models.Model):
     def __str__(self):
         return self.name
+
     created = models.DateField()
     slug = models.SlugField()
     name = models.CharField(max_length=64)
@@ -145,6 +149,7 @@ class ClassroomSet(models.Model):
 class GroupSet(models.Model):
     def __str__(self):
         return self.name
+
     # children = models.ManyToManyField(PreferenceSet, symetrical = False)
     created = models.DateTimeField()
     slug = models.SlugField()
@@ -158,7 +163,7 @@ class Group(models.Model):
         llast = len(last)
         if self._is_number(last) and len(last) == 1:
             last = '0' + last
-        return "{0} ({1}), {2}".format(self.short_name[:-llast]+last, self.size, self.groupset)
+        return "{0} ({1}), {2}".format(self.short_name[:-llast] + last, self.size, self.groupset)
 
     def _is_number(self, s):
         try:
@@ -283,6 +288,7 @@ class Activity(models.Model):
     def __str__(self):
         groups = self.groups.all()
         return "{0} {1}".format(self.name, "-".join([str(group) for group in groups]))
+
     # old_teachers = models.ManyToManyField('Teacher', blank=True, through='ActivityPercentage', related_name='old_teacher_activities')
     teachers = models.ManyToManyField('Teacher', blank=True, related_name='activities')
     name = models.CharField(max_length=200)
@@ -344,6 +350,7 @@ class NRequirementsPerStudent(models.Model):
 
     class Meta:
         unique_together = (("resource", "activity"),)
+
     resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
     activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
     n = models.FloatField()
@@ -352,8 +359,8 @@ class NRequirementsPerStudent(models.Model):
 class ActivityRealization(models.Model):
     def __str__(self):
         return self.activity.name + " " + \
-            " ".join([str(i) for i in self.teachers.all()]) + " " + \
-            " ".join([str(i) for i in self.groups.all()])
+               " ".join([str(i) for i in self.teachers.all()]) + " " + \
+               " ".join([str(i) for i in self.groups.all()])
 
     activity = models.ForeignKey('Activity', related_name='realizations', on_delete=models.CASCADE)
     teachers = models.ManyToManyField('Teacher', related_name='activity_realizations',
@@ -404,10 +411,10 @@ class ActivityRealization(models.Model):
         self.activity.name + "-" + self.id
 
 
-#class ActivityPercentage(models.Model):
+# class ActivityPercentage(models.Model):
 #    teacher = models.ForeignKey('Teacher')
 #    activity = models.ForeignKey('Activity')
-    # value = models.FloatField(default=1.0)
+# value = models.FloatField(default=1.0)
 
 
 class Teacher(models.Model):
@@ -449,6 +456,7 @@ class LocationDistance(models.Model):
 class Classroom(models.Model):
     def __str__(self):
         return "{0} ({1})".format(self.name, self.short_name)
+
     name = models.CharField(max_length=50)
     short_name = models.CharField(max_length=32)
     resources = models.ManyToManyField(Resource, through='ClassroomNResources',
@@ -463,6 +471,7 @@ class ClassroomNResources(models.Model):
 
     class Meta:
         unique_together = (("resource", "classroom"),)
+
     resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
     classroom = models.ForeignKey(Classroom, related_name='n_resources', on_delete=models.CASCADE)
     n = models.IntegerField()
@@ -471,6 +480,7 @@ class ClassroomNResources(models.Model):
 class TimetableSet(models.Model):
     def __str__(self):
         return self.name
+
     slug = models.SlugField()
     public = models.BooleanField(default=False)
     name = models.CharField(max_length=64)
@@ -480,20 +490,23 @@ class TimetableSet(models.Model):
     @property
     def allocations(self):
         return Allocation.objects.filter(
-            Q(timetable__timetable_sets__pk=self.pk) |\
+            Q(timetable__timetable_sets__pk=self.pk) | \
             Q(timetable__respected_by__timetable_sets__pk=self.pk)).distinct()
 
 
-def defaultTimetableSet():
+def default_timetable_set():
     return TimetableSet.objects.filter(public=True).order_by('-modified')[0]
 
-def defaultTimetable():
+
+def default_timetable():
     return Timetable.objects.filter(public=True,
                                     start__lte=datetime.datetime.now()).order_by('-start')[0]
+
 
 class Timetable(models.Model):
     def __str__(self):
         return self.name
+
     # respects = models.ManyToManyField('self', blank=True)
     activityset = models.ForeignKey('ActivitySet', blank=True, on_delete=models.CASCADE)
 
@@ -508,8 +521,8 @@ class Timetable(models.Model):
     @property
     def allocations(self):
         return Allocation.objects.filter(
-            Q(timetable__pk = self.pk) |\
-            Q(timetable__respected_by__pk = self.pk))
+            Q(timetable__pk=self.pk) | \
+            Q(timetable__respected_by__pk=self.pk))
 
     @property
     def classrooms(self):
@@ -522,6 +535,7 @@ class Timetable(models.Model):
     @property
     def preferences(self):
         return self.preferenceset.preferences
+
     name = models.CharField(max_length=64)
     slug = models.SlugField()
     public = models.BooleanField(default=False)
@@ -563,13 +577,13 @@ class Allocation(models.Model):
             ' ' + tt
         return s
 
-    def mailRepresentationFrom(self):
+    def mail_representation_from(self):
         return '{0}, {1}, {2} ob {3}'.format(self.activityRealization.activity.name,
                                              self.classroom,
                                              WEEKDAYSSLO[self.day],
                                              self.start)
 
-    def mailRepresentationTo(self):
+    def mail_representation_to(self):
         return "{0}, {1} ob {2}".format(self.classroom, WEEKDAYSSLO[self.day],
                                         self.start)
 
@@ -582,7 +596,7 @@ class Allocation(models.Model):
 
     @property
     def end(self):
-        endi = WORKHOURS.index((self.start, self.start))+self.duration
+        endi = WORKHOURS.index((self.start, self.start)) + self.duration
         if endi >= len(WORKHOURS):
             return AFTERHOURS[0]
         return WORKHOURS[endi][0]
@@ -605,16 +619,16 @@ class Allocation(models.Model):
     @property
     def hours(self):
         i = WORKHOURS.index((self.start, self.start))
-        hours = WORKHOURS[i:min(len(WORKHOURS), i+self.duration)]
+        hours = WORKHOURS[i:min(len(WORKHOURS), i + self.duration)]
         return [hour[0] for hour in hours]
 
     @property
     def are_groups_available(self):
-        '''
+        """
         Return True if groups on this allocation are available according to
         their GroupTimePreferences (with level CANT).
         Returns False otherwise.
-        '''
+        """
         return len(self.groups_not_available) == 0
 
     @property
@@ -626,7 +640,7 @@ class Allocation(models.Model):
                 if not group.is_available(self.day, set(self.hours))]
 
     @property
-    def startWithinWorkingHours(self):
+    def start_within_working_hours(self):
         """
         Return the set of allocations that starts when this allocation is active.
         """
@@ -652,6 +666,7 @@ class Allocation(models.Model):
 class Tag(models.Model):
     def __str__(self):
         return self.name
+
     name = models.CharField(max_length=32)
     description = models.TextField()
     teachers = models.ManyToManyField('Teacher', blank=True, related_name='tags')
@@ -668,7 +683,7 @@ class Tag(models.Model):
 class Preference(models.Model):
     def __str__(self):
         return self.level + \
-            " " + str(self.weight)
+               " " + str(self.weight)
 
     preferenceset = models.ForeignKey("PreferenceSet", related_name="preferences", on_delete=models.CASCADE)
     level = models.CharField(max_length=4, choices=PREFERENCELEVELS)
@@ -687,7 +702,7 @@ class GroupPreference(Preference):
 
     group = models.ForeignKey('Group', related_name='group_preferences', on_delete=models.CASCADE)
 
-    def adjustedWeight(self, optionalAdjustment=0.5):
+    def adjustedWeight(self, optional_adjustment=0.5):
         if self.level == 'CANT':
             return 1.0
         else:
@@ -697,8 +712,8 @@ class GroupPreference(Preference):
 class GroupTimePreference(GroupPreference):
     def __str__(self):
         return "{0}: {1} {2} {3}, {4} ({5})".format(self.group, self.level, self.day,
-                                                     self.start, self.duration,
-                                                     Preference.__str__(self))
+                                                    self.start, self.duration,
+                                                    Preference.__str__(self))
 
     day = models.CharField(max_length=3, choices=WEEKDAYS)
     start = models.CharField(max_length=5, choices=WORKHOURS)
@@ -709,13 +724,14 @@ class GroupTimePreference(GroupPreference):
 
     def hours(self):
         index = WORKHOURS.index((self.start, self.start))
-        return [i[0] for i in WORKHOURS[index:min(len(WORKHOURS), index+self.duration)]]
+        return [i[0] for i in WORKHOURS[index:min(len(WORKHOURS), index + self.duration)]]
 
 
 class GroupValuePreference(GroupPreference):
     def __str__(self):
-        return str(self.group) + " " + ' ' + str(self.level) +\
-            self.name + ',' + str(self.value)
+        return str(self.group) + " " + ' ' + str(self.level) + \
+               self.name + ',' + str(self.value)
+
     value = models.IntegerField()
     name = models.CharField(max_length=24, choices=PEOPLEVALUEPREFERENCES)
 
@@ -729,7 +745,7 @@ class TeacherPreference(Preference):
 
     teacher = models.ForeignKey('Teacher', related_name='teacher_preferences', on_delete=models.CASCADE)
 
-    def adjustedWeight(self, optionalAdjustment=1, min_weight=0, max_weight=1):
+    def adjustedWeight(self, optional_adjustment=1, min_weight=0, max_weight=1):
         if self.level == 'CANT':
             return 1.0
         else:
@@ -739,14 +755,15 @@ class TeacherPreference(Preference):
             preferences = TeacherPreference.objects.filter(teacher=self.teacher, level=self.level,
                                                            preferenceset=self.preferenceset)
             wsum = preferences.aggregate(s=models.Sum('weight'))
-            original_weight = optionalAdjustment*self.weight / wsum['s']
+            original_weight = optional_adjustment * self.weight / wsum['s']
             return min_weight + original_weight * (max_weight - min_weight)
 
 
 class TeacherValuePreference(TeacherPreference):
     def __str__(self):
-        return str(self.teacher) + " " + ' ' + str(self.level) +\
-            str(self.name) + ',' + str(self.value)
+        return str(self.teacher) + " " + ' ' + str(self.level) + \
+               str(self.name) + ',' + str(self.value)
+
     value = models.IntegerField()
     name = models.CharField(max_length=24, choices=PEOPLEVALUEPREFERENCES)
 
@@ -758,8 +775,9 @@ class TeacherValuePreference(TeacherPreference):
 class TeacherTimePreference(TeacherPreference):
     def __str__(self):
         return str(self.teacher) + " " + ' ' + str(self.level) + \
-            str(self.day) + ',' + str(self.start) + ' (+' + str(self.duration)+')' + \
-            " " + Preference.__str__(self)
+               str(self.day) + ',' + str(self.start) + ' (+' + str(self.duration) + ')' + \
+               " " + Preference.__str__(self)
+
     day = models.CharField(max_length=3, choices=WEEKDAYS)
     start = models.CharField(max_length=5, choices=WORKHOURS)
     duration = models.IntegerField(default=1)
@@ -779,7 +797,7 @@ class TeacherTimePreference(TeacherPreference):
 
     def hours(self):
         index = WORKHOURS.index((self.start, self.start))
-        return [i[0] for i in WORKHOURS[index:min(len(WORKHOURS), index+self.duration)]]
+        return [i[0] for i in WORKHOURS[index:min(len(WORKHOURS), index + self.duration)]]
 
 
 class TeacherDescriptivePreference(TeacherPreference):
@@ -796,7 +814,8 @@ class TeacherDescriptivePreference(TeacherPreference):
 class ActivityPreference(Preference):
     def __str__(self):
         return str(self.classroom) + " " + str(self.activity) + \
-            Preference.__str__(self)
+               Preference.__str__(self)
+
     classroom = models.ForeignKey('Classroom', on_delete=models.CASCADE)
     activity = models.ForeignKey('Activity', on_delete=models.CASCADE)
 
@@ -804,7 +823,8 @@ class ActivityPreference(Preference):
 class ActivityTimePlacePreference(Preference):
     def __str__(self):
         return str(self.classroom) + " " + str(self.activity) + self.day + \
-            " " + self.start + " (+" + str(self.duration) + ")" + Preference.__str__(self)
+               " " + self.start + " (+" + str(self.duration) + ")" + Preference.__str__(self)
+
     classroom = models.ForeignKey(Classroom, on_delete=models.CASCADE)
     activity = models.ForeignKey(Activity, on_delete=models.CASCADE)
     day = models.CharField(max_length=3, choices=WEEKDAYS)
@@ -818,7 +838,7 @@ class TagPreference(Preference):
 
     tag = models.ForeignKey('Tag', related_name='preferences', on_delete=models.CASCADE)
 
-    def adjustedWeight(self, optionalAdjustment=0.5):
+    def adjustedWeight(self, optional_adjustment=0.5):
         if self.level == 'CANT':
             return 1.0
         else:
@@ -839,9 +859,10 @@ class TagValuePreference(TagPreference):
 class TagTimePreference(TagPreference):
     def __str__(self):
         return str(self.tag) + " " + ' ' + str(self.level) + \
-            str(self.day) + ',' + str(self.start) + \
-            ' (+' + str(self.duration)+')' + \
-            " " + Preference.__str__(self)
+               str(self.day) + ',' + str(self.start) + \
+               ' (+' + str(self.duration) + ')' + \
+               " " + Preference.__str__(self)
+
     day = models.CharField(max_length=3, choices=WEEKDAYS)
     start = models.CharField(max_length=5, choices=WORKHOURS)
     duration = models.IntegerField(default=1)
@@ -851,12 +872,13 @@ class TagTimePreference(TagPreference):
 
     def hours(self):
         index = WORKHOURS.index((self.start, self.start))
-        return [i[0] for i in WORKHOURS[index:min(len(WORKHOURS), index+self.duration)]]
+        return [i[0] for i in WORKHOURS[index:min(len(WORKHOURS), index + self.duration)]]
 
 
 class TagDescriptivePreference(TagPreference):
     def __str__(self):
         return str(self.tag) + ' ' + str(self.level) + ',' + str(self.value)
+
     typename = models.CharField(max_length=16, choices=PREFERENCETYPES, default='COMMENT')
     value = models.TextField()
 
@@ -867,11 +889,12 @@ class TagDescriptivePreference(TagPreference):
 class Location(models.Model):
     def __str__(self):
         return self.name
+
     name = models.CharField(max_length=100)
     distances = models.ManyToManyField("self", through='LocationDistance', symmetrical=False)
 
     @property
-    def shortLocationName(self):
+    def short_location_name(self):
         if "Sežana" in self.name:
             return "Sežana"
         else:

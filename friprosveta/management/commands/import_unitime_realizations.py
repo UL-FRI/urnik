@@ -1,8 +1,8 @@
-from optparse import make_option
 from django.core.management.base import BaseCommand, CommandError
-from timetable.models import ActivityRealization, Allocation, Classroom
-from friprosveta.models import Teacher, Timetable, Subject, Activity, LectureType
 from unitime.common import Database
+
+from friprosveta.models import Teacher, Timetable, Subject, Activity, LectureType
+from timetable.models import ActivityRealization, Allocation, Classroom
 
 
 class Command(BaseCommand):
@@ -39,7 +39,7 @@ def import_unitime_activities(tt, solution):
              "JOIN scheduling_subpart AS ss ON (ss.uniqueid = c.subpart_id) "
              "WHERE solution_id={0}").format(solution)
     db.execute(query)
-    allocations = db.fetchallrows()
+    allocations = db.fetch_all_rows()
     # Subparts represent allocations
     subpart_data = dict()
     subpart_ids = set()
@@ -58,8 +58,8 @@ def import_unitime_activities(tt, solution):
         WHERE ss.uniqueid={0}""".format(subpart_id)
         db.execute(query)
         assert db.rowcount == 1, "There should be exactly one subject per subpart"
-        subject = Subject.objects.get(pk=db.fetchnextrow()[0])
-        itype, minutes, teacher_ids  = subpart_data[subpart_id]
+        subject = Subject.objects.get(pk=db.fetch_next_row()[0])
+        itype, minutes, teacher_ids = subpart_data[subpart_id]
         teachers = [Teacher.objects.get(pk=teacher_id) for teacher_id in teacher_ids]
         type_short_name = itype_type_mapping[itype]
         lecture_type = LectureType.objects.get(short_name=type_short_name)
@@ -70,22 +70,22 @@ def import_unitime_activities(tt, solution):
             short_name=subject.short_name,
             activityset=tt.activityset,
             type=type_short_name,
-            duration=minutes/60,
-            )
+            duration=minutes / 60,
+        )
         activity.save()
         for teacher in teachers:
             activity.teachers.add(teacher)
         # Get all allocations and iterate through all class ids 
         # Classes represent realizations
-        activity_allocations = [a for a in allocations if a[5]==subpart_id]
+        activity_allocations = [a for a in allocations if a[5] == subpart_id]
         class_ids = set([a[0] for a in activity_allocations])
         for class_id in class_ids:
             class_allocations = [a for a in activity_allocations if a[0] == class_id]
             class_teacher_ids = [a[4] for a in class_allocations]
             class_teachers = [Teacher.objects.get(pk=teacher_id) for teacher_id in class_teacher_ids]
-            slot, day, room_id = class_allocations[1:1+3]
+            slot, day, room_id = class_allocations[1:1 + 3]
             day = day_mapping[day]
-            hour = slot/12
+            hour = slot / 12
             # minute = slot % 12 * 5
             # V resnici se pri nama vedno zacne ob uri in ne 15 cez
             minute = 0
@@ -121,8 +121,7 @@ def import_unitime_realizations(tt, solution):
     type_itype_mapping = {'P': 10, 'LV': 30, 'AV': 20, 'TUT': 35}
 
     for activity in tt.activities.all():
-        print
-        print "Processing {0}".format(activity)
+        print("Processing {0}".format(activity))
         # find corresponding scheduling subpart
         subject = activity.subject
         itype = type_itype_mapping[activity.type]
@@ -132,21 +131,20 @@ def import_unitime_realizations(tt, solution):
         WHERE co.external_uid={0} AND ss.itype={1}""".format(subject.id, itype)
         db.execute(query)
         if db.rowcount != 1:
-            print(u"Error while processing {0}".format(activity.name))
+            print("Error while processing {0}".format(activity.name))
             print("Only one scheduling subaprt per activity is supported.")
-            print
             continue
-        scheduling_subpart_id = db.fetchnextrow()[0]
+        scheduling_subpart_id = db.fetch_next_row()[0]
         query = """SELECT uniqueid, external_uid FROM class_ WHERE
         subpart_id={0}""".format(scheduling_subpart_id)
         db.execute(query)
-        rows = db.fetchallrows()
-        # class_ids = [e[0] for e in db.fetchallrows()]
-        # realization_ids = [e[1] for e in db.fetchallrows()]
+        rows = db.fetch_all_rows()
+        # class_ids = [e[0] for e in db.fetch_all_rows()]
+        # realization_ids = [e[1] for e in db.fetch_all_rows()]
         # print class_ids, realization_ids
         # First delete all current realizations
         # activity.realizations.all().delete()
-        for class_id, realization_id in rows: #zip(class_ids, realization_ids):
+        for class_id, realization_id in rows:  # zip(class_ids, realization_ids):
             query = (
                 "SELECT slot, days, r.external_uid, "
                 "di.external_uid FROM assignment AS a "
@@ -159,28 +157,28 @@ def import_unitime_realizations(tt, solution):
                 "WHERE solution_id={0} AND c.uniqueid={1}").format(solution, class_id)
             db.execute(query)
             if db.rowcount == 0:
-                print "No class"
+                print("No class")
                 continue
-            rows = db.fetchallrows()
+            rows = db.fetch_all_rows()
             teacher_ids = [e[3] for e in rows if e[3] is not None]
             teachers = [Teacher.objects.get(id=teacher_id) for teacher_id in teacher_ids]
             slot, day, room_id, _ = rows[0]
             day = day_mapping[day]
-            hour = slot/12
+            hour = slot / 12
             minute = slot % 12 * 5
             # V resnici se pri nama vedno zacne ob uri in ne 15 cez
             minute = 0
             allocation_time = "{0:02d}:{1:02d}".format(hour, minute)
             room = Classroom.objects.get(id=room_id)
-            try: 
-                #realization = ActivityRealization(activity=activity, id=realization_id)
-                #realization.save()
+            try:
+                # realization = ActivityRealization(activity=activity, id=realization_id)
+                # realization.save()
                 realization = ActivityRealization.objects.get(pk=realization_id)
                 for teacher in teachers:
                     realization.teachers.add(teacher)
-                print realization
+                print(realization)
             except Exception:
-                print "No matching realization for {0}".format(realization_id)
+                print("No matching realization for {0}".format(realization_id))
 
             realization.allocations.all().delete()
             Allocation(timetable=tt,

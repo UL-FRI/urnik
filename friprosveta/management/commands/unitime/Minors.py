@@ -1,23 +1,16 @@
-# -*- coding: utf-8 -*-
+from .CreateXML import create_xml
 
-'''
-Created on 20. avg. 2012
-
-@author: gregor
-'''
-
-from CreateXML import createXML
-import sys
 
 # To so za nas študijske smeri, torej verjetno študiji
 
 
-#TODO: added campus, term, year as arguments
+# TODO: added campus, term, year as arguments
 def minors(campus, term, year):
     entries = []
     classifications = ["posMinors", {"campus": campus, "term": term, "year": year}, entries]
     return classifications
 
+
 if __name__ == "__main__":
-    doc = createXML(minors())
-    print doc.toprettyxml(indent="  ").encode('utf8')
+    doc = create_xml(minors())
+    print(doc.toprettyxml(indent="  ").encode('utf8'))

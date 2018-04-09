@@ -1477,7 +1477,8 @@ class RoomGroup(models.Model):
     session = models.ForeignKey('Sessions', blank=True, null=True, on_delete=models.CASCADE)
     name = models.CharField(max_length=60, blank=True)
     description = models.CharField(max_length=200, blank=True)
-    global_field = models.IntegerField(db_column='global', blank=True, null=True)  # Field renamed because it was a Python reserved word.
+    global_field = models.IntegerField(db_column='global', blank=True,
+                                       null=True)  # Field renamed because it was a Python reserved word.
     default_group = models.IntegerField(blank=True, null=True)
     department = models.ForeignKey(Department, blank=True, null=True, on_delete=models.CASCADE)
     abbv = models.CharField(max_length=60, blank=True)

@@ -1,4 +1,4 @@
-def studentEnrollments(timetable, campus, term, year):
+def student_enrollments(timetable, campus, term, year):
     entries = []
     for student in timetable.students:
         demands = []
@@ -6,7 +6,7 @@ def studentEnrollments(timetable, campus, term, year):
             demands += [
                 "class",
                 {
-                    "subject": u"{0}".format(subject.code),
+                    "subject": "{0}".format(subject.code),
                     "courseNbr": "101"
                 },
                 [],

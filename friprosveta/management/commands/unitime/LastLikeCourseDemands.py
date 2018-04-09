@@ -1,4 +1,4 @@
-def lastLikeCourseDemands(tt, tt_old, campus, term, year):
+def last_like_course_demands(tt, tt_old, campus, term, year):
     entries = []
     current_subject_codes = [subject.code for subject in tt.subjects]
     for student in tt_old.students:

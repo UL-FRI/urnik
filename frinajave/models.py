@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
-
-from itertools import combinations
 from collections import defaultdict
+from itertools import combinations
+
 from django.db import models
-from timetable.models import TimetableSet
+
 from friprosveta.models import LectureType
+from timetable.models import TimetableSet
 
 INSTRUCTION_STYLE = (
     (1, 'Enojni'),
@@ -18,11 +18,11 @@ DEFAULT_INSTRUCTION_STYLE = 1
 # How many teachers and students per activity type / instruction style.
 # The number 0 stands for infinite.
 ACTIVITY_TEACHERS_SIZE = {
-                ('AV', 'Enojni'): (1, 30),
-                ('LV', 'Enojni'): (1, 18),
-                ('LV', 'Dva asistenta'): (2, 30),
-                ('LV', 'Z demonstratorjem'): (1, 30),
-                ('P', 'Enojni'): (0, 0)}
+    ('AV', 'Enojni'): (1, 30),
+    ('LV', 'Enojni'): (1, 18),
+    ('LV', 'Dva asistenta'): (2, 30),
+    ('LV', 'Z demonstratorjem'): (1, 30),
+    ('P', 'Enojni'): (0, 0)}
 
 
 class TeacherSubjectCycles(models.Model):
@@ -30,14 +30,15 @@ class TeacherSubjectCycles(models.Model):
     How many cycles are allocated for a given teacher for a given subject
     for a given type in the given timetable.
     """
+
     def __str__(self):
         return ("Id: {5}, teacher: {0}, subject: {1}, lecture type: {2}, instruction type: {6}"
                 "cycles {4}, timetable_set: {3}".format(
-                    self.teacher_code,
-                    self.subject_code,
-                    self.lecture_type,
-                    self.timetable_set,
-                    self.cycles, self.id, self.instruction_type))
+                 self.teacher_code,
+                 self.subject_code,
+                 self.lecture_type,
+                 self.timetable_set,
+                 self.cycles, self.id, self.instruction_type))
 
     teacher_code = models.CharField(max_length=16, blank=False)
     subject_code = models.CharField(max_length=16, blank=False)
@@ -78,6 +79,7 @@ class TeacherSubjectCycles(models.Model):
         representing a group of teachers. The teachers are grouped so
         that every appears on the right number of cycles.
         """
+
         def sort_cycles(cycles):
             """
             Sort teacher_cycles list by cycles (not ascending).
@@ -134,21 +136,21 @@ class TeacherSubjectCycles(models.Model):
         non_integer_teacher_cycles = []
         integer_teacher_cycles = []
         for tc in teacher_cycles:
-            integer, decimal = int(tc[1]), tc[1]%1
+            integer, decimal = int(tc[1]), tc[1] % 1
             if decimal:
                 if integer > 0:
                     integer_teacher_cycles.append([tc[0], integer])
                 non_integer_teacher_cycles.append([tc[0], decimal])
             else:
                 integer_teacher_cycles.append(tc)
-        assert sum([c for t,c in non_integer_teacher_cycles]) % 1 == 0, "Non-integer parts should sum into integer"
+        assert sum([c for t, c in non_integer_teacher_cycles]) % 1 == 0, "Non-integer parts should sum into integer"
         while non_integer_teacher_cycles:
-            for length in range(2, len(non_integer_teacher_cycles)+1):
+            for length in range(2, len(non_integer_teacher_cycles) + 1):
                 for comb in combinations(non_integer_teacher_cycles, length):
                     # If this combination sums into integer cycle merge appropriate teachers
                     s = sum([c for _, c in comb])
                     if s % 1 == 0:
-                        merged = ",".join([t for t,c in comb])
+                        merged = ",".join([t for t, c in comb])
                         integer_teacher_cycles.append([merged, int(s)])
                         for e in comb:
                             non_integer_teacher_cycles.remove(e)
@@ -190,7 +192,8 @@ class TeacherSubjectCycles(models.Model):
                 if teachers_per_group_num == 0:
                     # Infinite teachers, one cycle
                     assert sum([r.cycles for r in rs]) == 1, ("Percentages should sum into one for subject {0}, "
-                                                             "lecture_type {1}, instruction style {2}".format(subject_code, lecture_type, instruction_style))
+                                                              "lecture_type {1}, instruction style {2}".format(
+                        subject_code, lecture_type, instruction_style))
                     # All teachers will be grouped into one big entry, since cycles are summed into 1
                     teachers_per_group_num = 1
                 entries = [[r.teacher_code, r.cycles] for r in rs]

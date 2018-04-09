@@ -1,15 +1,11 @@
-from django.core.management.base import BaseCommand, CommandError
+from friprosveta.models import LectureType, Student
+from friprosveta.models import Teacher, Subject
 from timetable.models import ActivityRealization, Allocation, Classroom
 from timetable.models import Group
-from friprosveta.models import Teacher, Timetable, Subject, Activity
-from friprosveta.models import LectureType, Student
-from unitime.models import Solution, Room, TimePattern, TimePref
+from unitime.models import Solution, TimePattern, TimePref
 from unitime.models import StudentClassEnrl
-from friprosveta.management.commands.django2fet import teachersFet
-from ..unitime.common import Database, allocation_days, index_days
+from ..unitime.common import Database, index_days
 from ..unitime.common import PreferenceLevel, day_mapping, itype_type_mapping
-from friprosveta.views import assignments
-from friprosveta.management.commands.unitime import Students
 
 
 def students_for_assignment(assignment, solution_id):
@@ -53,19 +49,19 @@ def realization_from_assignment(assignment, tt):
         start = "{0:02d}:{1:02d}".format(hour, 0)
         day = day_mapping[assignment.days]
         activities = tt.activities.filter(type=lecture_type.short_name,
-                                          duration=minutes_per_week/60,
+                                          duration=minutes_per_week / 60,
                                           subject=subject)
         assert activities.count() == 1
         activity = activities.get()
         alloc = Allocation.objects.get(
-                    timetable=tt,
-                    day=day,
-                    start=start,
-                    classroom=room)
+            timetable=tt,
+            day=day,
+            start=start,
+            classroom=room)
 
         return alloc.activityRealization
     except Exception as e:
-        print (e, day, start, room)
+        print(e, day, start, room)
         return None
 
 
@@ -77,9 +73,9 @@ def enroll_students(assignment, solution_id, tt):
     group_short_name = "g_{0}".format(realization.id)
     parent = Group.objects.get(short_name='UT')
     group = Group.objects.get_or_create(
-                name=group_name,
-                short_name=group_short_name,
-                groupset=tt.groupset)[0]
+        name=group_name,
+        short_name=group_short_name,
+        groupset=tt.groupset)[0]
     group.parent = parent
     group.save()
     # realization.groups.clear()
@@ -166,9 +162,9 @@ def fix_current_allocations(lecture_type, solution):
         start_index = preference_day_length * day_index + hour_index
         preference = (preference[:start_index] +
                       PreferenceLevel.Required +
-                      preference[start_index+1:])
+                      preference[start_index + 1:])
         subject_code = assignment.class_name.split()[0]
-        next_id = data.getNextID()
+        next_id = data.get_next_id()
         TimePref.objects.filter(owner_id=activity.uniqueid).delete()
         time_preference = TimePref(owner_id=activity.uniqueid,
                                    pref_level_id=1,
@@ -178,8 +174,7 @@ def fix_current_allocations(lecture_type, solution):
         time_preference.save()
 
 
-def check_sync_with_timetable(tt, unitime_allocations, solution_id,
-                              lecture_types=['P']):
+def check_sync_with_timetable(tt, unitime_allocations, solution_id, lecture_types=['P']):
     # allocs = read_unitime_allocations(tt, solution_id)
     allocs = unitime_allocations
     allocs_dict = {(start, day, classroom.short_name): (s, lt, ts)
@@ -190,8 +185,7 @@ def check_sync_with_timetable(tt, unitime_allocations, solution_id,
         if lecture_type.short_name not in lecture_types:
             continue
         try:
-            tt_alloc = tt.allocations.get(day=day, start=start,
-                                          classroom__shortName=classroom)
+            tt_alloc = tt.allocations.get(day=day, start=start, classroom__shortName=classroom)
         except:
             print(start, day, classroom, subject, "not in timetable")
         if tt_alloc.activityRealization.activity.activity.subject != subject:
@@ -206,4 +200,4 @@ def check_sync_with_timetable(tt, unitime_allocations, solution_id,
         if activity.lecture_type.short_name not in lecture_types:
             continue
         if (start, day, classroom) not in allocs_dict:
-            print (start, day, classroom, subject , "not in Unitime!")
+            print(start, day, classroom, subject, "not in Unitime!")

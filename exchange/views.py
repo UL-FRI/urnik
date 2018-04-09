@@ -16,7 +16,7 @@ from exchange.forms import ExchangeCreationForm, SubjectPreferenceForm, StudentS
     TeacherExchangeCreationForm
 from exchange.models import FormProcessingError, SubjectPreference, Exchange, ExchangeType
 from friprosveta.models import Subject, Teacher, Activity, Student
-from timetable.models import Timetable, defaultTimetable, Allocation
+from timetable.models import Timetable, default_timetable, Allocation
 
 
 def restrict_to_student(func):
@@ -62,7 +62,7 @@ def _main_redirect_helper(request, timetable_slug):
 @login_required
 @require_http_methods(["GET"])
 def main_redirect(request):
-    timetable = defaultTimetable()
+    timetable = default_timetable()
     return _main_redirect_helper(request, timetable.slug)
 
 

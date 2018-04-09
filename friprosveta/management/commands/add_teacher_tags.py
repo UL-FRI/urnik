@@ -1,6 +1,8 @@
-from optparse import make_option
 import logging
+from optparse import make_option
+
 from django.core.management.base import BaseCommand, CommandError
+
 from timetable.models import TagValuePreference, Timetable, Tag
 
 logger = logging.getLogger('friprosveta')
@@ -16,19 +18,19 @@ When rm_prefs option is given old time preferences and tags are deleted and \
 default TagValuePreferences are created.
 Usage: add_tags [--teacher=teacher_id] [--rm_prefs] timetable_slug"""
     option_list = BaseCommand.option_list + \
-        (make_option(
-            '--teacher',
-            type='int',
-            dest='teacher_id',
-            help='Only set preferences for the user with the given id'),
-         make_option(
-            '--rm_prefs',
-            action='store_true',
-            dest='remove_old_preferences',
-            default=False,
-            help='Remove old preferences for tags. This option is only valid when option \
+                  (make_option(
+                      '--teacher',
+                      type='int',
+                      dest='teacher_id',
+                      help='Only set preferences for the user with the given id'),
+                   make_option(
+                       '--rm_prefs',
+                       action='store_true',
+                       dest='remove_old_preferences',
+                       default=False,
+                       help='Remove old preferences for tags. This option is only valid when option \
 pset is also given, otherwise it is silently ignored.'),
-         )
+                  )
 
     def handle(self, *args, **options):
         if len(args) < 1:
@@ -98,7 +100,7 @@ pset is also given, otherwise it is silently ignored.'),
             6: '6 ur na dan',
             5: '5 ur na dan',
             4: '4 ure na dan',
-            3:  '3 ure na dan',
+            3: '3 ure na dan',
         }
         self.max_days_weekly = {
             4: '4 dni na teden',

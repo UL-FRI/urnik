@@ -1,17 +1,13 @@
-# -*- coding: utf-8 -*-
-import json
-import traceback
-
-from django.core.management.base import BaseCommand
-from django.core.exceptions import ObjectDoesNotExist
-from django.conf import settings
-
-from timetable.models import User
-from friprosveta.studis import Osebe
-from friprosveta.management.commands.change_teacher_code import change_teacher_code
-from friprosveta.management.commands.add_user import createSingleUser
-
 import logging
+
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.management.base import BaseCommand
+
+from friprosveta.management.commands.add_user import create_single_user
+from friprosveta.management.commands.change_teacher_code import change_teacher_code
+from friprosveta.studis import Osebe
+from timetable.models import User
+
 
 class Command(BaseCommand):
     def add_arguments(self, parser):
@@ -21,7 +17,6 @@ class Command(BaseCommand):
             dest='teacher_code',
             help='Only sync teacher with the given code.'),
 
-
     def sync_all_teachers(self):
         logger = logging.getLogger(__name__)
         logger.info("Starting sync")
@@ -29,9 +24,9 @@ class Command(BaseCommand):
         logger.debug("Created Osebe instance")
         teachers = osebe.get_teachers()
         logger.debug("Got teachers")
-        #logger.debug("{0}".format(teachers))
+        # logger.debug("{0}".format(teachers))
         teacher_codes = osebe.get_teacher_codes()
-        #logger.debug("Got teacher codes")
+        # logger.debug("Got teacher codes")
         logger.debug("{0}".format(teacher_codes))
         for teacher in teachers:
             teacher_code = teacher['sifra_predavatelja']
@@ -51,11 +46,11 @@ class Command(BaseCommand):
                     logger.info("User with upn {0} not found "
                                 "in system".format(teacher['upn']))
                     try:
-                        createSingleUser(first_name=teacher['ime'],
-                                         last_name=teacher['priimek'],
-                                         uid=teacher['upn'],
-                                         teacher_code=teacher_code,
-                                         write_to_db=True)
+                        create_single_user(first_name=teacher['ime'],
+                                           last_name=teacher['priimek'],
+                                           uid=teacher['upn'],
+                                           teacher_code=teacher_code,
+                                           write_to_db=True)
                     except Exception as e:
                         logger.exception("Exception while creating user")
             else:
@@ -69,7 +64,7 @@ class Command(BaseCommand):
         logger.debug("Created Osebe instance")
         teachers = osebe.get_teachers()
         logger.debug("Got teachers")
-        teacher = [t for t in teachers if t['sifra_predavatelja']==teacher_code]
+        teacher = [t for t in teachers if t['sifra_predavatelja'] == teacher_code]
         assert len(teacher) == 1, "No teacher with code found in Studij"
         teacher = teacher[0]
         logger.info("Processing {0} {1}; {2}".format(teacher['ime'], teacher['priimek'], teacher_code))
@@ -87,11 +82,11 @@ class Command(BaseCommand):
             logger.info("User with upn {0} not found "
                         "in system".format(teacher['upn']))
             try:
-                createSingleUser(first_name=teacher['ime'],
-                                 last_name=teacher['priimek'],
-                                 uid=teacher['upn'],
-                                 teacher_code=teacher_code,
-                                 write_to_db=True)
+                create_single_user(first_name=teacher['ime'],
+                                   last_name=teacher['priimek'],
+                                   uid=teacher['upn'],
+                                   teacher_code=teacher_code,
+                                   write_to_db=True)
             except Exception as e:
                 logger.exception("Exception while creating user")
         logger.info("Completed sync")

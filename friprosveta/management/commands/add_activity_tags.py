@@ -1,12 +1,12 @@
-from optparse import make_option
 import logging
-from django.core.management.base import BaseCommand, CommandError
-from timetable.models import ActivitySet, Tag, TagTimePreference, PreferenceSet
-from timetable.models import WORKHOURS
 from collections import defaultdict
 
-from friprosveta.studis import  Studij, Najave
+from django.core.management.base import BaseCommand
+
 from friprosveta.models import Timetable
+from friprosveta.studis import Studij, Najave
+from timetable.models import Tag, TagTimePreference, PreferenceSet
+from timetable.models import WORKHOURS
 
 logger = logging.getLogger('friprosveta')
 
@@ -21,6 +21,7 @@ When given preferenceset option it also creates default time preferences for add
 Default time preferences are hard coded into this python script.
 Usage: add_activity_tags [--act=activity_id] [--pset=preferenceset_slug] [--rm_prefs] \
 activity_set_slug"""
+
     def add_arguments(self, parser):
         parser.add_argument('timetable_slug', nargs=1, type=str,
                             help='Slug of the timetable to use')
@@ -48,7 +49,6 @@ activity_set_slug"""
             dest='remove_old_preferences',
             help='Remove old preferences for tags. This option is only valid when option \
 pset is also given, otherwise it is silently ignored.'),
-
 
     def handle(self, *args, **options):
         logger.info("Entering handle")
@@ -80,14 +80,14 @@ pset is also given, otherwise it is silently ignored.'),
         tag_obligatory = Tag.objects.get(name='Predavanja - redna')
         studij = Studij(year)
         najave = Najave(year)
-        # logger.debug(u'Tagging activities {}'.format(activities))
+        # logger.debug('Tagging activities {}'.format(activities))
         for activity in activities:
             logger.debug("Processing activity {0}".format(activity))
             activity.tags.remove(*self.safe_to_delete)
-            logger.debug(u'Removing {0} from activity {1}'.format(self.safe_to_delete, activity))
+            logger.debug('Removing {0} from activity {1}'.format(self.safe_to_delete, activity))
             for (atype, min_size, max_size), tag in self.tags.items():
                 if activity.type == atype and min_size <= activity.size <= max_size:
-                    logger.debug(u'Adding tag {0} to activity {1}'.format(tag, activity))
+                    logger.debug('Adding tag {0} to activity {1}'.format(tag, activity))
                     activity.tags.add(*tag)
             if activity.type == 'P':
                 try:
@@ -109,6 +109,7 @@ pset is also given, otherwise it is silently ignored.'),
 
     def add_default_preferences(self, preferenceset):
         logger.info("Entering add_default_preferences")
+
         def duration(start, end):
             i = WORKHOURS.index((start, start))
             j = WORKHOURS.index((end, end))
@@ -127,7 +128,7 @@ pset is also given, otherwise it is silently ignored.'),
                         tag=tag,
                         start=start,
                         duration=duration(start, end),
-                        weight=1.0*weight/100,
+                        weight=1.0 * weight / 100,
                         preferenceset=preferenceset,
                         level=level,
                     )

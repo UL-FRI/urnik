@@ -1,16 +1,17 @@
+import inspect
 import os
 import sys
-import inspect
-from CreateXML import createXML
-from importlib import import_module
 from collections import OrderedDict
+from importlib import import_module
+
+from .CreateXML import create_xml
 
 
 def export(tt, tt_old, campus, term, year, what):
-    '''
+    """
     What can be xml_all, database_all or one of the keys in the
     data dictionary.
-    '''
+    """
     abs_path = os.path.abspath(inspect.getfile(inspect.currentframe()))
     current_path = os.path.dirname(abs_path)
     sys.path.append(current_path)
@@ -80,22 +81,22 @@ def export(tt, tt_old, campus, term, year, what):
     else:
         what = [what]
     for module in what:
-        #(method, arguments) = xml_data.get(module, database_data[module])
+        # (method, arguments) = xml_data.get(module, database_data[module])
         if module in xml_data:
             (method, arguments) = xml_data[module]
         else:
             (method, arguments) = database_data[module]
-        print u"Running {0}".format(module)
+        print("Running {0}".format(module))
         module_data = None
         try:
             mod = import_module(module)
             module_data = getattr(mod, method)(*arguments)
         except ImportError as e:
-            print e
+            print(e)
         if module in xml_data:
             try:
                 f = open("{0}.xml".format(module), "w")
-                xml = createXML(module_data)
+                xml = create_xml(module_data)
                 xml = xml.toprettyxml(indent="  ").encode('utf8')
                 f.write(xml)
             finally:

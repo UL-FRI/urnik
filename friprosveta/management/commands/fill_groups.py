@@ -1,25 +1,18 @@
-'''
-Created on 10. jan. 2013
-
-@author: polz
-'''
-
-from django.core.management.base import BaseCommand, CommandError
-from optparse import make_option
+from django.core.management.base import BaseCommand
 from django.db import transaction
-import friprosveta.models as fm
-import timetable.models as tm
+
 import friprosveta
+import friprosveta.models as fm
 
 
 class Command(BaseCommand):
     """
     Put students into groups for a given timetable.
     """
-    
-    help="""Usage: fill_groups [--subject=subject_code] timetable_slug [write_to_db, default False] [unenroll_first, default False]
+
+    help = """Usage: fill_groups [--subject=subject_code] timetable_slug [write_to_db, default False] [unenroll_first, default False]
 Example: fill_groups "FRI 2013/2014, zimski semester" True"""
-    
+
     def add_arguments(self, parser):
         parser.add_argument(
             'timetable_slug', nargs=1)
@@ -33,56 +26,56 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
             '--subject', nargs=1,
             dest='subject_code',
             help='Fill groups for the given subject only.')
- 
-    def handle(self, *args, **options):        
-        WRITE_TO_DB=options['write_to_db']
+
+    def handle(self, *args, **options):
+        WRITE_TO_DB = options['write_to_db']
         print(WRITE_TO_DB)
-        UNENROLL_FIRST=options['unenroll_first']
+        UNENROLL_FIRST = options['unenroll_first']
         tt = fm.Timetable.objects.get(slug=options['timetable_slug'][0])
-        
-        subjects = tt.subjects.all() 
+
+        subjects = tt.subjects.all()
         if "subject_code" in options and options['subject_code'] != None:
             print(options["subject_code"][0])
-            subjects = tt.subjects.filter(code=options["subject_code"][0]) 
+            subjects = tt.subjects.filter(code=options["subject_code"][0])
         self.stdout.write(str(subjects))
-        self.fillGroupsBySize(tt, subjects, WRITE_TO_DB, UNENROLL_FIRST)
-        self.printGroupSurnames(tt)
-   
-    @transaction.atomic 
-    def fillGroupsBySize(self, tt, subjects, write_to_db = False, unenroll_first = False):
+        self.fill_groups_by_size(tt, subjects, WRITE_TO_DB, UNENROLL_FIRST)
+        self.print_group_surnames(tt)
+
+    @transaction.atomic
+    def fill_groups_by_size(self, tt, subjects, write_to_db=False, unenroll_first=False):
         # study = fm.Study.objects.get(short_name=group.study)
         # students = study.enrolledStudentsClassyear(tt, int(group.classyear)).order_by("surname", "name").all()
-        #group.students.clear()
-        #for s in students:
+        # group.students.clear()
+        # for s in students:
         #    group.students.add(s)
-        #group.size = len(students)
-        #group.save()
+        # group.size = len(students)
+        # group.save()
         for subject in subjects.all():
             groups_by_activitytype = dict()
             self.stdout.write("{} {}".format(subject.short_name, subject.code))
-            debugGroupDict = dict()
-            fooGroupList = list()
+            debug_group_dict = dict()
+            foo_group_list = list()
             for activity in subject.activities.filter(activityset=tt.activityset):
-            #    print "  ", activity.short_name
+                #    print "  ", activity.short_name
                 for group in activity.groups.filter(groupset=tt.groupset).distinct():
-            #        print "  ->", group.short_name
+                    #        print "  ->", group.short_name
                     dy = groups_by_activitytype.get(activity.type, {})
-                    groups_by_activitytype[activity.type] = dy # get a reference to groups by year
+                    groups_by_activitytype[activity.type] = dy  # get a reference to groups by year
                     ds = dy.get(group.classyear, {})
-                    dy[group.classyear] = ds # get a reference to groups by study
+                    dy[group.classyear] = ds  # get a reference to groups by study
                     l = ds.get(group.study, [])
                     ds[group.study] = l
                     debugTuple = (group.short_name, activity.type, group.classyear, group.study)
                     if group in l:
-                        fooGroupList.append(debugTuple)
+                        foo_group_list.append(debugTuple)
                     else:
                         l.append(group)
-                    deblist = debugGroupDict.get(debugTuple, [])
+                    deblist = debug_group_dict.get(debugTuple, [])
                     deblist.append((activity, group))
-                    debugGroupDict[debugTuple] = deblist
-            for fg in fooGroupList:
+                    debug_group_dict[debugTuple] = deblist
+            for fg in foo_group_list:
                 self.stderr.write("Skupina {0} je vsaj dvakrat na {1} {2} {3}".format(*fg))
-                for i in debugGroupDict[fg]:
+                for i in debug_group_dict[fg]:
                     self.stderr.write("    {} {} {} {}".format(i[0].id, i[0].short_name, i[1].id, i[1].short_name))
             # enroll "normal" students
             normal_enrollment_types = [4, 26]
@@ -95,19 +88,20 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
             for t, groups_by_year in groups_by_activitytype.items():
                 self.stdout.write(t)
                 for classyear, groups_by_study in groups_by_year.items():
-                    self.stdout.write("  "+str(classyear))
+                    self.stdout.write("  " + str(classyear))
                     for study_name, groups in groups_by_study.items():
-                        self.stdout.write("    "+str(study_name))
+                        self.stdout.write("    " + str(study_name))
                         try:
                             study = fm.Study.objects.get(short_name=study_name)
                             if study_name == 'PAD':
                                 students = set(extra_enrollments.values_list('student', flat=True))
                             else:
                                 students = set(normal_enrollments.filter(
-                                        study=study, classyear=int(classyear)
-                                    ).values_list('student', flat=True))
+                                    study=study, classyear=int(classyear)
+                                ).values_list('student', flat=True))
                         except Exception as e:
-                            self.stderr.write(u"Problem finding students for {0}-{1}: {2}".format(classyear, study_name, e))
+                            self.stderr.write(
+                                "Problem finding students for {0}-{1}: {2}".format(classyear, study_name, e))
                             students = set()
                         # students now contains all the students for this type of groups
                         self.stdout.write("        {}".format(students))
@@ -130,7 +124,8 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
                         new_students = fm.Student.objects.filter(id__in=new_students).order_by('surname', 'name')
                         former_students = fm.Student.objects.filter(id__in=former_students).order_by('surname', 'name')
                         # new_students = sorted(new_students, key=lambda x: (x.surname, x.name))
-                        print("NEW:", new_students, "DESIRED:", students, "CURRENT:", current_students, "FORMER:", former_students)
+                        print("NEW:", new_students, "DESIRED:", students, "CURRENT:", current_students, "FORMER:",
+                              former_students)
                         for group in groups:
                             group_students = list(group.students.all())
                             for student in group_students:
@@ -156,32 +151,33 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
                                 self.stderr.write("    groups too large")
                             for group in groups:
                                 self.stderr.write("    {}: {}".format(group.short_name, group.size))
-                        #assert len(students) == check_sum
+                        # assert len(students) == check_sum
 
-    def printGroupSurnames(self, tt):
+    def print_group_surnames(self, tt):
         l = []
         for group in tt.groupset.groups.all():
             s = list(group.students.order_by("surname", "name").all())
             if len(s) > 0:
-            #    print "    ", s[0].surname[:5], s[-1].surname[:5]
-                l.append((str(group).split()[0], u"" + s[0].surname + u" " + s[0].name, s[-1].surname + " " + s[-1].name, len(s), group.size))
+                #    print "    ", s[0].surname[:5], s[-1].surname[:5]
+                l.append((
+                    str(group).split()[0], "" + s[0].surname + " " + s[0].name, s[-1].surname + " " + s[-1].name,
+                    len(s), group.size))
             else:
-                l.append((str(group).split()[0], u"-", u"-", 0, group.size))
+                l.append((str(group).split()[0], "-", "-", 0, group.size))
         d = {}
         l.sort()
-        lastName = l[0][0]
-        d[lastName] = (l[0][1], 1, l[0][2], 1, l[0][3], l[0][4])
+        last_name = l[0][0]
+        d[last_name] = (l[0][1], 1, l[0][2], 1, l[0][3], l[0][4])
         for i, (short_name, s1, s2, n, gn) in enumerate(l[1:]):
-            s1_, l1_, s2_, l2_, n_, gn_ = d[lastName]
+            s1_, l1_, s2_, l2_, n_, gn_ = d[last_name]
             firstdiff = 0
-            while firstdiff+1 < min(len(s2_), len(s1)) and s2_[firstdiff] == s1[firstdiff]:
+            while firstdiff + 1 < min(len(s2_), len(s1)) and s2_[firstdiff] == s1[firstdiff]:
                 firstdiff += 1
-            d[short_name] = (s1, firstdiff+1, s2, firstdiff+1, n, gn)
-            d[lastName] = (s1_, l1_, s2_, firstdiff+1, n_, gn_)
-            lastName = short_name
-        s1_, l1_, s2_, l2_, n_, gn_ = d[lastName]
-        d[lastName] = (s1_, l1_, s2_, 1, n_, gn_)
+            d[short_name] = (s1, firstdiff + 1, s2, firstdiff + 1, n, gn)
+            d[last_name] = (s1_, l1_, s2_, firstdiff + 1, n_, gn_)
+            last_name = short_name
+        s1_, l1_, s2_, l2_, n_, gn_ = d[last_name]
+        d[last_name] = (s1_, l1_, s2_, 1, n_, gn_)
         for k in sorted(d):
             s1, l1, s2, l2, n, gn = d[k]
-            self.stdout.write(u"{0}: {1} .. {2} ({3} - {4})".format(k, s1[:l1], s2[:l2], n, gn))
-    
+            self.stdout.write("{0}: {1} .. {2} ({3} - {4})".format(k, s1[:l1], s2[:l2], n, gn))

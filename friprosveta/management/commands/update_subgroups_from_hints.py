@@ -1,16 +1,17 @@
 from django.core.management.base import BaseCommand
-from friprosveta.models import GroupSizeHint, Timetable, ENROLMENTTYPES, StudentEnrollment
+
+from friprosveta.models import Timetable
 
 
 class Command(BaseCommand):
-    '''
+    """
     Calculate group size hints from enrollments.
     It requires that:
     1) Groups for all lectures are already created.
     2) There exists one group named {{subject.code}}_PAD for every subject.
     Students with enrollment type 4, 26 are enrolled into
     'regular' groups, others into PAD group.
-    '''
+    """
     args = 'update_subgroups_from_hints timetable_slug method_name_1 method_name_2 ...'
     help = '''Usage:
 update_subgroups_from_hints timetable_slug method_name

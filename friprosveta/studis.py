@@ -1,6 +1,7 @@
-import json
 import codecs
+import json
 from urllib.request import Request, urlopen, quote
+
 from django.conf import settings
 
 
@@ -111,7 +112,7 @@ class Studenti(Studis):
         if unfinished:
             return self.data(self.source_urls['studis_unconfirmed_unfinished'].format(date))
         return self.data(self.source_urls['studis_unconfirmed'].format(date))
-        
+
     def get_student_enrollments(self, date, unconfirmed=True, unfinished=True, preenrolment=True):
         """
         Get information about student enrollments.
@@ -128,10 +129,10 @@ class Studenti(Studis):
         ]
         results = []
         for source, only_unconfirmed, only_unfinished, only_preenrolment in chosen_sources:
-            if (not unconfirmed and only_unconfirmed) or\
-               (not unfinished and only_unfinished) or \
-               (not preenrolment and only_preenrolment): continue
-            
+            if (not unconfirmed and only_unconfirmed) or \
+                    (not unfinished and only_unfinished) or \
+                    (not preenrolment and only_preenrolment): continue
+
             data = self.data(self.source_urls[source].format(date))
             for enrolment in data:
                 enrolment['source'] = source
@@ -199,6 +200,7 @@ class Najave(Studis):
         :param tt:
         :return:
         """
+
         def none_or_zero(value):
             return value is None or value == 0
 
@@ -209,19 +211,19 @@ class Najave(Studis):
             duration = int(izvajanje['st_ur_avd_vaj'])
             assert duration % 15 == 0, "Error processing AV for subject {} ({}), izvajanje {}".format(
                 izvajanje, subject, subject.code)
-            types['AV'] = duration/15
+            types['AV'] = duration / 15
         if not none_or_zero(izvajanje['st_ur_lab_vaj']):
             duration = int(izvajanje['st_ur_lab_vaj'])
             if not none_or_zero(izvajanje['st_ur_seminarja']):
                 duration += int(izvajanje['st_ur_seminarja'])
             assert duration % 15 == 0, "Error processing LV for subject {} ({}), izvajanje {}".format(
                 izvajanje, subject, subject.code)
-            types['LV'] = duration/15
+            types['LV'] = duration / 15
         if not none_or_zero(izvajanje['st_ur_predavanj']):
             duration = int(izvajanje['st_ur_predavanj'])
             assert duration % 15 == 0, "Error processing P for subject {} ({}), izvajanje {}".format(
                 izvajanje, subject, subject.code)
-            types['P'] = duration/15
+            types['P'] = duration / 15
         for studis_lecture_type, studis_duration in types.items():
             activities = tt.activities.filter(subject=subject, type=studis_lecture_type)
             assert activities.count() > 0, "No activity of type {} for {}(){}".format(
@@ -235,7 +237,7 @@ class Najave(Studis):
 class Osebe(Studis):
     def get_nazivi(self):
         return self.data('/sifrantiapi/nazivdelavca')
-    
+
     def get_osebe(self):
         return self.data('/osebeapi/oseba?aktiven=false')
 
@@ -252,20 +254,20 @@ class Osebe(Studis):
         :return: dictionary obtained from Studis.
         """
         url = ("/osebeapi/oseba?$filter=sifra_predavatelja eq '{}'".format(teacher_code))
-        #url = "osebeapi/oseba?$filter=sifra_predavatelja%20eq%20%27000014%27"
-        #print(url)
+        # url = "osebeapi/oseba?$filter=sifra_predavatelja%20eq%20%27000014%27"
+        # print(url)
         teacher = self.data(url)
         assert len(teacher) <= 1, "At most one teacher with code {} should exist in Studij".format(teacher_code)
         return teacher
 
     def get_teacher_codes(self):
-        teacher_titles = [u'asistent', u'asistent-raziskovalec',
-                          u'izredni profesor', u'docent', u'predavatelj',
-                          u'redni profesor', u'strokovni sodelavec',
-                          u'višji predavatelj']
+        teacher_titles = ['asistent', 'asistent-raziskovalec',
+                          'izredni profesor', 'docent', 'predavatelj',
+                          'redni profesor', 'strokovni sodelavec',
+                          'višji predavatelj']
 
         teacher_titles_ids = set([title['id'] for title in self.get_nazivi()
-                              if title['full_title']['sl'] in teacher_titles])
+                                  if title['full_title']['sl'] in teacher_titles])
 
         teacher_codes = [teacher['sifra_predavatelja']
                          for teacher in self.get_teachers()
