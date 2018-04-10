@@ -1,0 +1,151 @@
+body {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+}
+
+.header .titles {
+
+}
+
+.header .title {
+    display: block;
+    font-size: 3ex;
+}
+
+.header .subtitle {
+    display: block;
+    font-size: 2ex;
+}
+
+.header .aside {
+    font-size: small;
+}
+
+.grid-container {
+    margin: 3ex 0.5em;
+}
+
+
+.grid-day {
+    grid-row: day-row-start / day-row-end;
+    margin: auto;
+}
+
+.grid-hour {
+    grid-column: hour-column-start / hour-column-end;
+    margin: auto;
+}
+
+.grid-entry {
+    background-color: rgb(0, 208, 239);
+    border-radius: 3px;
+
+    /* needed for the hover to be absolutely positioned relative to the parent */
+    position: relative;
+
+    /* make horizontal lines have the same item padding as vertical ones */
+    margin-top: 2px;
+    margin-bottom: 2px;
+
+    /* top-bottom alignment, in conjunction with below */
+    display: flex;
+}
+
+.grid-entry .description {
+    margin: 3px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.grid-entry .description .top-aligned {
+}
+
+.grid-entry .description .bottom-aligned {
+}
+
+.grid-entry .description .row {
+    display: block;
+}
+
+.grid-complete-row {
+    grid-column: 1 / -1;
+
+    /* this makes lines line up nicely */
+    margin: -0.5px;
+    border: thin solid rgba(214, 214, 214, 0.36);
+}
+
+.grid-complete-row:hover {
+    border: thin solid rgba(129, 129, 129, 0.6);
+    border-radius: 5px;
+}
+
+.entry-hover {
+    display: none;
+    position: absolute;
+    bottom: 80%;
+    left: 5em;
+    width: 16rem;
+    padding: 5px;
+    margin: 5px;
+    z-index: 100;
+    color: black;
+    background: rgba(255, 255, 255, 0.95);
+    border: thin solid #1d1d1d;
+    border-radius: 10px;
+    font-size: 10px;
+    text-align: center;
+}
+
+a.link-subject:hover ~ .entry-hover {
+    display: block;
+}
+
+a {
+    color: #171717;
+    text-decoration: none;
+
+    /* we want this to react to pointer events (e.g. hovering), previously disabled */
+    pointer-events: auto;
+}
+
+a:hover {
+    color: rgb(3, 155, 229);
+}
+
+a.link-subject {
+    display: inline-block;
+    font-size: larger;
+    font-weight: 600;
+}
+
+.entry-type {
+    display: inline-block;
+    color: #222222;
+}
+
+a.link-classroom {
+    font-size: large;
+}
+
+a.link-teacher {
+    font-style: italic;
+    font-size: small;
+}
+
+a.link-group {
+    font-size: x-small;
+    color: rgba(23, 23, 23, 0.71);
+}
+
+a.link-management {
+}
+
+.group-list {
+    font-size: x-small;
+}
