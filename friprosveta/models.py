@@ -3,6 +3,8 @@ import logging
 from collections import defaultdict
 from operator import attrgetter, itemgetter
 
+from django.conf import settings
+from django.core.cache import cache
 from django.core.validators import validate_comma_separated_integer_list
 from django.db import models
 from django.db.models import Q
@@ -11,6 +13,7 @@ from django.utils.translation import ugettext as _
 import frinajave
 import friprosveta
 import timetable.models
+from friprosveta.studis import Studenti
 from timetable.models import Group
 
 logger = logging.getLogger(__name__)
@@ -583,6 +586,40 @@ class Student(models.Model):
             enrolled_students__student=self,
             enrolled_students__groupset=timetable.groupset
         ).distinct()
+
+    @classmethod
+    def from_user(cls, user):
+        """Get a `Student` object from a `User`.
+
+        Args:
+            user (User): The user to fetch student data for.
+        Returns:
+            Student: Student object.
+        Raises:
+            Student.DoesNotExist: If there is no such student.
+            IOError: If something goes wrong with the API.
+        """
+        # email is more correct than username, so use that
+        email = user.username
+
+        # this isn't really testable, but let's avoid overengineering for now
+        if settings.STUDENT_MAPPER_PRODUCTION:
+            # initialise if no cached values
+            print("REAL")
+            mapping = cache.get("cached_user_student_map")
+            if mapping is None:
+                s = Studenti()
+                data = s.get_confirmed_enrollments(datetime.datetime.utcnow().isoformat()[:10], unfinished=True)
+                if not data:
+                    raise IOError("Error getting api data.")
+                mapping = {a["upn"].strip(): a["vpisna_stevilka"].strip() for a in data if a["upn"] is not None}
+                cache.set("cached_user_student_map", mapping)
+
+            student_id = mapping.get(email, "this string is definitely not a student id")
+
+            return Student.objects.get(studentId=student_id)
+        else:
+            return Student.objects.get(name__iexact=user.first_name, surname__iexact=user.last_name)
 
 
 class StudentEnrollment(models.Model):

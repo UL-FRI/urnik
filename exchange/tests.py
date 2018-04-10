@@ -9,7 +9,7 @@ from django.core.management import call_command
 from django.test import TestCase
 from django.conf import settings
 
-from exchange.controllers import get_student_from_user, get_allocations_for_subject, get_available_exchanges, \
+from exchange.controllers import get_allocations_for_subject, get_available_exchanges, \
     get_student_exchanges, get_teacher_subject_list, get_student_subject_list, teacher_teaches_subject, \
     parse_student_from_ambiguous_identifier, get_current_student_subject_allocation, \
     process_exchange_request_matches, get_allocation_student_group, process_new_exchange_request, \
@@ -168,13 +168,13 @@ class BaseTestCase(TestCase):
 
 class ExchangeUtilsTestCase(BaseTestCase):
     def test_get_student_from_user_exists(self):
-        result = get_student_from_user(self.known_student_user)
+        result = Student.from_user(self.known_student_user)
         self.assertEqual(self.known_student_student, result)
 
     def test_get_student_from_user_does_not_exist(self):
         admin_user = User.objects.get(username="urnik")
         with self.assertRaises(Student.DoesNotExist):
-            get_student_from_user(admin_user)
+            Student.from_user(admin_user)
 
     def test_get_teacher_subject_list(self):
         subjects = get_teacher_subject_list(self.timetable, self.teachers[1])

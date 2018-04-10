@@ -8,7 +8,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_http_methods
 
 from exchange import controllers
-from exchange.controllers import get_student_from_user, get_teacher_subject_list, teacher_teaches_subject, \
+from exchange.controllers import get_teacher_subject_list, teacher_teaches_subject, \
     get_student_subject_list, get_allocations_for_subject, process_new_exchange_request, \
     get_current_student_subject_allocation, parse_student_from_ambiguous_identifier, get_available_exchanges, \
     get_student_exchanges, get_subject_exchanges, get_student_subject_other_allocations, is_exchange_cancellable
@@ -22,7 +22,7 @@ from timetable.models import Timetable, default_timetable, Allocation
 def restrict_to_student(func):
     """Authorisation helper: restricts a view to a logged-in student"""
     def user_is_student(user):
-        return get_student_from_user(user) is not None
+        return Student.from_user(user) is not None
 
     @wraps(func)
     @login_required
@@ -76,7 +76,7 @@ def main_redirect_with_timetable(request, timetable_slug):
 @require_http_methods(["GET"])
 def landing_student(request, timetable_slug):
     selected_timetable = get_object_or_404(Timetable, slug=timetable_slug)
-    student = get_student_from_user(request.user)
+    student = Student.from_user(request.user)
 
     student_exchanges = get_student_exchanges(selected_timetable, student)
     pending_exchanges = [ex for ex in student_exchanges if not ex.is_finalized()]
@@ -159,7 +159,7 @@ def subject_management(request, timetable_slug, subject_code):
 def create_exchange_student(request, timetable_slug):
     selected_timetable = get_object_or_404(Timetable, slug=timetable_slug)
 
-    student = get_student_from_user(request.user)
+    student = Student.from_user(request.user)
     subjects = get_student_subject_list(selected_timetable, student)
     subject_available_allocation_map = {}
     subject_attending_allocation_map = {}
@@ -216,7 +216,7 @@ def create_exchange_student(request, timetable_slug):
 @require_http_methods(["GET"])
 def accept_exchange(request, timetable_slug, exchange_id):
     selected_timetable = get_object_or_404(Timetable, slug=timetable_slug)
-    student = get_student_from_user(request.user)
+    student = Student.from_user(request.user)
     exchange = get_object_or_404(Exchange, id=exchange_id)
 
     if exchange.is_finalized():
@@ -262,7 +262,7 @@ def cancel_exchange(request, timetable_slug, exchange_id):
     if getattr(request.user, 'teacher', None) is not None:
         cancellable = True
     else:
-        student = get_student_from_user(request.user)
+        student = Student.from_user(request.user)
         cancellable = is_exchange_cancellable(exchange, student)
 
     if cancellable:
