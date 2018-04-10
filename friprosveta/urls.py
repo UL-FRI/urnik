@@ -72,4 +72,5 @@ urlpatterns = [
     url(r'^faq$', TemplateView.as_view(template_name="friprosveta/faq.html"), {}, name='faq'),
     url(r'^api/subject/?$', SubjectsView.as_view()),
     url(r'^api/subject/(?P<code>[0-9]+[A-B]?)/?$', SubjectDetailsView.as_view()),
+    url(r'^cookies/?$', TemplateView.as_view(template_name="friprosveta/cookies.html"), name='cookies')
 ]

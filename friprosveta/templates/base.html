@@ -4,7 +4,6 @@
 
 {% load i18n %}
 {% load timetable_extras %}
-{% load cookielaw_tags %}
 
 <html lang="en">
 <head>
@@ -12,15 +11,12 @@
     <title>{% block title %}{% endblock %}</title>
     <link rel="stylesheet" type="text/css" href="{% value_from_settings STATIC_URL %}css/cgp.css">
     <link rel="stylesheet" type="text/css" href="{% value_from_settings STATIC_URL %}css/main.css">
-    <link rel="stylesheet" type="text/css" href="{% value_from_settings STATIC_URL %}css/cookielaw.css">
     <link rel="icon" type="image/png" href="{{STATIC_URL}}/images/icon.png"/>
-    <script type="text/javascript" src="{% value_from_settings STATIC_URL %}/js/cookielaw.js"></script>
 {% block media %}{% endblock %}
 </head>
 
 
 <body>
-{% cookielaw_banner %}
 <div id="container">
   {% include "navigation.html" %}
   <div id="body">
@@ -32,7 +28,7 @@
   <footer id="footer">
     <div class="wrap">
       <div class="region region-footer">
-        Urnik FRI
+        Urnik FRI · <a href="{% url "cookies" %}">Cookies</a>
       </div>
     </div>
   </footer>  
