@@ -628,10 +628,10 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
             colors_used += 1
         # colors are in HSL for easier manipulation
         hls_color = colorsys.rgb_to_hls(*(c / 256.0 for c in color))
-        final_color=ColorVM(h=hls_color[0] * 360,
-                        l="{:.2f}%".format(100 * hls_color[1]),
-                        # emphasise lectures and slightly de-emphasise labs for more clarity
-                        s="{:.2f}%".format(100 * hls_color[2] * (0.8 if a.activityRealization.activity.type != "P" else 1.4)))
+        final_color = ColorVM(h=hls_color[0] * 360,
+                              l="{:.2f}%".format(100 * hls_color[1]),
+                              # emphasise lectures and slightly de-emphasise labs for more clarity
+                              s="{:.2f}%".format(100 * hls_color[2] * (0.8 if a.activityRealization.activity.type != "P" else 1.4)))
         allocation_colors[a] = final_color
     AllocationVM = namedtuple('AllocationVM', ['object', 'subject', 'day_index', 'hour_index', 'duration', 'color'])
     weekday_mapping = {wd[0]: i for i, wd in enumerate(WEEKDAYS)}
