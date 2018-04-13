@@ -72,7 +72,7 @@
         {% for day, hour_allocations in allocations_by_day %}
             <div class="grid-day-column" style="grid-area: day{{ day }}">
                 {% for a in hour_allocations %}
-                    <div class="grid-entry" style="grid-row: {{ a.hour_index|add:1 }} / span {{ a.duration }}; background-color: hsla({{ a.colour.h }}, {{ a.colour.s }}, {{ a.colour.l }}, 0.7)">
+                    <div class="grid-entry" style="grid-row: {{ a.hour_index|add:1 }} / span {{ a.duration }}; background-color: hsla({{ a.color.h }}, {{ a.color.s }}, {{ a.color.l }}, 0.7)">
                         <div class="description">
                             <div class="top-aligned">
                                 <div class="row">

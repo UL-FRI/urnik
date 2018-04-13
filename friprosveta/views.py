@@ -597,20 +597,43 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
 
     # not necessarily needed, but this helps make labs of the same subject be closer when looking at a huge timetable
     filtered_allocations = filtered_allocations.order_by('activityRealization__activity')
+    allocation_subjects = dict()
+    for a in filtered_allocations:
+        try:
+            subject = friprosveta.models.Activity.from_timetable_activity(a.activityRealization.activity).subject
+        except:
+            subject = None
+        allocation_subjects[a] = subject
 
-    # generate nice colours for each subject, then allocation
-    # colours repeat if there are too many subjects
+    # generate nice colors for each subject, then allocation
+    # colors repeat if there are too many subjects
     color_palette = palettable.colorbrewer.get_map("Set3", "qualitative", 12)
-    allocation_subjects = {a: friprosveta.models.Activity.from_timetable_activity(a.activityRealization.activity).subject
-                           for a in filtered_allocations}
-    subject_ids = set(s.id for s in allocation_subjects.values())
-    subject_colours = {s: color_palette.colors[i % color_palette.number] for i, s in enumerate(subject_ids)}
-    # colours are in HSL for easier manipulation
-    allocation_colours = {a: colorsys.rgb_to_hls(*(c / 256 for c in subject_colours[allocation_subjects[a].id]))
-                          for a in filtered_allocations}
-
-    AllocationVM = namedtuple('AllocationVM', ['object', 'subject', 'day_index', 'hour_index', 'duration', 'colour'])
-    ColourVM = namedtuple('ColourVM', ['h', 's', 'l'])
+    ColorVM = namedtuple('ColorVM', ['h', 's', 'l'])
+    allocation_colors = dict()
+    subject_colors = dict()
+    activity_colors = dict()
+    colors_used = 0
+    for a in filtered_allocations:
+        activity_id = a.activityRealization.activity.id
+        color = activity_colors.get(activity_id, None)
+        if color is None:
+            subject = allocation_subjects[a]
+            if subject is not None:
+                color = subject_colors.get(subject.id, None)
+        if color is None:
+            color = color_palette.colors[colors_used % color_palette.number]
+            activity_colors[activity_id] = color
+            if subject is not None:
+                subject_colors[subject.id] = color
+            colors_used += 1
+        # colors are in HSL for easier manipulation
+        hls_color = colorsys.rgb_to_hls(*(c / 256.0 for c in color))
+        final_color=ColorVM(h=hls_color[0] * 360,
+                        l="{:.2f}%".format(100 * hls_color[1]),
+                        # emphasise lectures and slightly de-emphasise labs for more clarity
+                        s="{:.2f}%".format(100 * hls_color[2] * (0.8 if a.activityRealization.activity.type != "P" else 1.4)))
+        allocation_colors[a] = final_color
+    AllocationVM = namedtuple('AllocationVM', ['object', 'subject', 'day_index', 'hour_index', 'duration', 'color'])
     weekday_mapping = {wd[0]: i for i, wd in enumerate(WEEKDAYS)}
     hour_mapping = {wh[0]: i for i, wh in enumerate(WORKHOURS)}
     allocation_vms = [AllocationVM(
@@ -619,10 +642,7 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
         day_index=weekday_mapping[a.day],
         hour_index=hour_mapping[a.start],
         duration=a.duration,
-        colour=ColourVM(h=allocation_colours[a][0] * 360,
-                        l="{:.2f}%".format(100 * allocation_colours[a][1]),
-                        # emphasise lectures and slightly de-emphasise labs for more clarity
-                        s="{:.2f}%".format(100 * allocation_colours[a][2] * (0.8 if a.activityRealization.activity.type != "P" else 1.4)))
+        color=allocation_colors[a],
     ) for a in filtered_allocations]
     # sorting required for groupby
     allocation_vms = sorted(allocation_vms, key=lambda avm: avm.day_index)

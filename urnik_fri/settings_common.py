@@ -6,7 +6,7 @@ ALLOWED_HOSTS = ['*']
 
 AUTHENTICATION_BACKENDS = (
     # 'guardian.backends.ObjectPermissionBackend',
-    'django_auth_ldap.backend.LDAPBackend',
+    # 'django_auth_ldap.backend.LDAPBackend',
     'django.contrib.auth.backends.ModelBackend',
 )
 
@@ -147,6 +147,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
     ),
     'DEFAULT_FILTER_BACKENDS': (
-        'rest_framework.filters.DjangoFilterBackend',
+        # 'rest_framework.filters.DjangoFilterBackend',
     ),
 }
