@@ -648,6 +648,8 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
     allocation_vms = sorted(allocation_vms, key=lambda avm: avm.day_index)
     allocations_by_day = [(d, list(avm_grouper))
                           for d, avm_grouper in itertools.groupby(allocation_vms, lambda avm: avm.object.day)]
+    # add missing days so we have all columns present
+    allocations_by_day += [(d[0], []) for d in WEEKDAYS if d[0] not in [existing_day for existing_day, _ in allocations_by_day]]
 
     response = render(request, 'friprosveta/allocations.html', {
         'is_teacher': is_teacher,
