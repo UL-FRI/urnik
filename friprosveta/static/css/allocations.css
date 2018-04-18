@@ -35,6 +35,18 @@ body {
     margin: auto;
 }
 
+@media (max-width: 35em) {
+    .grid-day {
+        font-size: 1.5ex;
+    }
+}
+
+@media (max-width: 30em) {
+    .grid-day {
+        font-size: 1.3ex;
+    }
+}
+
 .grid-hour {
     grid-column: hour-column-start / hour-column-end;
     margin: auto;
@@ -138,9 +150,21 @@ a.link-teacher {
     font-size: small;
 }
 
+@media (max-width: 35em) {
+    a.link-teacher {
+        font-size: 1.2ex;
+    }
+}
+
 a.link-group {
     font-size: x-small;
     color: rgba(23, 23, 23, 0.71);
+}
+
+@media (max-width: 35em) {
+    a.link-group {
+        display: none;
+    }
 }
 
 a.link-management {
