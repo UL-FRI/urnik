@@ -1,10 +1,13 @@
+import colorsys
 import datetime
+import itertools
 import logging
 from bisect import bisect_left
 from collections import OrderedDict, defaultdict
 from collections import namedtuple
 
 import django.forms
+import palettable
 # from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
@@ -25,18 +28,11 @@ import friprosveta.forms
 import friprosveta.models
 import timetable.forms
 import timetable.views
+import timetable.views
 from friprosveta.forms import AssignmentForm, NajavePercentageForm
 from timetable.models import Timetable, Group, ActivityRealization, \
     Allocation, Activity, WORKHOURS, WEEKDAYS, \
     Tag, default_timetable
-
-import timetable.views
-import logging
-import datetime
-import itertools
-import colorsys
-
-import palettable
 
 logger = logging.getLogger(__name__)
 
@@ -208,41 +204,6 @@ def results(request, timetable_slug):
     return render(request, 'friprosveta/results.html', params)
 
 
-def select_realizations(request, timetable_slug):
-    tt = __default_timetable(request)
-    data = []
-    if request.method == 'POST':
-        rs = request.POST.getlist('realization')
-        if len(rs) > 0:
-            try:
-                selected_realizations = set(map(int, rs))
-            except:
-                selected_realizations = rs
-    else:
-        try:
-            rs = request.COOKIES['realizations']
-            selected_realizations = set(map(int, rs.split('&')))
-        except:
-            selected_realizations = set()
-    tl = []
-    data.append((tt, tl))
-    for subject in tt.subjects:
-        sl = []
-        tl.append((subject, sl))
-        for activity in subject.activities.order_by("type"):
-            al = []
-            sl.append((activity, al))
-            for realization in activity.realizations.filter(allocations__timetable=tt).distinct():
-                is_selected = realization.id in selected_realizations
-                al.append((realization, is_selected))
-    response = render(request, 'friprosveta/select_realizations.html', {
-        'timetables': data,
-        'timetable_slug': timetable_slug})
-    if tt.end is not None:
-        response.set_cookie("realizations", "&".join(map(str, selected_realizations)), expires=tt.end)
-    return response
-
-
 ParamTuple = namedtuple(
     'ParamTuple',
     [
@@ -250,10 +211,6 @@ ParamTuple = namedtuple(
         'filterProperty', 'allocationProperty'
     ]
 )
-
-
-def student_realizations(request):
-    pass
 
 
 def _allocation_context_links(request):
@@ -631,7 +588,8 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
         final_color = ColorVM(h=hls_color[0] * 360,
                               l="{:.2f}%".format(100 * hls_color[1]),
                               # emphasise lectures and slightly de-emphasise labs for more clarity
-                              s="{:.2f}%".format(100 * hls_color[2] * (0.8 if a.activityRealization.activity.type != "P" else 1.4)))
+                              s="{:.2f}%".format(
+                                  100 * hls_color[2] * (0.8 if a.activityRealization.activity.type != "P" else 1.4)))
         allocation_colors[a] = final_color
     AllocationVM = namedtuple('AllocationVM', ['object', 'subject', 'day_index', 'hour_index', 'duration', 'color'])
     weekday_mapping = {wd[0]: i for i, wd in enumerate(WEEKDAYS)}
@@ -649,7 +607,8 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
     allocations_by_day = [(d, list(avm_grouper))
                           for d, avm_grouper in itertools.groupby(allocation_vms, lambda avm: avm.object.day)]
     # add missing days so we have all columns present
-    allocations_by_day += [(d[0], []) for d in WEEKDAYS if d[0] not in [existing_day for existing_day, _ in allocations_by_day]]
+    allocations_by_day += [(d[0], []) for d in WEEKDAYS if
+                           d[0] not in [existing_day for existing_day, _ in allocations_by_day]]
 
     response = render(request, 'friprosveta/allocations.html', {
         'is_teacher': is_teacher,
@@ -1646,29 +1605,6 @@ def place_realization(request, timetable_slug, realization_id):
     else:
         form = friprosveta.forms.AllocationNoIdPlaceForm()
     return render(request, 'friprosveta/place_realization.html',
-                  {'form': form})
-
-
-@login_required
-def move_allocation(request, timetable_slug, allocation_id):
-    if not request.user.is_staff:
-        return HttpResponseForbidden()
-    allocation = Allocation.objects.get(id=allocation_id)
-    if request.method == 'POST':
-        form = friprosveta.forms.AllocationMoveForm(request.POST, instance=allocation)
-        if form.is_valid():
-            form.save()
-            try:
-                success_url = request.META['HTTP_REFERER']
-            except:
-                # success_url = reverse('allocations')
-                success_url = reverse('allocations',
-                                      timetable_slug=timetable_slug,
-                                      ) + "?activity=" + form.instance.activityRealization.activity
-            return HttpResponseRedirect(success_url)
-    else:
-        form = friprosveta.forms.AllocationMoveForm(instance=allocation)
-    return render(request, 'friprosveta/move_allocation.html',
                   {'form': form})
 
 
