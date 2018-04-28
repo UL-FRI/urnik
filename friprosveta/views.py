@@ -14,7 +14,7 @@ from django.core import serializers
 from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q, Sum
-from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseForbidden
+from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, render_to_response, redirect, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
@@ -27,7 +27,6 @@ import frinajave
 import friprosveta.forms
 import friprosveta.models
 import timetable.forms
-import timetable.views
 import timetable.views
 from friprosveta.forms import AssignmentForm, NajavePercentageForm
 from timetable.models import Timetable, Group, ActivityRealization, \
@@ -711,9 +710,7 @@ def allocations_edit(request, timetable_slug=None):
     return response
 
 
-@login_required
-def students_list(request, timetable_slug, realization_id):
-    user = request.user
+def _students_list_helper(user, timetable_slug, realization_id):
     students = []
     if __is_teacher_or_staff(user):
         realization = get_object_or_404(
@@ -729,7 +726,41 @@ def students_list(request, timetable_slug, realization_id):
     data = {'students': students,
             'realization': realization,
             'allocations': allocations}
+    return data
+
+
+@login_required
+def students_list(request, timetable_slug, realization_id):
+    user = request.user
+    data = _students_list_helper(user, timetable_slug, realization_id)
+    data['timetable_slug'] = timetable_slug
+    data['realization_id'] = realization_id
     return render(request, 'friprosveta/students_list.html', data)
+
+
+@login_required
+def students_list_json(request, timetable_slug, realization_id):
+    user = request.user
+    data = _students_list_helper(user, timetable_slug, realization_id)
+    json_data = {
+        'realization': {
+            'id': data['realization'].id,
+            'activity': {
+                'id': data['realization'].activity.id,
+                'name': data['realization'].activity.name
+            },
+            'allocations': [{
+                'id': a.id,
+                'day': a.day,
+                'start': a.start
+            } for a in data['allocations']],
+            'students': [{
+                'name': s.name,
+                'surname': s.surname
+            } for s in data['students']]
+        }
+    }
+    return JsonResponse(json_data)
 
 
 @login_required

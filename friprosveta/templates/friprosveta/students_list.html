@@ -2,6 +2,9 @@
 {% block title %}Urnik - Seznam študentov{% endblock %}
 {% block body %}
 <h1>Seznam študentov</h1>
+<span style="float: right; font-style: italic;">
+    <a href="{% url 'students_list_json' timetable_slug realization_id %}">Podatki v formatu JSON</a>
+</span>
 <h2>{{realization.activity.name}}</h2>
 <div>
     <h3>Izvajanja</h3>
