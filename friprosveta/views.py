@@ -711,6 +711,7 @@ def allocations_edit(request, timetable_slug=None):
     return response
 
 
+@login_required
 def students_list(request, timetable_slug, realization_id):
     user = request.user
     students = []
@@ -723,6 +724,8 @@ def students_list(request, timetable_slug, realization_id):
             activityRealization=realization)
         if user.is_staff or user.teacher in realization.activity.teachers.all():
             students = realization.students.order_by('surname')
+    else:
+        raise PermissionDenied()
     data = {'students': students,
             'realization': realization,
             'allocations': allocations}
