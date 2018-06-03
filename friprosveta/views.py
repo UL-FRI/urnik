@@ -21,6 +21,7 @@ from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpRespons
 from django.shortcuts import get_object_or_404, render_to_response, redirect, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.utils.html import escape
 from django.utils.translation import ugettext as _
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
@@ -553,6 +554,7 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
     param_ids['timetable_slug'] = [timetable_slug]
     title, subtitles = _titles(param_ids)
     is_internet_explorer = "trident" in request.META["HTTP_USER_AGENT"].lower()
+    get_args = "?" + "&".join("{}={}".format(escape(k), escape(v)) for k, v in request.GET.items()) if request.GET else ""
 
     # not necessarily needed, but this helps make labs of the same subject be closer when looking at a huge timetable
     filtered_allocations = filtered_allocations.order_by('activityRealization__activity')
@@ -615,6 +617,7 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
     response = render(request, 'friprosveta/allocations.html', {
         'is_teacher': is_teacher,
         'context_links': context_links,
+        'get_args': get_args,
         'title': title,
         'subtitles': subtitles,
         'groups': groups_listed,

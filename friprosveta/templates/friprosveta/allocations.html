@@ -56,6 +56,7 @@
         <a href="?type=P{{ context_links.type }}">Show only lectures</a><br/>
         <a href="?type=LV&type=AV&type=LAB{{ context_links.type }}">Show only lab work</a><br/>
         <a href="?{{ context_links.type }}">Show lectures and lab work</a><br/>
+        <a href="{% url "allocations_ical" timetable_slug %}{{ get_args }}" style="font-weight: bold;">Export to calendar</a><br/>
     </div>
 </div>
 
