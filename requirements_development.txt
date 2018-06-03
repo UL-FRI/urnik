@@ -28,3 +28,4 @@ ldap
 ldap3
 pyldap
 palettable
+icalendar
