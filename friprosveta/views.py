@@ -1,3 +1,4 @@
+from bisect import bisect_left
 import colorsys
 import datetime
 import itertools
@@ -7,7 +8,9 @@ from collections import OrderedDict, defaultdict
 from collections import namedtuple
 
 import django.forms
+import icalendar
 import palettable
+import pytz
 # from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
@@ -18,6 +21,7 @@ from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpRespons
 from django.shortcuts import get_object_or_404, render_to_response, redirect, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.utils.html import escape
 from django.utils.translation import ugettext as _
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
@@ -550,6 +554,7 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
     param_ids['timetable_slug'] = [timetable_slug]
     title, subtitles = _titles(param_ids)
     is_internet_explorer = "trident" in request.META["HTTP_USER_AGENT"].lower()
+    get_args = "?" + "&".join("{}={}".format(escape(k), escape(v)) for k, v in request.GET.items()) if request.GET else ""
 
     # not necessarily needed, but this helps make labs of the same subject be closer when looking at a huge timetable
     filtered_allocations = filtered_allocations.order_by('activityRealization__activity')
@@ -612,6 +617,7 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
     response = render(request, 'friprosveta/allocations.html', {
         'is_teacher': is_teacher,
         'context_links': context_links,
+        'get_args': get_args,
         'title': title,
         'subtitles': subtitles,
         'groups': groups_listed,
@@ -624,6 +630,63 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
         'is_internet_explorer': is_internet_explorer
     })
 
+    return response
+
+
+def allocations_ical(request, timetable_slug):
+    tt = get_object_or_404(timetable.models.Timetable, slug=timetable_slug)
+    param_ids = _allocation_context_links(request)[1]
+    filtered_allocations = _allocation_set(param_ids, tt.allocations, request.user.is_staff)
+
+    calendar = icalendar.Calendar()
+    calendar.add("prodid", "-//Urnik FRI//urnik.fri.uni-lj.si//")
+    calendar.add("version", "2.0")
+
+    for a in filtered_allocations:
+        try:
+            subject = friprosveta.models.Activity.from_timetable_activity(a.activityRealization.activity).subject
+        except:
+            subject = None
+
+        # the first event starts on the first occurrence of the day-hour after the timetable start
+        timetable_start_day = tt.start.weekday()
+        allocation_day = next(i for i, d in enumerate(WEEKDAYS) if d[0] == a.day)
+        days_in_the_future = (allocation_day - timetable_start_day) % 7
+        first_event_day = tt.start + datetime.timedelta(days=days_in_the_future)
+
+        start_hour = int(a.start[0:2])
+        first_event_start = datetime.datetime.combine(first_event_day, datetime.time(hour=start_hour, minute=0))
+        first_event_start = first_event_start.astimezone(tz=pytz.timezone("Europe/Ljubljana"))
+        first_event_end = first_event_start + datetime.timedelta(hours=a.duration)
+
+        event = icalendar.Event()
+        calendar.add_component(event)
+        event.add("summary", "{} - {}".format(
+            subject.short_name if subject else "unknown subject", a.activityRealization.activity.type
+        ))
+        event.add("description", "{} {} @ {}\n{}".format(
+            subject.name if subject else "unknown subject",
+            a.activityRealization.activity.type,
+            a.classroom.name,
+            ", ".join("{} {}".format(t.user.first_name, t.user.last_name) for t in a.activityRealization.teachers.all())
+        ))
+        event.add("location", a.classroom.name)
+        event.add("uid", "urnikfri-{}".format(a.id))
+        event.add("dtstart", first_event_start)
+        event.add("dtend", first_event_end)
+        event.add("dtstamp", datetime.datetime.utcnow())
+
+        rep = icalendar.vRecur()
+        event.add("rrule", rep)
+        rep.update({
+            "freq": "weekly",
+            "byday": a.day[:2],
+            "until": datetime.datetime.combine(tt.end, datetime.time.max)
+        })
+
+    result_text = calendar.to_ical().decode("UTF-8").replace("\\r\\n", "\n")
+    response = HttpResponse(result_text, content_type="text/calendar")
+    response["Content-Disposition"] = "attachment; filename=urnik.ical"
     return response
 
 
