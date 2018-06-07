@@ -18,7 +18,6 @@ urlpatterns = [
     url(r'^timetable/(?P<timetable_slug>[\w-]+)/realization/(?P<realization_id>[0-9]+)/$', views.busy_students, {}, name='busy_students'),
     url(r'^timetable/(?P<timetable_slug>[\w-]+)/realization/(?P<realization_id>[0-9]+)/students_list', views.students_list, {}, name='students_list'),
     url(r'^timetable/(?P<timetable_slug>[\w-]+)/realization/(?P<realization_id>[0-9]+)/busy_students_admin', views.busy_students_admin, {}, name='busy_students_admin'),
-    # url(r'^timetable/(?P<timetable_slug>[\w-]+)/move_allocation/(?P<allocation_id>[0-9]+)', views.move_allocation, {}, name='move_allocation'),
     url(r'^timetable/(?P<timetable_slug>[\w-]+)/realization/(?P<realization_id>[0-9]+)/place', views.place_realization, {}, name='place_realization'),
     url(r'^timetable/(?P<timetable_slug>[\w-]+)/?', views.results, {}, name='results'),
     url(r'^timetable/?', views.TimetableList.as_view(), name='timetables'),
