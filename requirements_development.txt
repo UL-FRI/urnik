@@ -29,3 +29,5 @@ ldap3
 pyldap
 palettable
 icalendar
+celery
+jupyterlab
