@@ -49,6 +49,7 @@ RUN pip3 install --upgrade --force-reinstall  pyldap
 RUN python3 urnik/manage.py collectstatic --noinput --settings=urnik_fri.settings_example
 RUN chown timetable.timetable -R /home/timetable
 
+RUN pip3 install jupyterlab
 
 # UWSGI options are read from environmental variables.
 # They are specified in docker-compose file.
