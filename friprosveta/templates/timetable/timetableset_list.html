@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "URNIK - settings - choose timetable" %}{% endblock %}
+{% block body %}
+<h1>{% trans "Choose timetable" %}</h1>
+<p>
+    {% for timetableset in object_list %}
+    <a href={% url "results" timetable_set_slug=timetableset.slug %}>{{timetableset.name}}</a></br>
+    {% endfor %}
+</p>
+{% endblock %}
