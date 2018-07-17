@@ -55,7 +55,7 @@ class Sifranti(Studis):
         return 22
 
     def get_semestri(self, year):
-        return self.data('{0}/sifrantiapi/semestri'.format(year))
+        return self.data('/sifrantiapi/{0}/semestri'.format(year))
 
 
 class Studij(Studis):
