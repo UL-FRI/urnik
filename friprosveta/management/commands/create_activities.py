@@ -173,7 +173,7 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
                 continue
 
             found = False
-            izvajanja = izvajanja_subject_ids[cikel['predmet_id']]
+            izvajanja = izvajanja_subject_ids[cikel['idpredmet']]
             for izvajanje in izvajanja:
                 izvajanje_id = izvajanje["id"].split("-")[1].strip()
                 if str(cikel["izvajanje_id"]) == izvajanje_id:
