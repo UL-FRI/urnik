@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
     args = 'create_activities timetable_slug year semester'
     help = '''Create activities in the given timetable according to najave in studis.
-Usage: create_activities sync_timetable_with_najave timetable_slug year semester force
+Usage: create_activities  timetable_slug year semester force
 Semester can be 1 (zimski), 2(poletni), 3(celoletni) or 4(blocni).
 When force option is enabled and no such timetable exists it will be created.
 Beware: all existing activities (and all its children) WILL BE DELETED.
@@ -52,7 +52,7 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
                           semestri)[0]
         return semester
 
-    @transaction.commit_on_success
+    @transaction.atomic
     def handle(self, *args, **options):
         logger.info("Entering handle")
         if options['force'][0]:
@@ -90,7 +90,7 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
         self.sync_activities_with_fri_najave(tt, semester, year, location, subject)
         logger.info("Exiting handle")
 
-    @transaction.commit_on_success
+    @transaction.atomic
     def sync_activities_with_fri_najave(self, timetable, semester, year, location, update_subject):
         """
         Sinhronizira učitelje v najavah z učitelji v aktivnostih.
