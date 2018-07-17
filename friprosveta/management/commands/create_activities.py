@@ -28,7 +28,7 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
         parser.add_argument('semester_id', nargs=1, type=str)
 
         parser.add_argument(
-            '--force', nargs=1,
+            '--force',
             action='store_true',
             dest='subject',
             default=False,
