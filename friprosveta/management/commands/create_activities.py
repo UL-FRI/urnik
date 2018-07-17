@@ -80,7 +80,7 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
             tt = Timetable.objects.get(slug=options["timetable_slug"][0])
         location = Location.objects.get(name=options['location'][0])
         subject = None
-        if options['subject_code'][0] is not None:
+        if options['subject_code'] is not None:
             subject = options['subject_code'][0]
 
         year = int(options["year"][0])
