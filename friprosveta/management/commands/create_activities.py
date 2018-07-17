@@ -176,7 +176,7 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
             izvajanja = izvajanja_subject_ids[cikel['idpredmet']]
             for izvajanje in izvajanja:
                 izvajanje_id = izvajanje["id"].split("-")[1].strip()
-                if str(cikel["izvajanje_id"]) == izvajanje_id:
+                if str(cikel["id_izvajanja_predmeta"]) == izvajanje_id:
                     found = True
             if not found:
                 logger.info("No matching izvajanje for cikel {0}, skipping".format(cikel).encode("utf-8"))
