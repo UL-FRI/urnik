@@ -49,8 +49,8 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
         sifranti = Sifranti()
         semestri = sifranti.get_semestri(year)
         semester = filter(lambda semester: semester['id'] == semester_id,
-                          semestri)[0]
-        return semester
+                        semestri)
+        return list(semester)[0]
 
     @transaction.atomic
     def handle(self, *args, **options):
@@ -167,7 +167,7 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
             izvajanja_subject_ids[izvajanje['idpredmet']].append(izvajanje)
 
         for cikel in najave.get_izvajanja():
-            subject_code = cikel['predmet_sifra']
+            subject_code = cikel['sifra_predmeta']
             # Skip subjects we should no update
             if update_subject is not None and update_subject != subject_code:
                 continue
