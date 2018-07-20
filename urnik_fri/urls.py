@@ -7,7 +7,8 @@ from django.contrib.auth.views import login, logout
 admin.autodiscover()
 
 urlpatterns = [
-    url(r'^jsi18n/(?P<packages>\S+?)/$', django.views.i18n.javascript_catalog),
+    # url(r'^jsi18n/(?P<packages>\S+?)/$', django.views.i18n.javascript_catalog),
+    url(r'^jsi18n/', django.views.i18n.JavaScriptCatalog.as_view()),
     url(r'^', include('friprosveta.urls')),
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
     url(r'^admin/', admin.site.urls),

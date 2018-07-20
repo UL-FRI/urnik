@@ -182,7 +182,7 @@ def results(request, timetable_slug):
         allocations_view = reverse('allocations',
                                    kwargs={'timetable_slug': timetable_slug})
 
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         try:
             accessing_student = friprosveta.models.Student.from_user(request.user)
         except friprosveta.models.Student.DoesNotExist:
