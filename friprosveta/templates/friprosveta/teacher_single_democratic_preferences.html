@@ -101,10 +101,13 @@ ni v učilnicah, jo izberite spodaj.
 <p>
 {% trans "V primeru, da imate še kakšno pripombo v zvezi z urnikom, jo dodajte spodaj." %}
 </p>
+    {{preference_form.descriptivePreferences.management_form}}
+    {% for form in preference_form.descriptivePreferences.forms %}
     <table>
-        {{preference_form.descriptivePreferences.as_table}}
+        {{form.as_table}}
     </table>
     <input type="submit" value="Submit" />
+    {% endfor %}
 </form>
 </div>
 {% endblock %}
