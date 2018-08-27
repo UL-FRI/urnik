@@ -1,7 +1,7 @@
 from django.conf.urls import url, include
 import django.views
 from django.contrib import admin
-from django.contrib.auth.views import login, logout
+from django.contrib.auth.views import LoginView, LogoutView
 
 
 admin.autodiscover()
@@ -13,8 +13,9 @@ urlpatterns = [
     url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
     url(r'^admin/', admin.site.urls),
     url(r'^impersonate/', include('impersonate.urls')),
-    url(r'^accounts/login/$', login, name='django.contrib.auth.views.login'),
-    url(r'^accounts/logout/$', logout),
+    url(r'^accounts/login/$', LoginView.as_view(), name='django.contrib.auth.views.login'),
+    url(r'^accounts/logout/$', LogoutView.as_view()),
     url(r'^exchange/', include('exchange.urls')),
+    path('accounts/', include('django.contrib.auth.urls')),
 ] 
 
