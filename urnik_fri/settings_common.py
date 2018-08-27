@@ -129,7 +129,7 @@ INSTALLED_APPS = (
     'unitime',
     'exchange',
     'django.contrib.admin',
-    'rest_framework',
+    # 'rest_framework',
     'impersonate',
     'import_export',
     # 'djcelery_email',

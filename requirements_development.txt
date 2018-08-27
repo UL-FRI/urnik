@@ -1,5 +1,5 @@
 argparse
-Django==1.11.10
+Django
 django-auth-ldap
 django-authority
 django-guardian
@@ -7,7 +7,7 @@ django-impersonate
 django-filter
 django-pyodbc
 django-sqlserver
-djangorestframework==3.6.3
+# djangorestframework==3.6.3
 django-autocomplete-light
 django-js-reverse
 django-debug-toolbar
@@ -16,6 +16,7 @@ django-import-export
 django-celery-results
 django-celery-email
 ipython
+python-ldap
 ply
 psycopg2-binary
 python-memcached
@@ -24,9 +25,6 @@ slimit
 beautifulsoup4
 celery
 pyodbc
-ldap
-ldap3
-pyldap
 palettable
 icalendar
 celery

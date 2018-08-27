@@ -302,9 +302,9 @@ ShortTVPFormset = forms.models.modelformset_factory(
 class ShortDVPForm(forms.models.ModelForm):
     value = forms.CharField(label='', widget=forms.Textarea())
 
-    # level = forms.ChoiceField(
-    #    initial='WANT', choices=PREFERENCELEVELS,
-    #    widget=forms.HiddenInput())
+    level = forms.ChoiceField(
+        initial='WANT', choices=PREFERENCELEVELS,
+        widget=forms.HiddenInput())
 
     class Meta:
         model = TeacherDescriptivePreference
@@ -312,7 +312,7 @@ class ShortDVPForm(forms.models.ModelForm):
         widgets = {
             'teacher': forms.HiddenInput(),
             'preferenceset': forms.HiddenInput(),
-            'level': forms.HiddenInput(),
+            # 'level': forms.HiddenInput(initial='WANT'),
             'typename': forms.HiddenInput(),
             'weight': forms.HiddenInput(),
             'value': forms.Textarea(),

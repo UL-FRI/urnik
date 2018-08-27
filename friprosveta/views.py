@@ -182,7 +182,7 @@ def results(request, timetable_slug):
         allocations_view = reverse('allocations',
                                    kwargs={'timetable_slug': timetable_slug})
 
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         try:
             accessing_student = friprosveta.models.Student.from_user(request.user)
         except friprosveta.models.Student.DoesNotExist:
@@ -1092,7 +1092,7 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
         own_act_formset.full_clean()
         others_act_formset.full_clean()
         if preference_form.is_valid() and (
-                not preference_form.preferenceset().locked \
+                not preference_form.preferenceset().locked
                 or request.user.is_staff) \
                 and own_act_formset.is_valid() \
                 and others_act_formset.is_valid():
@@ -1124,8 +1124,10 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
         # own_act_formset = timetable.forms.ActivityRequirementsFormset(queryset=own_activities, prefix="ownact-" )
         own_act_formset = timetable.forms.ActivityMinimalFormset(queryset=own_activities, prefix="ownact-")
         others_act_formset = timetable.forms.ActivityMinimalFormset(queryset=others_activities, prefix="act-")
-        preference_form = timetable.forms.TeacherPreferenceForm(teacher=teacher, preferenceset=pset, prefix="pref-")
-    return render(request, 'friprosveta/teacher_single_democratic_preferences.html',
+        preference_form = timetable.forms.TeacherPreferenceForm(
+            teacher=teacher, preferenceset=pset, prefix="pref-")
+    return render(request,
+                  'friprosveta/teacher_single_democratic_preferences.html',
                   {'preference_set': pset,
                    'timetable_slug': timetable_slug,
                    'deadline': None,
@@ -1349,7 +1351,6 @@ def assignments(request, timetable_slug, subject_code):
 @login_required
 def subject(request, timetable_slug, subject_code):
     tt = get_object_or_404(timetable.models.Timetable, slug=timetable_slug)
-    user = request.user.teacher
     subject = friprosveta.models.Subject.objects.get(code=subject_code)
     # if not user.is_staff or not subject in user.managed_subjects:
     if not request.user.is_staff:  # \
@@ -1496,13 +1497,12 @@ def subject_list(request, timetable_slug):
         return ""
 
     tt = friprosveta.models.Timetable.objects.get(slug=timetable_slug)
-    teacher = request.user.teacher
     user = request.user
     data = []
     if user.is_staff:
         subjects = tt.subjects.all().distinct().order_by("name")
     else:
-        subjects = tt.subjects.filter(managers=teacher).distinct().order_by("name")
+        subjects = tt.subjects.filter(managers__user=user).distinct().order_by("name")
     l = []
     for frisubject in subjects:
         css_class = "cycles_ok"

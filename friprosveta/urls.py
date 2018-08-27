@@ -4,7 +4,7 @@ from django.views.generic.list import ListView
 
 from timetable.models import TimetableSet
 from . import views
-from .restapi import SubjectDetailsView, SubjectsView
+# from .restapi import SubjectDetailsView, SubjectsView
 
 urlpatterns = [
     url(r'^$', views.default_timetable_redirect, name='default_timetable'),
@@ -71,7 +71,7 @@ urlpatterns = [
     url(r'^allocations.json$', views.allocations_json),
     url(r'^allocations$', views.allocations),
     url(r'^faq$', TemplateView.as_view(template_name="friprosveta/faq.html"), {}, name='faq'),
-    url(r'^api/subject/?$', SubjectsView.as_view()),
-    url(r'^api/subject/(?P<code>[0-9]+[A-B]?)/?$', SubjectDetailsView.as_view()),
+    # url(r'^api/subject/?$', SubjectsView.as_view()),
+    # url(r'^api/subject/(?P<code>[0-9]+[A-B]?)/?$', SubjectDetailsView.as_view()),
     url(r'^cookies/?$', TemplateView.as_view(template_name="friprosveta/cookies.html"), name='cookies')
 ]

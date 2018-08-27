@@ -539,6 +539,7 @@ def teacher_value_time_preferences(timetable):
         'MAXDAYSWEEK': ('ConstraintTeacherMaxDaysPerWeek', 'Max_Days_Per_Week'),
         'MINDAYSWEEK': ('ConstraintTeacherMinDaysPerWeek', 'Min_Days_Per_Week'),
         'MAXHOURSDAY': ('ConstraintTeacherMaxHoursDaily', 'Maximum_Hours_Daily'),
+        'MAXSPANDAY': ('ConstraintTeacherMaxSpanPerDay', 'Max_Span'),
         'MAXHOURSCONT': ('ConstraintTeacherMaxHoursContinuously', 'Maximum_Hours_Continuously'),
         # 'MAXHOURSDAY': 'Max hours per day for a tag'),
         # 'MINHOURSDAY': 'Min hours per day for a tag'),
