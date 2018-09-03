@@ -114,7 +114,7 @@ MIDDLEWARE = (
     'impersonate.middleware.ImpersonateMiddleware',
 )
 
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     'dal',
     'dal_select2',
     'django.contrib.auth',
@@ -134,7 +134,7 @@ INSTALLED_APPS = (
     'import_export',
     # 'djcelery_email',
     # 'django_celery_results',
-)
+]
 
 CACHE_BACKEND = 'locmem://'
 

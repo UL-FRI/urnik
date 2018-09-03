@@ -30,3 +30,4 @@ icalendar
 celery
 jupyterlab
 ldap3
+raven
