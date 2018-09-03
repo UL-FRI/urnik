@@ -5,6 +5,7 @@ from django.db import models
 
 from friprosveta.models import LectureType
 from timetable.models import TimetableSet
+import logging
 
 INSTRUCTION_STYLE = (
     (1, 'Enojni'),
@@ -93,6 +94,7 @@ class TeacherSubjectCycles(models.Model):
         assert cycles_sum % 1 == 0, "Cycles should sum into integer"
         teachers_groups = []
         # Sort teachers by the number of cycles they have to teach
+        orig_cycles = teacher_cycles
         teacher_cycles = sort_cycles(teacher_cycles)
         while len(teacher_cycles) >= teachers_in_group_num:
             teachers_in_group = teacher_cycles[:teachers_in_group_num]
@@ -102,6 +104,12 @@ class TeacherSubjectCycles(models.Model):
                 if entry[1] == 0:
                     teacher_cycles.remove(entry)
             teacher_cycles = sort_cycles(teacher_cycles)
+        if len(teacher_cycles) != 0:
+            logger = logging.getLogger(__name__)
+            logger.error("Teacher cycles len is zero")
+            logger.debug(orig_cycles)
+            logger.debug(teacher_cycles)
+            logger.debug(teachers_in_group_num)
         assert len(teacher_cycles) == 0, "Unable to assign teachers to realizations"
         return teachers_groups
 
@@ -130,7 +138,7 @@ class TeacherSubjectCycles(models.Model):
     @staticmethod
     def group_to_integer_cycles(teacher_cycles):
         """Teacher_cycles is a list of entries [teacher_code, cycles].
-        Sometimes they are not integers but they always sum into one. 
+        Sometimes they are not integers but they always sum into one.
         Group them into integer cycles (merge two teachers if necessary).
         """
         non_integer_teacher_cycles = []
@@ -193,7 +201,7 @@ class TeacherSubjectCycles(models.Model):
                     # Infinite teachers, one cycle
                     assert sum([r.cycles for r in rs]) == 1, ("Percentages should sum into one for subject {0}, "
                                                               "lecture_type {1}, instruction style {2}".format(
-                        subject_code, lecture_type, instruction_style))
+                                                                  subject_code, lecture_type, instruction_style))
                     # All teachers will be grouped into one big entry, since cycles are summed into 1
                     teachers_per_group_num = 1
                 entries = [[r.teacher_code, r.cycles] for r in rs]

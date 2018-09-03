@@ -836,7 +836,7 @@ class ActivityTimePlacePreference(Preference):
 
 class TagPreference(Preference):
     def __str__(self):
-        return self.tag + ' ' + self.level
+        return "{} {}".format(self.tag, self.level)
 
     tag = models.ForeignKey('Tag', related_name='preferences', on_delete=models.CASCADE)
 

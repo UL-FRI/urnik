@@ -1,14 +1,12 @@
-import datetime
 import logging
+import datetime
 from collections import defaultdict
 from operator import attrgetter, itemgetter
 
 from django.conf import settings
 from django.core.cache import cache
-from django.core.validators import validate_comma_separated_integer_list
 from django.db import models
 from django.db.models import Q
-from django.utils.translation import ugettext as _
 
 import frinajave
 import friprosveta
@@ -130,7 +128,7 @@ class GroupSizeHint(models.Model):
         se = StudentEnrollment.objects.filter(
             groupset=groupset,
             subject__in=group_subjects,
-            study__shortName=group_study_short_name,
+            study__short_name=group_study_short_name,
             classyear=classyear
         )
         if enrollment_types is not None:
@@ -282,7 +280,7 @@ class Activity(timetable.models.Activity):
                     intended_size=intended_size,
                 )
                 ar.save()
-                ar.teachers = teachers
+                ar.teachers.add(*teachers)
                 ar.save()
                 self.teachers.add(*teachers)
                 logger.debug("Add teachers {0}".format(teachers))
@@ -314,39 +312,39 @@ class Study(models.Model):
             enrolled_students__classyear=classyear).distinct()
 
 
-class Group(timetable.models.Group):
-    """
-    Group extended for FRI usage. Students are grouped
-    according to their enrollment type, year and study.
-    """
-    enrollment_types = models.CharField(
-        validators=[validate_comma_separated_integer_list],
-        default='',
-        help_text=_('Valid enrollment types for this group'),
-        verbose_name=_('valid enrolment types'),
-        blank=True,
-        max_length=65536,
-    )
-    class_years = models.CharField(
-        validators=[validate_comma_separated_integer_list],
-        verbose_name=_('group class year'),
-        help_text=_('Class year of students in this group'),
-        max_length=65536,
-    )
-    studies = models.ManyToManyField(
-        Study,
-        verbose_name=_('group studies'),
-        help_text=_('Studies of students on the group')
-    )
-    visible_in_navigation = models.BooleanField(
-        default=False,
-        verbose_name=_('visible in navigation'),
-        help_text=_('Visible in group list in navigation menu on '
-                    'main urnik web page')
-    )
-    intended_type = models.CharField(
-        max_length=4,
-        choices=timetable.models.ACTIVITYTYPES)
+# class Group(timetable.models.Group):
+#     """
+#     Group extended for FRI usage. Students are grouped
+#     according to their enrollment type, year and study.
+#     """
+#     enrollment_types = models.CharField(
+#         validators=[validate_comma_separated_integer_list],
+#         default='',
+#         help_text=_('Valid enrollment types for this group'),
+#         verbose_name=_('valid enrolment types'),
+#         blank=True,
+#         max_length=65536,
+#     )
+#     class_years = models.CharField(
+#         validators=[validate_comma_separated_integer_list],
+#         verbose_name=_('group class year'),
+#         help_text=_('Class year of students in this group'),
+#         max_length=65536,
+#     )
+#     studies = models.ManyToManyField(
+#         Study,
+#         verbose_name=_('group studies'),
+#         help_text=_('Studies of students on the group')
+#     )
+#     visible_in_navigation = models.BooleanField(
+#         default=False,
+#         verbose_name=_('visible in navigation'),
+#         help_text=_('Visible in group list in navigation menu on '
+#                     'main urnik web page')
+#     )
+#     intended_type = models.CharField(
+#         max_length=4,
+#         choices=timetable.models.ACTIVITYTYPES)
 
 
 class ActivityRealization(timetable.models.ActivityRealization):
@@ -916,12 +914,12 @@ class Subject(models.Model):
                 # Others will be set by the create_groups method
                 activities = self.activities.filter(activityset=activityset, type=type)
                 for activity in activities:
-                    for tmp in activity.groups.filter(shortName__startswith=group.short_name):
+                    for tmp in activity.groups.filter(short_name__startswith=group.short_name):
                         tmp.size = 0
                         tmp.save()
                 for method in methods:
                     gsh = GroupSizeHint.objects.filter(method=method, group=group)
-                    assert gsh.count() <= 1, "No more than one group size hint should exist for {0}, method {1}".format(
+                    assert gsh.count() <= 1, "More than one GSH exists for {0}, method {1}".format(
                         group, method
                     )
                     if gsh.count() == 1:
@@ -978,7 +976,7 @@ class Subject(models.Model):
         #            return Study.objects.get(short_name=study_short_name)
 
         predmetnik = self.get_studis_predmetnik(year, studij=studij, najave=najave)
-        obligatory_predmetnik = [e for e in predmetnik if e[0]['obvezen'] == True]
+        obligatory_predmetnik = [e for e in predmetnik if e[0]['obvezen']]
         for izvajanje, predmetnik in obligatory_predmetnik:
             sname, name = group_name(predmetnik)
             study = get_study(predmetnik)
@@ -1022,7 +1020,7 @@ class Subject(models.Model):
         predmetnik = self.get_studis_predmetnik(year, studij=studij, najave=najave)
         logger.debug("Got predmetnik: {}".format(predmetnik))
         lecture_activities = tt.activities.filter(type='P', subject=self)
-        for e, predmetnik in [e for e in predmetnik if e[0]['obvezen'] == False]:
+        for e, predmetnik in [e for e in predmetnik if not e[0]['obvezen']]:
             logger.debug("Processing {}".format(e))
             try:
                 sname, name = group_name(predmetnik)
@@ -1080,7 +1078,7 @@ class Subject(models.Model):
     def is_obligatory(self, year, studij=None, najave=None):
         """Is thi subject obligatory on some study for the given year?"""
         predmetnik = self.get_studis_predmetnik(year, studij=studij, najave=najave)
-        return len([e for e in predmetnik if e[0]['obvezen'] == True]) > 0
+        return len([e for e in predmetnik if e[0]['obvezen']]) > 0
 
 
 class SubjectHeadTeachers(models.Model):

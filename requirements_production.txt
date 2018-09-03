@@ -26,3 +26,4 @@ django-celery-results
 django-celery-email
 palettable=3.1.0
 icalendar>=4.0.1
+ldap3

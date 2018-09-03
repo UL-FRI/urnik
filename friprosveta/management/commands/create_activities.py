@@ -156,9 +156,9 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
             return total_duration / 15
 
         semester_id = semester['id']
-        studij = Studij(2017)
+        studij = Studij(year)
         sifranti = Sifranti()
-        najave = Najave(2017)
+        najave = Najave(year)
         # Only process this semester izvajanja
         izvajanja = [i for i in studij.get_izvajanja() if i["semester"] == semester_id]
 
@@ -166,17 +166,21 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
         for izvajanje in izvajanja:
             izvajanja_subject_ids[izvajanje['idpredmet']].append(izvajanje)
 
-        for cikel in najave.get_izvajanja():
-            subject_code = cikel['sifra_predmeta']
+        for cikel in najave.get_predmeti_cikli():
+            if cikel['izvaja_partnerska_institucija']:
+                continue
+            
+            subject_code = cikel['predmet_sifra']
             # Skip subjects we should no update
             if update_subject is not None and update_subject != subject_code:
                 continue
 
             found = False
-            izvajanja = izvajanja_subject_ids[cikel['idpredmet']]
+            izvajanja = izvajanja_subject_ids[cikel['predmet_id']]
             for izvajanje in izvajanja:
                 izvajanje_id = izvajanje["id"].split("-")[1].strip()
-                if str(cikel["id_izvajanja_predmeta"]) == izvajanje_id:
+                cikel_izvajanje_id = str(cikel["izvajanje_id"]) 
+                if cikel_izvajanje_id == izvajanje_id:
                     found = True
             if not found:
                 logger.info("No matching izvajanje for cikel {0}, skipping".format(cikel).encode("utf-8"))
@@ -211,7 +215,7 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
                         teacher = Teacher.objects.get(code=code)
                         teachers.append(teacher)
                     except ObjectDoesNotExist as e:
-                        logger.Exception(
+                        logger.exception(
                             "Teacher with code {0} on subject {1} does not exist".format(code, subject.code))
 
                 if activities.count() == 0:
@@ -231,8 +235,10 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
                     logger.debug("Created activity {0}.".format(activity))
                     activities = [activity]
                 for activity in activities:
-                    activity.name = activity_name(subject, lecture_type),
-                    activity.short_name = activity_short_name(subject, lecture_type),
+                    activity.name = activity_name(subject, lecture_type)
+                    activity.short_name = activity_short_name(subject, lecture_type)
+                    print("Name, shortname")
+                    print(activity.name, activity.short_name)
                     activity.save()
                     activity.teachers.clear()
                     activity.teachers.add(*teachers)

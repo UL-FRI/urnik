@@ -16,5 +16,4 @@ urlpatterns = [
     url(r'^accounts/login/$', LoginView.as_view(), name='django.contrib.auth.views.login'),
     url(r'^accounts/logout/$', LogoutView.as_view()),
     url(r'^exchange/', include('exchange.urls')),
-] 
-
+]

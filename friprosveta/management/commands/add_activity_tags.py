@@ -20,7 +20,7 @@ If activity option is specified only tags for the given activity are set.
 When given preferenceset option it also creates default time preferences for added tags.
 Default time preferences are hard coded into this python script.
 Usage: add_activity_tags [--act=activity_id] [--pset=preferenceset_slug] [--rm_prefs] \
-activity_set_slug"""
+timetable_slug year"""
 
     def add_arguments(self, parser):
         parser.add_argument('timetable_slug', nargs=1, type=str,

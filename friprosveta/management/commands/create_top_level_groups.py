@@ -9,9 +9,9 @@ class Command(BaseCommand):
     """
     Create top level groups from Studis izvajanja for the given timetable.
     """
-    args = 'create_groups timetable_slug year semester_id'
+    args = 'create_top_level_groups timetable_slug year semester_id'
     help = ('Usage:\n'
-            'create_groups timetable_slug year semester_id\n'
+            'create_top_level_groups timetable_slug year semester_id\n'
             '\n'
             'Year is the first part in the study year:\n'
             '2015/2016 -> 2015\n'
@@ -28,11 +28,11 @@ class Command(BaseCommand):
         year = options['year'][0]
         semester_id = options['semester_id'][0]
 
-        studis_najave = Najave()
-        studij = Studij()
+        studis_najave = Najave(year)
+        studij = Studij(year)
         studijsko_drevo = studij.get_studijsko_drevo()
-        izvajanja = studis_najave.get_izvajanja(year)
-        create_regular_groups(izvajanja, studijsko_drevo, timetable.groupset)
+        izvajanja = studis_najave.get_izvajanja()
+        create_regular_groups(izvajanja, [semester_id], studijsko_drevo, timetable.groupset, studis_najave)
 
 
 def group_name(self, predmetnik):
@@ -51,9 +51,8 @@ def group_name(self, predmetnik):
     return short_name, name
 
 
-def create_regular_groups(izvajanja, semestri, studijsko_drevo, groupset):
-    najave = Najave()
-    regular_izvajanja = [e for e in izvajanja if e['obvezen'] == True
+def create_regular_groups(izvajanja, semestri, studijsko_drevo, groupset, najave):
+    regular_izvajanja = [e for e in izvajanja if e['obvezen']
                          and e['semester'] in semestri]
     problems = []
     for e in regular_izvajanja:

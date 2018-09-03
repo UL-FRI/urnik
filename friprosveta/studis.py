@@ -163,24 +163,25 @@ class Najave(Studis):
     def get_predmetnik(self, izvajanje, studijsko_drevo):
         """Return entire predmetnik for given izvajanje."""
         ret = dict()
-        print(izvajanje['predmetnik'])
-        print(studijsko_drevo)
-        e = self.get_studijsko_drevo_entry(izvajanje['predmetnik'], studijsko_drevo)
+        e = self.get_studijsko_drevo_entry(izvajanje['predmetnik'], 5, studijsko_drevo)
         while e["parent"] is not None:
             ret[e["type"]] = e
-            e = self.get_studijsko_drevo_entry(e['parent'], studijsko_drevo)
+            e = self.get_studijsko_drevo_entry(e['parent'], e['type']-1, studijsko_drevo)
         ret[e["type"]] = e
         return ret
 
-    def get_studijsko_drevo_entry(self, predmetnik_id, studijsko_drevo):
+    def get_studijsko_drevo_entry(self, predmetnik_id, level, studijsko_drevo):
         """
         Return entry in studijsko drevo from predmetnik (in izvajanja).
         :param predmetnik_id:
+        :param level: entry named "type" in studijsko drevo. Initial entry has type 5.
         :param studijsko_drevo:
         :return: entry in studijsko drevo with the given id. Exception is thrown
         if entry is not found.
         """
-        entry = [e for e in studijsko_drevo if str(e["id"]) == str(predmetnik_id)]
+        entry = [e for e in studijsko_drevo
+                 if str(e["id"]) == str(predmetnik_id)
+                 and e["type"] == level]
         assert len(entry) == 1, "No entries found"
         return entry[0]
 

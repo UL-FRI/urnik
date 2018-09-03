@@ -29,3 +29,4 @@ palettable
 icalendar
 celery
 jupyterlab
+ldap3

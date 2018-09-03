@@ -1,8 +1,5 @@
 import logging
-from optparse import make_option
-
 from django.core.management.base import BaseCommand, CommandError
-
 from timetable.models import TagValuePreference, Timetable, Tag
 
 logger = logging.getLogger('friprosveta')
@@ -16,33 +13,46 @@ class Command(BaseCommand):
 If teacher option is specified only tags for the given teacher are set.
 When rm_prefs option is given old time preferences and tags are deleted and \
 default TagValuePreferences are created.
-Usage: add_tags [--teacher=teacher_id] [--rm_prefs] timetable_slug"""
-    option_list = BaseCommand.option_list + \
-                  (make_option(
-                      '--teacher',
-                      type='int',
-                      dest='teacher_id',
-                      help='Only set preferences for the user with the given id'),
-                   make_option(
-                       '--rm_prefs',
-                       action='store_true',
-                       dest='remove_old_preferences',
-                       default=False,
-                       help='Remove old preferences for tags. This option is only valid when option \
+Usage: add_teacher_tags [--teacher=teacher_id] [--rm_prefs] timetable_slug"""
+
+    def add_arguments(self, parser):
+        parser.add_argument('timetable_slug', nargs=1, type=str,
+                            help='Slug of the timetable to use')
+        parser.add_argument(
+            '--rm_prefs', nargs=1,
+            action='store',
+            type=bool,
+            default=False,
+            dest='remove_old_preferences',
+            help='Remove old preferences for tags. This option is only valid when option \
 pset is also given, otherwise it is silently ignored.'),
-                  )
+        parser.add_argument(
+            '--teacher', nargs=1,
+            action='store',
+            type=int,
+            dest='teacher_id',
+            help='Only set the tags for the teacher with this id'),
 
     def handle(self, *args, **options):
-        if len(args) < 1:
-            raise CommandError(Command.help)
-        timetable = Timetable.objects.get(slug=args[0])
+        timetable = Timetable.objects.get(slug=options['timetable_slug'][0])
         self.prepare()
         teachers = timetable.teachers
+
         if options['remove_old_preferences']:
             self.remove_old_preferences(timetable)
+
+        self.recreate_tag_time_preferences(timetable)
+
         if options['teacher_id'] is not None:
             teachers = teachers.filter(pk=options['teacher_id'])
+
         self.add_default_preference_tags(teachers.all(), timetable)
+
+    def add_default_preference_tags(self, teachers, timetable):
+        for teacher in teachers:
+            tags = self.teacher_tags(timetable, teacher)
+            print("Adding {} for {}".format(tags, teacher))
+            teacher.tags.add(*tags)
 
     def remove_old_preferences(self, timetable):
         TagValuePreference.objects.filter(
@@ -55,8 +65,8 @@ pset is also given, otherwise it is silently ignored.'),
 
     def recreate_tag_time_preferences(self, timetable):
         level = 'WANT'
-        for value, tag in self.max_hours_daily.iteritems():
-            preference = TagValuePreference(
+        for value, tag in self.max_hours_daily.items():
+            preference = TagValuePreference.objects.get_or_create(
                 weight=1,
                 value=value,
                 name='MAXHOURSDAY',
@@ -64,9 +74,9 @@ pset is also given, otherwise it is silently ignored.'),
                 preferenceset=timetable.preferenceset,
                 level=level,
             )
-            preference.save()
-        for value, tag in self.max_days_weekly.iteritems():
-            preference = TagValuePreference(
+
+        for value, tag in self.max_days_weekly.items():
+            preference = TagValuePreference.objects.get_or_create(
                 weight=1,
                 value=value,
                 name='MAXDAYSWEEK',
@@ -74,14 +84,21 @@ pset is also given, otherwise it is silently ignored.'),
                 preferenceset=timetable.preferenceset,
                 level=level,
             )
-            preference.save()
 
-    def add_default_preference_tags(self, teachers, timetable):
-        for teacher in teachers:
-            tags = self.teacher_tags(timetable, teacher)
-            teacher.tags.add(*tags)
+        # No teacher should work for more than 8 hour daily
+        TagValuePreference.objects.get_or_create(
+            weight=1,
+            value=8,
+            name='8 hours start - end',
+            tag=self.max_span_day,
+            preferenceset=timetable.preferenceset,
+            level=level,
+        )
 
     def prepare(self):
+        """
+        Prepare internal data structures
+        """
         self.safe_to_delete = [
             '3 ure na dan',
             '4 ure na dan',
@@ -93,7 +110,9 @@ pset is also given, otherwise it is silently ignored.'),
             '3 dni na teden',
             '4 dni na teden',
             '2 do upokojitve',
+            '8 ur od zacetka do konca'
         ]
+
         self.max_hours_daily = {
             10: '10 ur na dan',
             8: '8 ur na dan',
@@ -108,10 +127,11 @@ pset is also given, otherwise it is silently ignored.'),
             2: '2 dni na teden',
         }
 
-        for k, v in self.max_hours_daily.iteritems():
+        for k, v in self.max_hours_daily.items():
             self.max_hours_daily[k] = Tag.objects.get(name=v)
-        for k, v in self.max_days_weekly.iteritems():
+        for k, v in self.max_days_weekly.items():
             self.max_days_weekly[k] = Tag.objects.get(name=v)
+        self.max_span_day = Tag.objects.get(name="8 ur od zacetka do konca")
 
     def teacher_tags(self, timetable, teacher):
         def teacher_hours(teacher):
@@ -139,4 +159,5 @@ pset is also given, otherwise it is silently ignored.'),
         return [
             self.max_days_weekly[max_days(teacher)],
             self.max_hours_daily[max_hours(teacher)],
+            self.max_span_day
         ]

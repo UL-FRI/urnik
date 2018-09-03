@@ -26,7 +26,7 @@ def get_study_classyear(studijsko_drevo, entry_id):
         entry2_short = study_mapper.get(entry2['short_title'].strip(),
                                         entry2['short_title'].strip())
         study = "{}-{}".format(entry1['short_title'].strip(), entry2_short)
-    except:
+    except Exception:
         study = "{}".format(study_mapper.get(entry2['short_title'].strip(), entry2['short_title'].strip()))
     study = study_mapper.get(study, study)
     return (study, classyear)
@@ -36,7 +36,7 @@ class Command(BaseCommand):
     """
     Get StudentEnrollments from Studis
     """
-    args = 'enroll_students timetable_slug year date'
+    args = 'import_studis_students timetable_slug year date'
     help = '''Enroll students to subjects from studis using
 enrollment data on the given date.
 Date must be in format YYYY-MM-DD.
@@ -137,7 +137,8 @@ Year is the first part in current studijsko leto 2014/2015 -> 2014.'''
             subjects_to_enroll = []
             for entry in student['predmetnik']:
                 if (not entry['opravlja_vaje']) and (not entry['opravlja_predavanja']):
-                    continue
+                    if entry['opravlja_vaje'] is not None and entry['opravlja_predavanja'] is not None:
+                        continue
                 studis_subject = self.subjects.get(entry['id_predmet'], None)
                 if studis_subject is None:
                     self.stdout.write('Skiping subject with id {0}'.format(entry['id_predmet']))
@@ -161,8 +162,6 @@ with code {0} in database.".format(subject.code)
                 #    continue
             StudentEnrollment.objects.filter(groupset=groupset,
                                              student=database_student).delete()
-            if student_id == '63160433':
-                print("here i am")
             for subject in subjects_to_enroll:
                 se = StudentEnrollment(groupset=groupset,
                                        student=database_student,
@@ -174,7 +173,3 @@ with code {0} in database.".format(subject.code)
                                        regular_enrollment=not izredni)
 
                 se.save()
-                # self.stderr.write("enroll {} on {}({}) under {}_{} -> {}".format(
-                #    student_id, subject.short_name, subject.code, classyear, study, se.id))
-                if student_id == '63160433':
-                    print(se)
