@@ -423,7 +423,7 @@ def _allocation_set(param_ids, filtered_allocations, is_staff=False):
         param_ids, ActivityRealization.objects.all(), allow_unfiltered=True)
     filtered_allocations = filtered_allocations.filter(
         activityRealization__in=realizations)
-    return filtered_allocations
+    return filtered_allocations.distinct()
 
 
 def _titles(param_ids):
