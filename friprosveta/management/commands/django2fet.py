@@ -1005,11 +1005,11 @@ Example:
                     raise Exception
                 f = tuple(f.items())
             except:
-                f = (('activityRealization__activity__shortName__regex',
+                f = (('activityRealization__activity__short_name__regex',
                       filters[i]),)
             allocation_weights[f] = (float(filters[i + 1]), float(filters[i + 2]))
         if len(allocation_weights) < 1:
-            allocation_weights = {(('activityRealization__activity__shortName__regex', '.*'),): (1.0, 1.0)}
+            allocation_weights = {(('activityRealization__activity__short_name__regex', '.*'),): (1.0, 1.0)}
         razor_dict = {('P', 'P'): 3}
         try:
             timetable = friprosveta.models.Timetable.objects.get(slug=fet_timetable_name)
