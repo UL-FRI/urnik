@@ -78,7 +78,7 @@
                         <div class="description">
                             <div class="top-aligned">
                                 <div class="row">
-                                    <a class="link-subject" href="?subject={{ a.subject.code }}{{ context_links.subject }}">{{ a.subject.short_name }}</a>
+                                    <a class="link-subject" {% if a.subject %}href="?subject={{ a.subject.code }}{{ context_links.subject }}" {% else %} href="?activity={{a.object.activityRealization.activity_id}}{{context_links.activity}}"{% endif %}>{{ a.object.activityRealization.activity.short_name }}</a>
                                     <span class="entry-type">| {{ a.object.activityRealization.activity.type }}</span>
                                     <div class="entry-hover">
                                         {{ a.object.get_day_display }} {{ a.object.start }} - {{ a.object.end }}<br/>
