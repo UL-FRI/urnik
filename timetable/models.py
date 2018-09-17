@@ -81,6 +81,7 @@ PREFERENCETYPES = (
     ('CONSECUTIVE', 'Realizations must be consecutive'),
     ('ENDSSTUDENTSDAY', "Activity ends student's day"),
     ('SAMEDAY', 'A set of activities/realizations must be on the same day'),
+    ('SAMESTARTINGTIME', 'A set of activities/realizations must start on the same time (day + hour)'),
 )
 
 ACTIVITYTYPES = (

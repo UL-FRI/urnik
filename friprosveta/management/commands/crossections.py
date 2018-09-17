@@ -5,7 +5,10 @@ import friprosveta
 import friprosveta.models
 import timetable
 import timetable.models
-from .django2fet import add_number_of
+
+
+def add_number_of(l, s):
+    return [[s, str(len(l))]] + l
 
 # import django2fet
 # hackity hack -----------------------------------

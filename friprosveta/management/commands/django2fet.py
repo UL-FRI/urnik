@@ -406,6 +406,27 @@ def activities_same_day(tt):
     return l
 
 
+def activities_same_time(tt):
+    """<ConstraintActivitiesSameStartingTime>
+    <Weight_Percentage>100</Weight_Percentage>
+    <Number_of_Activities>2</Number_of_Activities>
+    <Activity_Id>30937</Activity_Id>
+    <Activity_Id>30945</Activity_Id>
+    <Active>true</Active>
+    <Comments></Comments>
+    </ConstraintActivitiesSameStartingTime>"""
+    l = []
+    for p in timetable.models.TagDescriptivePreference.objects.filter(typename='SAMESTARTINGTIME', level="WANT",
+                                                                      preferenceset__timetable=tt).distinct():
+        realizations = tt.realizations.filter(Q(activity__tags__exact=p.tag) | Q(tags__exact=p.tag)).distinct()
+        if len(realizations) > 0:
+            actList = [['Activity_Id', str(r.id)] for r in realizations]
+            l.append(['ConstraintActivitiesSameStartingTime', None, [
+                ['Weight_Percentage', str(100 * p.weight)]] +
+                      add_number_of(actList, 'Number_of_Activities')])
+    return l
+
+
 def activitiesMaxNumberOfRooms(tt):
     """<ConstraintActivitiesOccupyMaxDifferentRooms>
         <Weight_Percentage>100</Weight_Percentage>
@@ -714,7 +735,8 @@ def time_constraints_fet(timetable, groupset, razor, razor_dict, allocation_weig
         activity_ends_students_day(timetable) +
         activities_consecutive(timetable) +
         activities_grouped(timetable) +
-        activities_same_day(timetable)
+        activities_same_day(timetable) +
+        activities_same_time(timetable)
     ]
     return l2El(l)
 
