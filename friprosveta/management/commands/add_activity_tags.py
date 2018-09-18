@@ -161,138 +161,138 @@ pset is also given, otherwise it is silently ignored.'),
         self.preferences = defaultdict(dict)
         self.preferences['MON']['Predavanja'] = [
             ('08:00', '20:00', 100),
-            ('08:00', '16:00', 99),
+            # ('08:00', '16:00', 99),
         ]
         self.preferences['TUE']['Predavanja'] = [
             ('08:00', '20:00', 100),
-            ('08:00', '16:00', 99),
+            # ('08:00', '16:00', 99),
         ]
         self.preferences['WED']['Predavanja'] = [
             ('08:00', '20:00', 100),
-            ('08:00', '16:00', 99),
+            # ('08:00', '16:00', 99),
         ]
         self.preferences['THU']['Predavanja'] = [
             ('08:00', '20:00', 100),
-            ('08:00', '16:00', 99),
+            # ('08:00', '16:00', 99),
         ]
         self.preferences['FRI']['Predavanja'] = [
             ('08:00', '20:00', 100),
-            ('08:00', '16:00', 99),
+            # ('08:00', '16:00', 99),
         ]
         self.preferences['MON']['Predavanja - redna'] = [
-            ('08:00', '14:00', 100),
-            ('08:00', '14:00', 99),
+            ('08:00', '18:00', 100),
+            # ('08:00', '14:00', 99),
         ]
         self.preferences['TUE']['Predavanja - redna'] = [
-            ('08:00', '14:00', 100),
-            ('08:00', '14:00', 99),
+            ('08:00', '20:00', 100),
+            # ('08:00', '14:00', 99),
         ]
         self.preferences['WED']['Predavanja - redna'] = [
-            ('08:00', '17:00', 100),
-            ('08:00', '15:00', 99),
+            ('08:00', '19:00', 100),
+            # ('08:00', '19:00', 99),
         ]
         self.preferences['THU']['Predavanja - redna'] = [
-            ('08:00', '17:00', 100),
-            ('08:00', '15:00', 99),
+            ('08:00', '19:00', 100),
+            # ('08:00', '15:00', 99),
         ]
         self.preferences['FRI']['Predavanja - redna'] = [
-            ('08:00', '14:00', 100),
-            ('08:00', '14:00', 99),
+            ('08:00', '16:00', 100),
+            # ('08:00', '14:00', 99),
         ]
         self.preferences['MON']['Predavanja < 30'] = [
-            ('08:00', '17:00', 100),
+            ('08:00', '16:00', 100),
         ]
         self.preferences['TUE']['Predavanja < 30'] = [
-            ('08:00', '17:00', 100),
+            ('08:00', '16:00', 100),
         ]
         self.preferences['WED']['Predavanja < 30'] = [
-            ('08:00', '17:00', 100),
+            ('08:00', '16:00', 100),
         ]
         self.preferences['THU']['Predavanja < 30'] = [
-            ('08:00', '14:00', 100),
+            ('08:00', '16:00', 100),
         ]
         self.preferences['FRI']['Predavanja < 30'] = [
-            ('08:00', '14:00', 100),
+            ('08:00', '16:00', 100),
         ]
         self.preferences['MON']['Predavanja 30 < x < 50'] = [
-            ('08:00', '16:00', 100),
+            ('08:00', '17:00', 100),
         ]
         self.preferences['TUE']['Predavanja 30 < x < 50'] = [
-            ('08:00', '16:00', 100),
+            ('08:00', '17:00', 100),
         ]
         self.preferences['WED']['Predavanja 30 < x < 50'] = [
-            ('08:00', '16:00', 100),
+            ('08:00', '17:00', 100),
         ]
         self.preferences['THU']['Predavanja 30 < x < 50'] = [
-            ('08:00', '15:00', 100),
+            ('08:00', '17:00', 100),
         ]
         self.preferences['FRI']['Predavanja 30 < x < 50'] = [
-            ('08:00', '15:00', 100),
+            ('08:00', '17:00', 100),
         ]
         self.preferences['MON']['Predavanja 50 < x < 100'] = [
-            ('08:00', '18:00', 100),
+            ('08:00', '17:00', 100),
         ]
         self.preferences['TUE']['Predavanja 50 < x < 100'] = [
-            ('08:00', '18:00', 100),
+            ('08:00', '17:00', 100),
         ]
         self.preferences['WED']['Predavanja 50 < x < 100'] = [
             ('08:00', '17:00', 100),
         ]
         self.preferences['THU']['Predavanja 50 < x < 100'] = [
-            ('08:00', '15:00', 100),
+            ('08:00', '17:00', 100),
         ]
         self.preferences['FRI']['Predavanja 50 < x < 100'] = [
-            ('08:00', '15:00', 100),
+            ('08:00', '17:00', 100),
         ]
         self.preferences['MON']['Predavanja 100 < x < 200'] = [
             ('08:00', '16:00', 100),
         ]
         self.preferences['TUE']['Predavanja 100 < x < 200'] = [
-            ('08:00', '16:00', 100),
+            ('08:00', '20:00', 100),
         ]
         self.preferences['WED']['Predavanja 100 < x < 200'] = [
             ('08:00', '17:00', 100),
         ]
         self.preferences['THU']['Predavanja 100 < x < 200'] = [
-            ('08:00', '17:00', 100),
+            ('08:00', '16:00', 100),
         ]
         self.preferences['FRI']['Predavanja 100 < x < 200'] = [
-            ('08:00', '17:00', 100),
+            ('08:00', '16:00', 100),
         ]
         self.preferences['MON']['Avditorne vaje'] = [
-            ('08:00', '15:00', 100),
+            ('08:00', '16:00', 100),
         ]
         self.preferences['TUE']['Avditorne vaje'] = [
-            ('08:00', '15:00', 100),
+            ('08:00', '16:00', 100),
         ]
         self.preferences['WED']['Avditorne vaje'] = [
-            ('08:00', '15:00', 100),
+            ('08:00', '16:00', 100),
         ]
         self.preferences['THU']['Avditorne vaje'] = [
-            ('08:00', '15:00', 100),
+            ('08:00', '16:00', 100),
         ]
         self.preferences['FRI']['Avditorne vaje'] = [
-            ('08:00', '15:00', 100),
+            ('08:00', '16:00', 100),
         ]
         self.preferences['MON']['Laboratorijske vaje'] = [
             ('07:00', '18:00', 100),
-            ('08:00', '16:00', 99),
+            # ('08:00', '16:00', 99),
         ]
         self.preferences['TUE']['Laboratorijske vaje'] = [
             ('07:00', '18:00', 100),
-            ('08:00', '16:00', 99),
+            # ('08:00', '16:00', 99),
         ]
         self.preferences['WED']['Laboratorijske vaje'] = [
             ('07:00', '18:00', 100),
-            ('08:00', '16:00', 99),
+            # ('08:00', '16:00', 99),
         ]
         self.preferences['THU']['Laboratorijske vaje'] = [
             ('07:00', '18:00', 100),
-            ('08:00', '16:00', 99),
+            # ('08:00', '16:00', 99),
         ]
         self.preferences['FRI']['Laboratorijske vaje'] = [
-            ('07:00', '17:00', 100),
-            ('08:00', '16:00', 99),
+            ('07:00', '18:00', 100),
+            # ('08:00', '16:00', 99),
         ]
 
         self.safe_to_delete = [Tag.objects.get(name=name) for name in self.safe_to_delete]

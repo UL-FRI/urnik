@@ -72,6 +72,7 @@ TAGVALUEPREFERENCES = (
     ('MULSIZE', 'Multiply group size for activities with this tag by a factor'),
     ('SHRINKGROUPS', 'Group size for activity -> Group size - VALUE'),
     ('MAXROOMSREALIZATIONS', 'Maximal number of different rooms used by the set of realization'),
+    ('TAGMAXHOURSDAILY', 'Mas hours daily for given tag for given students'),
 )
 
 PREFERENCETYPES = (

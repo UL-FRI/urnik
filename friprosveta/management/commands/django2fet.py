@@ -427,6 +427,29 @@ def activities_same_time(tt):
     return l
 
 
+def activities_tag_max_hour_daily(tt):
+    """<ConstraintStudentsSetActivityTagMaxHoursDaily>
+    <Weight_Percentage>100</Weight_Percentage>
+    <Maximum_Hours_Daily>6</Maximum_Hours_Daily>
+    <Students>1_BUN-RI</Students>
+    <Activity_Tag>Predavanja</Activity_Tag>
+    <Active>true</Active>
+    <Comments></Comments>
+    </ConstraintStudentsSetActivityTagMaxHoursDaily>"""
+    ret = []
+    for p in timetable.models.TagValuePreference.objects.filter(typename='TAGMAXHOURSDAILY', level="WANT",
+                                                                preferenceset__timetable=tt).distinct():
+        tag = p.tag
+        for group in tag.groups.all():
+            ret.append(['ConstraintStudentsSetActivityTagMaxHoursDaily', None, [
+                ['Weight_Percentage', str(100 * p.weight)],
+                ['Maximum_Hours_Daily', str(p.value)],
+                ['Students', group.short_name],
+                ['Activity_Tag', tag.name],
+            ]])
+    return ret
+
+
 def activitiesMaxNumberOfRooms(tt):
     """<ConstraintActivitiesOccupyMaxDifferentRooms>
         <Weight_Percentage>100</Weight_Percentage>
@@ -736,7 +759,8 @@ def time_constraints_fet(timetable, groupset, razor, razor_dict, allocation_weig
         activities_consecutive(timetable) +
         activities_grouped(timetable) +
         activities_same_day(timetable) +
-        activities_same_time(timetable)
+        activities_same_time(timetable) +
+        activities_tag_max_hour_daily(timetable)
     ]
     return l2El(l)
 
