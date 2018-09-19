@@ -437,7 +437,7 @@ def activities_tag_max_hour_daily(tt):
     <Comments></Comments>
     </ConstraintStudentsSetActivityTagMaxHoursDaily>"""
     ret = []
-    for p in timetable.models.TagValuePreference.objects.filter(typename='TAGMAXHOURSDAILY', level="WANT",
+    for p in timetable.models.TagValuePreference.objects.filter(name='TAGMAXHOURSDAILY', level="WANT",
                                                                 preferenceset__timetable=tt).distinct():
         tag = p.tag
         for group in tag.groups.all():
