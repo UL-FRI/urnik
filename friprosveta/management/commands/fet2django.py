@@ -178,39 +178,35 @@ example2: ./django/urnik/fet2django.py urnik_fu_fmf_zelje-multi "FRI2011/2012, z
 
     def add_arguments(self, parser):
         parser.add_argument('fet_timetable_dir', nargs=1)
-        parser.add_argument('django_timetable_name', nargs='?')
+        parser.add_argument('django_timetable_slug', nargs='?')
         parser.add_argument('n_best', nargs='?',
                             type=int, default=1)
         parser.add_argument('allocation_name_filter', nargs='?',
                             default='.*')
 
     def handle(self, *args, **options):
-        fet_timetable_dir = options['fet_timetable_dir']
+        fet_timetable_dir = options['fet_timetable_dir'][0]
+        if fet_timetable_dir.endswith(os.path.sep):
+            fet_timetable_dir = fet_timetable_dir[:-1]
+        fet_name = os.path.split(fet_timetable_dir)[1]
         if re.match(r'.*-multi', fet_timetable_dir):
-            fet_name = fet_timetable_dir[max(0, fet_timetable_dir.rfind('/')):-len('-multi')]
+            fet_name = fet_name[:-len('-multi')]
             multi = True
         elif re.match(r'.*-single', fet_timetable_dir):
-            fet_name = fet_timetable_dir[max(0, fet_timetable_dir.rfind('/')):-len('-single')]
+            fet_name = fet_name[:-len('-single')]
             multi = False
         else:
             print("Timetable dir name must end in -single or -multi")
             exit(1)
-        if len(args) > 1:
-            dest_timetable_name = args[1]
-        else:
-            if not multi:
-                dest_timetable_name = fet_name
-            else:
-                print("Can't guess the timetable name for -multi timetables")
-                exit(1)
         name_filter = options['allocation_name_filter']
+        dest_timetable_slug = options['dest_timetable_slug']
         if multi:
             nbest = options['n_best']
-            print("base:", dest_timetable_name)
-            timetable = Timetable.objects.get(name=dest_timetable_name)
+            timetable = Timetable.objects.get(slug=dest_timetable_slug)
+            print("base:", timetable)
             best_timetables(fet_timetable_dir, nbest, timetable, fet_name, name_filter)
         else:
-            timetable = Timetable.objects.get(name=dest_timetable_name)
+            timetable = Timetable.objects.get(slug=dest_timetable_slug)
             single_timetable(fet_timetable_dir, timetable, fet_name, True, name_filter)
 
         # roomsNotAvailableTimetableName = "FE"
