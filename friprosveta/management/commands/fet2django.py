@@ -135,9 +135,12 @@ def best_timetables(d, nbest, base_timetable, fet_timetable_name, name_filter=".
     respected = base_timetable.respects.all()
     l.sort()
     for i, di in enumerate(l[:nbest]):
-        timetable = Timetable.objects.get_or_create(name=base_timetable.name + '-' + str(i + 1) + '-' + di[1],
+        suffix = '-' + str(i + 1) + '-' + di[1]
+        slug = base_timetable.slug + suffix 
+        timetable = Timetable.objects.get_or_create(slug=slug,
                                                     defaults={'activityset': activity_set, 'groupset': group_set,
                                                               'preferenceset': preference_set,
+                                                              'name': base_timetable.name + suffix,
                                                               'classroomset': classroom_set, 'start': start,
                                                               'end': end})[0]
         fet_dir = os.path.join(d, di[1])
@@ -169,12 +172,12 @@ class Command(BaseCommand):
     """
     Import the output of FET into a timetable
     """
-    help = """Usage: fet2django fet_timetable_dir [django_timetable_name] [n_best] [allocation_name_filter]
+    help = """Usage: fet2django fet_timetable_dir [django_timetable_slug] [n_best] [allocation_name_filter]
 For multiple timetables, the number of best timetables must be specified
 Each of the multiple timetables will have their rank appended to the name of the basic timetable
 If no timetable name is specified for a -single timetable, a new timetable will be created using the directory as a name.
-example1: ./django/urnik/fet2django.py urnik_fu_fmf_zelje-single "FRI2011/2012, zimski semester" ".*_P"
-example2: ./django/urnik/fet2django.py urnik_fu_fmf_zelje-multi "FRI2011/2012, zimski semester" 3 ".*_P"""
+example1: ./django/urnik/fet2django.py urnik_fu_fmf_zelje-single "fri-2012-zimski-osnova" ".*_P"
+example2: ./django/urnik/fet2django.py urnik_fu_fmf_zelje-multi "fri-2012-zimski-osnova" 3 ".*_P"""
 
     def add_arguments(self, parser):
         parser.add_argument('fet_timetable_dir', nargs=1)
