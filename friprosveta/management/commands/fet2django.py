@@ -135,9 +135,12 @@ def best_timetables(d, nbest, base_timetable, fet_timetable_name, name_filter=".
     respected = base_timetable.respects.all()
     l.sort()
     for i, di in enumerate(l[:nbest]):
-        timetable = Timetable.objects.get_or_create(name=base_timetable.name + '-' + str(i + 1) + '-' + di[1],
+        suffix = '-' + str(i + 1) + '-' + di[1]
+        slug = base_timetable.slug + suffix 
+        timetable = Timetable.objects.get_or_create(slug=slug,
                                                     defaults={'activityset': activity_set, 'groupset': group_set,
                                                               'preferenceset': preference_set,
+                                                              'name': base_timetable.name + suffix,
                                                               'classroomset': classroom_set, 'start': start,
                                                               'end': end})[0]
         fet_dir = os.path.join(d, di[1])
@@ -169,48 +172,44 @@ class Command(BaseCommand):
     """
     Import the output of FET into a timetable
     """
-    help = """Usage: fet2django fet_timetable_dir [django_timetable_name] [n_best] [allocation_name_filter]
+    help = """Usage: fet2django fet_timetable_dir [django_timetable_slug] [n_best] [allocation_name_filter]
 For multiple timetables, the number of best timetables must be specified
 Each of the multiple timetables will have their rank appended to the name of the basic timetable
 If no timetable name is specified for a -single timetable, a new timetable will be created using the directory as a name.
-example1: ./django/urnik/fet2django.py urnik_fu_fmf_zelje-single "FRI2011/2012, zimski semester" ".*_P"
-example2: ./django/urnik/fet2django.py urnik_fu_fmf_zelje-multi "FRI2011/2012, zimski semester" 3 ".*_P"""
+example1: ./django/urnik/fet2django.py urnik_fu_fmf_zelje-single "fri-2012-zimski-osnova" ".*_P"
+example2: ./django/urnik/fet2django.py urnik_fu_fmf_zelje-multi "fri-2012-zimski-osnova" 3 ".*_P"""
 
     def add_arguments(self, parser):
         parser.add_argument('fet_timetable_dir', nargs=1)
-        parser.add_argument('django_timetable_name', nargs='?')
+        parser.add_argument('django_timetable_slug', nargs='?')
         parser.add_argument('n_best', nargs='?',
                             type=int, default=1)
         parser.add_argument('allocation_name_filter', nargs='?',
                             default='.*')
 
     def handle(self, *args, **options):
-        fet_timetable_dir = options['fet_timetable_dir']
+        fet_timetable_dir = options['fet_timetable_dir'][0]
+        if fet_timetable_dir.endswith(os.path.sep):
+            fet_timetable_dir = fet_timetable_dir[:-1]
+        fet_name = os.path.split(fet_timetable_dir)[1]
         if re.match(r'.*-multi', fet_timetable_dir):
-            fet_name = fet_timetable_dir[max(0, fet_timetable_dir.rfind('/')):-len('-multi')]
+            fet_name = fet_name[:-len('-multi')]
             multi = True
         elif re.match(r'.*-single', fet_timetable_dir):
-            fet_name = fet_timetable_dir[max(0, fet_timetable_dir.rfind('/')):-len('-single')]
+            fet_name = fet_name[:-len('-single')]
             multi = False
         else:
             print("Timetable dir name must end in -single or -multi")
             exit(1)
-        if len(args) > 1:
-            dest_timetable_name = args[1]
-        else:
-            if not multi:
-                dest_timetable_name = fet_name
-            else:
-                print("Can't guess the timetable name for -multi timetables")
-                exit(1)
         name_filter = options['allocation_name_filter']
+        dest_timetable_slug = options['dest_timetable_slug']
         if multi:
             nbest = options['n_best']
-            print("base:", dest_timetable_name)
-            timetable = Timetable.objects.get(name=dest_timetable_name)
+            timetable = Timetable.objects.get(slug=dest_timetable_slug)
+            print("base:", timetable)
             best_timetables(fet_timetable_dir, nbest, timetable, fet_name, name_filter)
         else:
-            timetable = Timetable.objects.get(name=dest_timetable_name)
+            timetable = Timetable.objects.get(slug=dest_timetable_slug)
             single_timetable(fet_timetable_dir, timetable, fet_name, True, name_filter)
 
         # roomsNotAvailableTimetableName = "FE"
