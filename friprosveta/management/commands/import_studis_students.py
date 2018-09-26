@@ -5,29 +5,35 @@ from friprosveta.models import Subject
 from friprosveta.studis import Sifranti, Studij, Studenti
 
 
+def get_parents(studijsko_drevo, entry_id):
+    """
+    The method get on dict class is used for a reason:
+    if the given key does not exist, it returns None
+    instead of raising an Exception.
+    """
+    entries = dict()
+    entry = studijsko_drevo.get(entry_id)
+    while entry:
+        entries[entry["type"]] = entry
+        entry = studijsko_drevo.get(entry.get("parent"))
+    return entries
+
+
 def get_study_classyear(studijsko_drevo, entry_id):
     if entry_id not in studijsko_drevo:
         return 'PAD', 8
     study_mapper = {'Upravna informatika': 'BUN-UI', 'Izmenjave': 'IZMENJAVE', 'BUN-ML': 'BUN-MM'}
     classyear_mapper = {'B': 8, 'D': 4}
-    entry5 = studijsko_drevo[entry_id]
-    assert entry5['type'] == 5
-    classyear = int(classyear_mapper.get(entry5['short_title'],
-                                         entry5['short_title']))
-    entry4 = studijsko_drevo[entry5['parent']]
-    assert entry4['type'] == 4
-    entry3 = studijsko_drevo[entry4['parent']]
-    assert (entry3['type'] == 3) and (entry3['short_title'] is None)
-    entry2 = studijsko_drevo[entry3['parent']]
-    assert (entry2['type'] == 2)
+    entries = get_parents(studijsko_drevo, entry_id)
+    classyear = int(classyear_mapper.get(entries[5]['short_title'],
+                                         entries[5]['short_title']))
+
+    entry2_short = study_mapper.get(entries[2]['short_title'].strip(),
+                                    entries[2]['short_title'].strip())
     try:
-        entry1 = studijsko_drevo[entry2['parent']]
-        assert (entry1['type'] == 1)
-        entry2_short = study_mapper.get(entry2['short_title'].strip(),
-                                        entry2['short_title'].strip())
-        study = "{}-{}".format(entry1['short_title'].strip(), entry2_short)
+        study = "{}-{}".format(entries[1]['short_title'].strip(), entry2_short)
     except Exception:
-        study = "{}".format(study_mapper.get(entry2['short_title'].strip(), entry2['short_title'].strip()))
+        study = "{}".format(entry2_short)
     study = study_mapper.get(study, study)
     return (study, classyear)
 
