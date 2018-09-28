@@ -34,7 +34,8 @@ class Command(BaseCommand):
                               if title['full_title']['sl'] in teacher_titles]
         teacher_codes = [teacher['sifra_predavatelja']
                          for teacher in teachers
-                         if len(set(teacher['habilitacija']) & set(teacher_titles_ids)) > 0]
+                         if len(set(teacher['habilitacija']) & set(teacher_titles_ids)) > 0 and
+                         teacher['status_kadrovska'] == 2]
 
         fri_teachers = Teacher.objects.filter(code__in=teacher_codes)
         allocations = Allocation.objects.filter(activityRealization__id__in=realizacije_ids)
