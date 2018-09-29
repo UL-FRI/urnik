@@ -49,6 +49,9 @@ RUN pip3 install --upgrade --force-reinstall  pyldap
 RUN python3 urnik/manage.py collectstatic --noinput --settings=urnik_fri.settings_example
 RUN chown timetable.timetable -R /home/timetable
 
+COPY wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
+
 # UWSGI options are read from environmental variables.
 # They are specified in docker-compose file.
 CMD ["uwsgi"]
