@@ -1,7 +1,6 @@
 sut:
   build: .
-  command: ["/wait-for-it.sh db:5432 -- /usr/bin/python3 /home/timetable/urnik/manage.py test friprosveta"]
-  command:
+  command: "/wait-for-it.sh db:5432 -- /usr/bin/python3 /home/timetable/urnik/manage.py test friprosveta"
   environment:
     - DJANGO_SETTINGS_MODULE=urnik_fri.settings_example
   links:
