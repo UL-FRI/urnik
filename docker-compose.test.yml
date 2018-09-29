@@ -3,7 +3,7 @@ sut:
   command: /usr/bin/python3 /home/timetable/urnik/manage.py test friprosveta
   environment:
     - DJANGO_SETTINGS_MODULE=urnik_fri.settings_example
-  depends_on:
+  links:
     - db
 
 db:
