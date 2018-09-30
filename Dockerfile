@@ -37,10 +37,15 @@ RUN apt-get update \
   unixodbc-dev \
    && rm -rf /var/lib/apt/lists/*
 
+
 WORKDIR /home/timetable
 
 # Pull tomo source into current working directory
-RUN git clone -b ${URNIK_GIT_BRANCH} ${URNIK_GIT_LOCATION}
+# RUN git clone -b ${URNIK_GIT_BRANCH} ${URNIK_GIT_LOCATION}
+
+COPY --chown=timetable:timetable * urnik/
+COPY . /wait-for-it.sh
+
 
 # Install dependencies
 RUN pip3 install -r urnik/requirements_development.txt
