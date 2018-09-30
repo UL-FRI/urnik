@@ -43,8 +43,7 @@ WORKDIR /home/timetable
 # Pull tomo source into current working directory
 # RUN git clone -b ${URNIK_GIT_BRANCH} ${URNIK_GIT_LOCATION}
 
-COPY --chown=timetable:timetable * urnik/
-COPY . /wait-for-it.sh
+COPY --chown=timetable:timetable . urnik/
 
 
 # Install dependencies
