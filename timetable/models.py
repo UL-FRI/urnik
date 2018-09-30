@@ -524,7 +524,7 @@ class TimetableSite(models.Model):
     timetable = models.ForeignKey('Timetable', on_delete=models.CASCADE,
                                   help_text=_('Timetable to show on the given site'),
                                   verbose_name=_('Timetable'))
-    site = models.ForeignKey('Site')
+    site = models.ForeignKey('Site', on_delete=models.CASCADE)
     default = models.BooleanField()
 
 
