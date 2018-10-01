@@ -67,6 +67,56 @@ class GroupSizeHint(models.Model):
     group = models.ForeignKey(timetable.models.Group, on_delete=models.CASCADE)
 
     @staticmethod
+    def strategy(group, methods, strategy_name):
+        """
+        Return new group size based on methods and strategy_name. Strategy name can be one
+        of the following.
+         - first: take the first hint. When there is no first hint None is returned.
+         - first-non-zero: the first non-zero group size hint is considered. When no non-zero
+           hint is given None is returned.
+         - max: take the max hint. When no hint is given None is returned.
+         - max-non-zero: take the max non-zero hint. When no hint is given group size is not updated.
+         - max-group: take the maximum value from current group size and max hint.
+
+        If strategy_name is none of the above it raises KeyError exception.
+        """
+        def non_zero(hints):
+            return [h for h in hints if h.size != 0]
+
+        def first(group, hints):
+            return hints[0].size
+
+        def first_non_zero(group, hints):
+            return first(group, non_zero(hints))
+
+        def mymax(group, hints):
+            return max(h.size for h in hints)
+
+        def max_non_zero(group, hints):
+            return mymax(group, non_zero(hints))
+
+        def max_group(group, hints):
+            return max(group.size, mymax(group, hints))
+
+        strategies = {
+            "first": first,
+            "first-non-zero": first_non_zero,
+            "max": mymax,
+            "max-non-zero": max_non_zero,
+            "max-group": max_group,
+        }
+        hints = [GroupSizeHint.objects.get(group=group, method=method)
+                 for method in methods
+                 if GroupSizeHint.objects.filter(group=group, method=method).exists()]
+        strategy = strategies[strategy_name]
+        try:
+            return strategy(group, hints)
+        except ValueError:  # max of the empty sequence
+            return None
+        except IndexError:  # list index out of range (first element of empty sequence)
+            return None
+
+    @staticmethod
     def size_from_old_group(group, groupset, enrollment_types=[4, 26]):
         """
         Calculate group size hint from old groups and write site in the
@@ -847,12 +897,16 @@ class Subject(models.Model):
         return [(izvajanje, najave.get_predmetnik(izvajanje, studijsko_drevo))
                 for izvajanje in izvajanja]
 
-    def create_subgroups_from_hints(self, activityset, methods, empty_groups=False):
+    def update_or_create_subgroups_from_hints(self, activityset, methods,
+                                              empty_groups=False, groups=None):
         """
-        Create subgroups for lab work (LV and AV) from groups on lectures (considered top groups).
+        Create or update subgroups for lab work (LV and AV) from groups on lectures (considered top groups).
         :param activityset: fetch the activities from the given activity set.
         :param method: use the given method string for reading group size hints.
         :param empty_groups: is true, subgroups is size 0 are also created.
+        :param groups: names of top-level groups for which to compute subgroups for. If it is None (default)
+        then all top level groups for the subject are processed.
+
         Useful for assigning activities on the correct day for students from other faculties
         when their number is not known in advance.
         :return:
@@ -892,20 +946,22 @@ class Subject(models.Model):
                 size = sizes[i - 1]
                 name = "{0}, {1}, skupina {2}".format(base_name, type, i)
                 short_name = "{0}_{2}_{1:02d}".format(base_short_name, i, type)
-                g = Group.objects.get_or_create(
+                g = Group.objects.update_or_create(
                     name=name,
                     short_name=short_name,
                     parent=parent_group,
                     groupset=parent_group.groupset,
                     defaults={'size': size}
                 )[0]
-                g.size = size
-                g.save()
                 groups.append(g)
             return groups
 
         """Create necessary groups for subject from hints"""
         top_groups = self.activities.filter(activityset=activityset, type='P').first().groups.all()
+        if groups is None:
+            groups = top_groups
+        else:
+            top_groups = [g for g in top_groups if g in groups]
         types = set(self.activities.filter(activityset=activityset).exclude(type='P').values_list('type', flat=True))
         sizes = {'LV': [15, 3, 2, 1], 'AV': [30, 5, 3, 2, 1]}
         for group in top_groups:
@@ -982,15 +1038,13 @@ class Subject(models.Model):
             study = get_study(predmetnik)
             group_size = self.enrolled_students_for_study(tt, study).count()
             logger.debug("Obligatory group sname, name, study: {} ; {} ; {}".format(sname, name, study))
-            g, created = Group.objects.get_or_create(
+            g, created = Group.objects.update_or_create(
                 name=name,
                 short_name=sname,
                 parent=None,
                 groupset=tt.groupset,
                 defaults={"size": group_size}
             )
-            g.size = group_size
-            g.save()
             for activity in tt.activities.filter(type='P', subject=self):
                 activity.groups.add(g)
 
