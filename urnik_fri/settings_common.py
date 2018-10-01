@@ -20,7 +20,9 @@ ANONYMOUS_USER_ID = -1
 # The ID, as an integer, of the current site in the django_site database table.
 # This is used so that application data can hook into specific sites and a single
 # database can manage content for multiple sites.
-SITE_ID = 1
+
+# Gregor: comment the entry bellow so that site ID is looked up from the database.
+# SITE_ID = 1
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
