@@ -9,18 +9,18 @@ ENV URNIK_GIT_BRANCH=master
 # It is overrided from settings in docker-compose.
 ENV SECRET_KEY=very_secret_key
 
-# Add Tomo user and group first to make sure their IDs get assigned consistently
+# Add timetable user and group first to make sure their IDs get assigned consistently
 RUN groupadd -r timetable && useradd -r -g timetable timetable
 
-# Change locale to en_US.UTF-8
+# Change locale to sl_SI.UTF-8
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y locales
 
-RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+RUN sed -i -e 's/# sl_SI.UTF-8 UTF-8/sl_SI.UTF-8 UTF-8/' /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \
-    update-locale LANG=en_US.UTF-8
+    update-locale LANG=sl_SI.UTF-8
     
-ENV LANG en_US.UTF-8
-ENV LC_ALL en_US.UTF-8 
+ENV LANG sl_SI.UTF-8
+ENV LC_ALL sl_SI.UTF-8 
 
 # Install required packages
 RUN apt-get update \
@@ -43,6 +43,8 @@ WORKDIR /home/timetable
 # Pull tomo source into current working directory
 # RUN git clone -b ${URNIK_GIT_BRANCH} ${URNIK_GIT_LOCATION}
 
+# When inside urnik repository just copy everything into 
+# the appropriate subfolder.
 COPY --chown=timetable:timetable . urnik/
 
 
@@ -50,10 +52,14 @@ COPY --chown=timetable:timetable . urnik/
 RUN pip3 install -r urnik/requirements_development.txt
 RUN pip3 install --upgrade --force-reinstall  pyldap
 
+# Collect Django static files
 RUN python3 urnik/manage.py collectstatic --noinput --settings=urnik_fri.settings_example
+
+# Chown everything to the user timetable
 RUN chown timetable.timetable -R /home/timetable
 
-COPY wait-for-it.sh /wait-for-it.sh
+# Make wait-for-it.sh as executable. It is used by testing image to wait
+# for the database container to be online before the tests are ran.
 RUN chmod +x /wait-for-it.sh
 
 # UWSGI options are read from environmental variables.
