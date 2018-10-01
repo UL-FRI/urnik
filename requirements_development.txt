@@ -31,3 +31,4 @@ celery
 jupyterlab
 ldap3
 raven
+model_mommy  # Makes creating models for testing easier
