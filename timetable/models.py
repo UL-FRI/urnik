@@ -6,7 +6,6 @@ from django.db import models
 from django.db.models import Count, Q
 from django.contrib.sites.models import Site
 from django.contrib.sites.shortcuts import get_current_site
-from django.http import HttpResponseNotFound
 from django.utils.translation import ugettext as _
 
 
