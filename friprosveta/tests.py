@@ -1,8 +1,16 @@
+from datetime import datetime, timedelta
+
 from django.test import TestCase
+from django.contrib.sites.models import Site
+from django.test import Client
+from django.test.client import RequestFactory
+
 from friprosveta.studis import Studij
 from friprosveta.management.commands.import_studis_students import get_parents
 
 from friprosveta.models import GroupSizeHint
+
+from timetable.models import default_timetable
 
 from model_mommy import mommy
 
@@ -19,6 +27,72 @@ from model_mommy import mommy
 #                            set([16289, 1321, 2541, 1201]),
 #                            set()]
 #         self.assertEqual(results, expected_output, "Parent from studijsko drevo are wrong")
+
+class MultiSiteTest(TestCase):
+    def setUp(self):
+        TestCase.setUp(self)
+        self.request_factory = RequestFactory()
+        self.server_name = "urnik.fri.uni-lj.si"
+        #self.site1 = mommy.make(Site, domain="urnik1.fri.uni-lj.si")
+        #self.site2 = mommy.make(Site, domain="urnik2.fri.uni-lj.si")
+        #self.public_default_timetable = mommy.make('timetable.Timetable', public=True, name="Default")
+        #self.non_public_default_timetable = mommy.make('timetable.Timetable', public=False)
+
+        #self.timetable_site1 = mommy.make('timetable.TimetableSite', site=self.site1,
+        #                                  default=True, timetable=self.public_default_timetable)
+        #self.timetable_site2 = mommy.make('timetable.TimetableSite', site=self.site2,
+        #                                  default=True, timetable=self.non_public_default_timetable)
+
+    def test_default_timetable_no_site(self):
+        request = self.request_factory.get("/", SERVER_NAME="koala.lumpur.si")
+        with self.assertRaises(Site.DoesNotExist):
+            default_timetable(request)
+
+    def test_default_timetable_no_timetable_site(self):
+        site = mommy.make(Site, domain=self.server_name)
+        request = self.request_factory.get("/", SERVER_NAME=self.server_name)
+        with self.assertRaises(IndexError):
+            default_timetable(request)
+        site.delete()
+
+    def test_default_timetable_no_default_timetable_site(self):
+        site = mommy.make(Site, domain=self.server_name)
+        timetable = mommy.make('timetable.Timetable', public=True)
+        timetable_site = mommy.make('timetable.TimetableSite', default=False, timetable=timetable, site=site)
+        request = self.request_factory.get("/", SERVER_NAME=self.server_name)
+        with self.assertRaises(IndexError):
+            default_timetable(request)
+        site.delete()
+
+    def test_default_timetable_no_public_timetable(self):
+        site = mommy.make(Site, domain=self.server_name)
+        timetable = mommy.make('timetable.Timetable', public=False)
+        timetable_site = mommy.make('timetable.TimetableSite', default=True, timetable=timetable, site=site)
+        request = self.request_factory.get("/", SERVER_NAME=self.server_name)
+        with self.assertRaises(IndexError):
+            default_timetable(request)
+        site.delete()
+
+    def test_default_timetable_normal(self):
+        site = mommy.make(Site, domain=self.server_name)
+        timetable = mommy.make('timetable.Timetable', public=True)
+        timetable_site = mommy.make('timetable.TimetableSite', default=True, timetable=timetable, site=site)
+        request = self.request_factory.get("/", SERVER_NAME=self.server_name)
+        self.assertEqual(default_timetable(request), timetable,
+                         "The default timetable is not the right one")
+        site.delete()
+
+    def test_default_timetable_multiple(self):
+        # Get the one that starts later
+        site = mommy.make(Site, domain=self.server_name)
+        timetable1 = mommy.make('timetable.Timetable', public=True, start=datetime.now())
+        timetable2 = mommy.make('timetable.Timetable', public=True, start=datetime.now() + timedelta(123456))
+        timetable_site = mommy.make('timetable.TimetableSite', default=True, timetable=timetable1, site=site)
+        timetable_site = mommy.make('timetable.TimetableSite', default=True, timetable=timetable2, site=site)
+        request = self.request_factory.get("/", SERVER_NAME=self.server_name)
+        self.assertEqual(default_timetable(request), timetable2,
+                         "The default timetable is not the right one")
+        site.delete()
 
 
 class GroupSizeHintTest(TestCase):
