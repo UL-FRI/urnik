@@ -156,7 +156,7 @@ class TagListView(ListView):
 
 
 def default_timetable_redirect(request):
-    slug = default_timetable().slug
+    slug = default_timetable(request).slug
     return redirect("/timetable/{}/".format(slug), permanent=False)
 
 
