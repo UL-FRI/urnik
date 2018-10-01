@@ -28,3 +28,4 @@ palettable=3.1.0
 icalendar>=4.0.1
 ldap3
 raven
+model_mommy  # Makes creating models easier

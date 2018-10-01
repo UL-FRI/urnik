@@ -523,7 +523,7 @@ def generic_not_available_preferences(tt, objs, constraint_string, entity_string
                     ['Day', a.get_day_display()],
                     ['Hour', h]]])
         for tag in i.tags.all():
-            for tp in timetable.models.TagTimePreference.objects.filter(tag=tag):
+            for tp in timetable.models.TagTimePreference.objects.filter(tag=tag, level__in=['HATE', 'CANT']):
                 weight = tp.adjustedWeight() * 100
                 # Ignore yellow fields
                 # if weight < 100:

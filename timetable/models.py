@@ -4,6 +4,11 @@ from _collections import defaultdict
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Count, Q
+from django.contrib.sites.models import Site
+from django.contrib.sites.shortcuts import get_current_site
+from django.http import HttpResponseNotFound
+from django.utils.translation import ugettext as _
+
 
 WEEKDAYS = (
     ('MON', 'ponedeljek'),
@@ -240,13 +245,13 @@ class Group(models.Model):
         """
         Scope = sub for all children (default), one for single level.
         """
-        l = []
-        for i in Group.objects.filter(parent=self):
-            l.append(i)
+        children = []
+        for group in Group.objects.filter(parent=self):
+            children.append(group)
             if scope == 'sub':
-                l += i.children()
-        l.sort(key=lambda x: x.name)
-        return l
+                children += group.children()
+        children.sort(key=lambda x: x.name)
+        return children
 
     def family(self):
         return self.children() + [self] + self.parents
@@ -293,7 +298,6 @@ class Activity(models.Model):
         groups = self.groups.all()
         return "{0} {1}".format(self.name, "-".join([str(group) for group in groups]))
 
-    # old_teachers = models.ManyToManyField('Teacher', blank=True, through='ActivityPercentage', related_name='old_teacher_activities')
     teachers = models.ManyToManyField('Teacher', blank=True, related_name='activities')
     name = models.CharField(max_length=200)
     short_name = models.CharField(max_length=32)
@@ -494,7 +498,7 @@ class TimetableSet(models.Model):
     @property
     def allocations(self):
         return Allocation.objects.filter(
-            Q(timetable__timetable_sets__pk=self.pk) | \
+            Q(timetable__timetable_sets__pk=self.pk) |
             Q(timetable__respected_by__timetable_sets__pk=self.pk)).distinct()
 
 
@@ -502,9 +506,26 @@ def default_timetable_set():
     return TimetableSet.objects.filter(public=True).order_by('-modified')[0]
 
 
-def default_timetable():
-    return Timetable.objects.filter(public=True,
-                                    start__lte=datetime.datetime.now()).order_by('-start')[0]
+def default_timetable(request):
+    all_timetables = Timetable.objects.all()
+    current_site = get_current_site(request)
+    site_default = all_timetables.filter(site=current_site, public=True, default=True)
+    if site_default:
+        return site_default.order_by("-timetable__start")[0]
+    else:
+        return HttpResponseNotFound('<h1>Page not found</h1>')
+
+
+class TimetableSite(models.Model):
+    """
+    Mapping between sites and timetables. Only timetables connected to the given site
+    are available on the site. Some timetables for the site can be marked as default.
+    """
+    timetable = models.ForeignKey('Timetable', on_delete=models.CASCADE,
+                                  help_text=_('Timetable to show on the given site'),
+                                  verbose_name=_('Timetable'))
+    site = models.ForeignKey(Site, on_delete=models.CASCADE)
+    default = models.BooleanField()
 
 
 class Timetable(models.Model):
@@ -515,7 +536,8 @@ class Timetable(models.Model):
     activityset = models.ForeignKey('ActivitySet', blank=True, on_delete=models.CASCADE)
 
     preferenceset = models.ForeignKey('PreferenceSet', blank=True, null=True, on_delete=models.CASCADE)
-    groupset = models.ForeignKey('GroupSet', blank=True, null=True, related_name='timetables', on_delete=models.CASCADE)
+    groupset = models.ForeignKey('GroupSet', blank=True, null=True,
+                                 related_name='timetables', on_delete=models.CASCADE)
     classroomset = models.ForeignKey('ClassroomSet', blank=True, null=True,
                                      related_name='timetables', on_delete=models.CASCADE)
 
@@ -525,7 +547,7 @@ class Timetable(models.Model):
     @property
     def allocations(self):
         return Allocation.objects.filter(
-            Q(timetable__pk=self.pk) | \
+            Q(timetable__pk=self.pk) |
             Q(timetable__respected_by__pk=self.pk))
 
     @property
@@ -572,8 +594,8 @@ class Allocation(models.Model):
             teachers = " ".join([str(i) for i in self.activityRealization.teachers.all()])
             duration = str(self.duration)
             tt = str(self.timetable)
-        except:
-            pass
+        except Exception:
+            return "Error"
         s = teachers + \
             " [" + name + ']' + \
             " " + str(self.classroom) + " " + self.day + \

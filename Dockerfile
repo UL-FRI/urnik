@@ -37,10 +37,14 @@ RUN apt-get update \
   unixodbc-dev \
    && rm -rf /var/lib/apt/lists/*
 
+
 WORKDIR /home/timetable
 
 # Pull tomo source into current working directory
-RUN git clone -b ${URNIK_GIT_BRANCH} ${URNIK_GIT_LOCATION}
+# RUN git clone -b ${URNIK_GIT_BRANCH} ${URNIK_GIT_LOCATION}
+
+COPY --chown=timetable:timetable . urnik/
+
 
 # Install dependencies
 RUN pip3 install -r urnik/requirements_development.txt
@@ -48,6 +52,9 @@ RUN pip3 install --upgrade --force-reinstall  pyldap
 
 RUN python3 urnik/manage.py collectstatic --noinput --settings=urnik_fri.settings_example
 RUN chown timetable.timetable -R /home/timetable
+
+COPY wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
 
 # UWSGI options are read from environmental variables.
 # They are specified in docker-compose file.
