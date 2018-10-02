@@ -62,7 +62,7 @@ def _main_redirect_helper(request, timetable_slug):
 @login_required
 @require_http_methods(["GET"])
 def main_redirect(request):
-    timetable = default_timetable()
+    timetable = default_timetable(request)
     return _main_redirect_helper(request, timetable.slug)
 
 
