@@ -506,13 +506,20 @@ def default_timetable_set():
 
 
 def default_timetable(request):
+    """
+    Get the default Timetable for the given site.
+    When more than one Timetable is default the latest is chosen.
+    When no public Timetable is default for the given Site the exception is thrown.
+
+    The exception is:
+    - Site.NotFoundException when site is not found.
+    - IndexError when no public timetable exists for a given site.
+    """
     all_timetables = Timetable.objects.all()
     current_site = get_current_site(request)
-    site_default = all_timetables.filter(site=current_site, public=True, default=True)
-    if site_default:
-        return site_default.order_by("-timetable__start")[0]
-    else:
-        return HttpResponseNotFound('<h1>Page not found</h1>')
+    current_site_default_timetables = all_timetables.filter(
+        timetablesite__site=current_site, public=True, timetablesite__default=True)
+    return current_site_default_timetables.order_by("-start")[0]
 
 
 class TimetableSite(models.Model):
@@ -532,7 +539,7 @@ class Timetable(models.Model):
         return self.name
 
     # respects = models.ManyToManyField('self', blank=True)
-    activityset = models.ForeignKey('ActivitySet', blank=True, on_delete=models.CASCADE)
+    activityset = models.ForeignKey('ActivitySet', blank=True, null=True, on_delete=models.CASCADE)
 
     preferenceset = models.ForeignKey('PreferenceSet', blank=True, null=True, on_delete=models.CASCADE)
     groupset = models.ForeignKey('GroupSet', blank=True, null=True,

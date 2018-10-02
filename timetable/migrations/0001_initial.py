@@ -193,7 +193,7 @@ class Migration(migrations.Migration):
                 ('start', models.DateField(default=datetime.date.today)),
                 ('end', models.DateField(default=datetime.date.today)),
                 ('preference_deadline', models.DateField(default=datetime.date.today)),
-                ('activityset', models.ForeignKey(blank=True, on_delete=django.db.models.deletion.CASCADE, to='timetable.ActivitySet')),
+                ('activityset', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='timetable.ActivitySet')),
                 ('classroomset', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='timetables', to='timetable.ClassroomSet')),
                 ('groupset', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='timetables', to='timetable.GroupSet')),
                 ('preferenceset', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='timetable.PreferenceSet')),
