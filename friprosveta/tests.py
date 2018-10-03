@@ -7,12 +7,13 @@ from django.test.client import RequestFactory
 
 from friprosveta.studis import Studij
 from friprosveta.management.commands.import_studis_students import get_parents
-
+from friprosveta.management.commands.fill_groups import Command as fgc
 from friprosveta.models import GroupSizeHint
 
 from timetable.models import default_timetable
 
 from model_mommy import mommy
+import friprosveta
 
 
 # class Test(TestCase):
@@ -28,20 +29,79 @@ from model_mommy import mommy
 #                            set()]
 #         self.assertEqual(results, expected_output, "Parent from studijsko drevo are wrong")
 
+
+class FillGroupsTest(TestCase):
+    def setUp(self):
+        TestCase.setUp(self)
+        self.c = fgc()
+        self.study = mommy.make('friprosveta.Study', short_name='BUN-RI')
+        self.groupset = mommy.make('timetable.GroupSet')
+        self.aset = mommy.make('timetable.ActivitySet')
+        self.tt = mommy.make('timetable.Timetable', groupset=self.groupset,
+                             activityset=self.aset)
+        self.a = mommy.make('friprosveta.Activity', type='LV',
+                            activityset=self.aset)
+        self.subject = self.a.subject
+        self.g1 = mommy.make('timetable.Group', size=18,
+                             short_name='1_BUN-RI_LV_01', groupset=self.groupset)
+        self.g2 = mommy.make('timetable.Group', size=18,
+                             short_name='1_BUN-RI_LV_02', groupset=self.groupset)
+        self.a.groups.add(self.g1)
+        self.a.groups.add(self.g2)
+        self.students = mommy.make('friprosveta.Student', _quantity=17)
+        for student in self.students:
+            mommy.make('friprosveta.StudentEnrollment',
+                       groupset=self.groupset,
+                       student=student,
+                       subject=self.subject,
+                       study=self.study,
+                       enrollment_type=4,
+                       classyear=1)
+
+    def tearDown(self):
+        self.a.activityset.timetable_set.first().delete()
+        friprosveta.models.Student.objects.all().delete()
+
+    def test_simple_enrollment(self):
+        self.c.fill_groups_by_size(
+            tt=self.tt,
+            subjects=friprosveta.models.Subject.objects.all(),
+            write_to_db=True,
+        )
+        self.assertEqual(self.g1.students.count(), 17, "All students should be enrolled")
+
+    def test_enrollment_no_change(self):
+        self.c.fill_groups_by_size(
+            tt=self.tt,
+            subjects=friprosveta.models.Subject.objects.all(),
+            write_to_db=True,
+        )
+        original_g1_students = set(self.g1.students.all())
+        new_students = mommy.make('friprosveta.Student', _quantity=17)
+        for student in new_students:
+            mommy.make('friprosveta.StudentEnrollment',
+                       groupset=self.groupset,
+                       student=student,
+                       subject=self.subject,
+                       study=self.study,
+                       enrollment_type=4,
+                       classyear=1)
+        self.c.fill_groups_by_size(
+            tt=self.tt,
+            subjects=friprosveta.models.Subject.objects.all(),
+            write_to_db=True,
+        )
+        self.assertEqual(self.g1.students.count(), 18, "Group g1 must be filled first")
+        self.assertEqual(self.g2.students.count(), 16, "Group must be filled up to available students")
+        self.assertEqual(len(set(self.g1.students.all()).intersection(original_g1_students)), 17,
+                         "Students from g1 should not be moved")
+
+
 class MultiSiteTest(TestCase):
     def setUp(self):
         TestCase.setUp(self)
         self.request_factory = RequestFactory()
         self.server_name = "urnik.fri.uni-lj.si"
-        #self.site1 = mommy.make(Site, domain="urnik1.fri.uni-lj.si")
-        #self.site2 = mommy.make(Site, domain="urnik2.fri.uni-lj.si")
-        #self.public_default_timetable = mommy.make('timetable.Timetable', public=True, name="Default")
-        #self.non_public_default_timetable = mommy.make('timetable.Timetable', public=False)
-
-        #self.timetable_site1 = mommy.make('timetable.TimetableSite', site=self.site1,
-        #                                  default=True, timetable=self.public_default_timetable)
-        #self.timetable_site2 = mommy.make('timetable.TimetableSite', site=self.site2,
-        #                                  default=True, timetable=self.non_public_default_timetable)
 
     def test_default_timetable_no_site(self):
         request = self.request_factory.get("/", SERVER_NAME="koala.lumpur.si")
