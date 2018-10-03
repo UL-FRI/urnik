@@ -169,7 +169,10 @@ class GroupSizeHint(models.Model):
             method = "enrollments from {0} for types {1}".format(groupset, enrollment_types)
         group_subjects = set()
         group_study_short_name = group.study
-        classyear = int(group.classyear)
+        try:
+            classyear = int(group.classyear)
+        except ValueError:
+            classyear = 8
         logger.debug("grou`p study: {0}".format(group_study_short_name))
         logger.debug("group classyear: {0}".format(classyear))
         for a in group.activities.all():
