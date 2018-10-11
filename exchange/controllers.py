@@ -1,4 +1,3 @@
-from abc import ABC, abstractmethod
 import logging
 from typing import Optional, Dict, List, Union
 from datetime import datetime
@@ -14,9 +13,6 @@ from timetable.models import Allocation, Group
 from .models import Exchange, SubjectPreference, FormProcessingError, TIMETABLE_EXCHANGE_GROUP_PREFIX, ExchangeType
 
 logger = logging.getLogger(__name__)
-
-
-
 
 
 def get_available_exchanges(timetable, student):
@@ -331,14 +327,17 @@ def process_exchange_request_matches(exchange_left, exchange_right):
         exchange_left (Exchange): One exchange request.
         exchange_right (Exchange): The other exchange request.
     """
-
     # the exchanges match, but we might not have two students to exchange with
     if exchange_left.initiator_student and exchange_right.initiator_student:
         # here this is either ExchangeType.REQUEST_OFFER or ExchangeType.SPECIFIC_STUDENT
         # in both cases, we have two students and all allocations set
+        tt = exchange_left.allocation_from.timetable
+        group_source_left = get_allocation_student_group(exchange_left.allocation_from, exchange_left.initiator_student)
+        move_student_to_exchange_groups(exchange_left.initiator_student, group_source_left, tt)
         group_source_left = get_allocation_student_group(exchange_left.allocation_from, exchange_left.initiator_student)
         group_source_right = get_allocation_student_group(exchange_right.allocation_from, exchange_right.initiator_student)
-
+        move_student_to_exchange_groups(exchange_right.initiator_student, group_source_right, tt)
+        group_source_right = get_allocation_student_group(exchange_right.allocation_from, exchange_right.initiator_student)
         group_exchange_left = get_allocation_exchange_group(exchange_left.allocation_from) or \
                               create_allocation_exchange_group(exchange_left.allocation_from)
         group_exchange_right = get_allocation_exchange_group(exchange_left.allocation_to) or \
@@ -358,9 +357,13 @@ def process_exchange_request_matches(exchange_left, exchange_right):
             finalizer_exchange = exchange_right
 
         # the finalizer exchange (the one made by the student) has all the information we need
+        tt = finalizer_exchange.allocation_from.timetable
+        group_from = get_allocation_student_group(finalizer_exchange.allocation_from, finalizer_exchange.initiator_student)
+        move_student_to_exchange_groups(finalizer_exchange.initiator_student, group_from, tt)
         group_from = get_allocation_student_group(finalizer_exchange.allocation_from, finalizer_exchange.initiator_student)
         group_to = get_allocation_exchange_group(finalizer_exchange.allocation_to) or \
                    create_allocation_exchange_group(finalizer_exchange.allocation_to)
+
         # because there is no student on the other end, we only move once
         move_student(finalizer_exchange.initiator_student, group_from, group_to)
 
@@ -557,6 +560,37 @@ def create_allocation_exchange_group(allocation):
 
 
 @transaction.atomic
+def move_student_to_exchange_groups(student, group, tt):
+    """
+    Move the student from the given group to exchange group on
+    all allocations on the given timetable. Rationale: when
+    swapping a student from for instance 1_BUN_LV_01 group on
+    one allocations all other allocations including this group
+    will dissappear from his timetable. So we move him first
+    into exchange groups and then perform the exchange.
+
+    Do not do anything if student is already in exchange group.
+
+    Args:
+        student (Student): The student to move.
+        group_from (Group): The group to move from.
+        tt (Timetable): The timetable to respect.
+    """
+    if group.short_name.startswith(TIMETABLE_EXCHANGE_GROUP_PREFIX):
+        return
+    exchange_groups = []
+    allocations = tt.allocations.filter(activityRealization__groups=group)
+    for allocation in allocations:
+        alloc_exc_group = get_allocation_exchange_group(allocation)
+        if alloc_exc_group is None:
+            alloc_exc_group = create_allocation_exchange_group(allocation)
+        exchange_groups.append(alloc_exc_group)
+    group.students.remove(student)
+    for exchange_group in exchange_groups:
+        exchange_group.students.add(student)
+
+
+@transaction.atomic
 def move_student(student, group_from, group_to):
     """Move a student between groups.
 
@@ -567,4 +601,3 @@ def move_student(student, group_from, group_to):
     """
     group_from.students.remove(student)
     group_to.students.add(student)
-
