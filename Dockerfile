@@ -46,6 +46,7 @@ WORKDIR /home/timetable
 # When inside urnik repository just copy everything into 
 # the appropriate subfolder.
 COPY --chown=timetable:timetable . urnik/
+COPY --chown=timetable:timetable wait_for_it.sh /
 
 
 # Install dependencies
