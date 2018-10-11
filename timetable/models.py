@@ -188,6 +188,7 @@ class Group(models.Model):
     size = models.IntegerField(null=True)
     parent = models.ForeignKey('self', null=True, blank=True, related_name="+", on_delete=models.CASCADE)
     groupset = models.ForeignKey('GroupSet', related_name='groups', on_delete=models.CASCADE)
+    visible_in_navigation = models.BooleanField(default=False, null=False, blank=False)
 
     # Return the second part of group name, split by '_'
     @property
