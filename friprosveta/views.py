@@ -168,7 +168,7 @@ def results(request, timetable_slug):
     selected_timetable = get_object_or_404(timetable.models.Timetable,
                                            slug=timetable_slug)
     try:
-        groups = selected_timetable.groupset.groups.filter(parent=None)
+        groups = selected_timetable.groupset.groups.filter(visible_in_navigation=True)
     except:
         groups = timetable.models.Group.objects.none()
     teachers = friprosveta.models.Teacher.objects.filter(
