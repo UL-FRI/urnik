@@ -148,7 +148,7 @@ class GroupSizeHint(models.Model):
         logger.info("Size hint calculated")
 
     @staticmethod
-    def size_from_enrollments(group, groupset, enrollment_types=[4, 26], method=None):
+    def size_from_enrollments(group, groupset, enrollment_types=[4, 26], excluded_students=[], method=None):
         """
         Calculate size from enrollments. The subject and study and classyear are inferred from the group (on
         which actitivities it is, group short name). Then enrollments to the given groupset
@@ -158,6 +158,7 @@ class GroupSizeHint(models.Model):
         :param groupset: enrollments are gathered from here.
         :param enrollment_types: which types of enrollments to consider, defaults to [4, 26]. See ENROLLMENTTYPES.
         if enrollment_types is None, all enrollment types are considered.
+        :param excluded_students: students to exclude. For instance students from exchange groups.
         :param method: method name. If not used it will be auto generated from enrollment_types and groupset
         :return: None
         """
@@ -189,6 +190,7 @@ class GroupSizeHint(models.Model):
         students = set()
         for e in se:
             students.add(e.student)
+        students = students - set(excluded_students)
         size = len(students)
         logger.debug("students: {0}".format(students))
         logger.debug("size: {0}".format(size))
@@ -638,6 +640,72 @@ class Student(models.Model):
             enrolled_students__groupset=timetable.groupset
         ).distinct()
 
+    def realizations(self, tt):
+        """
+        Return a list of the realizations the given student is attending.
+        """
+        return tt.realizations.filter(
+            groups__students=self
+        )
+
+    def allocations(self, tt):
+        """
+        Return a list of the allocations the given student is attending.
+        """
+        return tt.allocations.filter(
+            activityRealization__groups__students=self
+        )
+
+    def busy_hours(self, tt):
+        """
+        Returns a dict of form (day, hours) : [allocation list].
+        """
+        busy = defaultdict(list)
+        for a in self.allocations(tt):
+            for hour in a.hours:
+                busy[(a.day, hour)].append(a)
+        return busy
+
+    def is_available(self, tt, allocation, busy_hours=None):
+        if busy_hours is None:
+            busy_hours = self.busy_hours(tt)
+        return all((allocation.day, hour) not in busy_hours for hour in allocation.hours)
+
+    def overlaps(self, tt, busy_hours=None):
+        """
+        Return overlaps as a set of tuples (day, hour, overlapping_allocations).
+        """
+        if busy_hours is None:
+            busy_hours = self.busy_hours(tt)
+        overlaps = set()
+        for key, allocations in busy_hours.items():
+            if len(allocations) > 1:
+                overlaps.add((*key, tuple(allocations)))
+        return overlaps
+
+    @classmethod
+    def find_substitution(cls, tt, allocation_from, allocation_to, group_type):
+        """
+        Find all students on the given allocation that are contained in the
+        groups which shortname contains the string group_type and are
+        free at the time of the allocation allocation_to.
+        """
+        substitutions = set()
+        realization = allocation_from.activityRealization
+        groups = realization.groups.filter(short_name__contains=group_type)
+        for group in groups:
+            for student in group.students.all():
+                if cls.is_available(student, tt, allocation_to):
+                    substitutions.add(student)
+        return substitutions
+
+    def my_groups(self, allocation):
+        """
+        Return a QuerySet containing students's groups for the given allocation.
+        """
+        realization = allocation.activityRealization
+        realization.groups.filter(students=self)
+
     @classmethod
     def from_user(cls, user):
         """Get a `Student` object from a `User`.
@@ -900,12 +968,13 @@ class Subject(models.Model):
         return [(izvajanje, najave.get_predmetnik(izvajanje, studijsko_drevo))
                 for izvajanje in izvajanja]
 
-    def update_or_create_subgroups_from_hints(self, activityset, methods,
+    def update_or_create_subgroups_from_hints(self, activityset, methods, strategy_name,
                                               empty_groups=False, groups=None):
         """
         Create or update subgroups for lab work (LV and AV) from groups on lectures (considered top groups).
         :param activityset: fetch the activities from the given activity set.
         :param method: use the given method string for reading group size hints.
+        :param strategy_name: how to calculate group size. See GroupSizeHint.strategy for detail explanation.
         :param empty_groups: is true, subgroups is size 0 are also created.
         :param groups: names of top-level groups for which to compute subgroups for. If it is None (default)
         then all top level groups for the subject are processed.
@@ -976,18 +1045,8 @@ class Subject(models.Model):
                     for tmp in activity.groups.filter(short_name__startswith=group.short_name):
                         tmp.size = 0
                         tmp.save()
-                for method in methods:
-                    gsh = GroupSizeHint.objects.filter(method=method, group=group)
-                    assert gsh.count() <= 1, "More than one GSH exists for {0}, method {1}".format(
-                        group, method
-                    )
-                    if gsh.count() == 1:
-                        break
-                gsh_size = 0
-                if gsh.count() == 1:
-                    gsh_size = gsh.first().size
-                else:
-                    # Do not set size if no entry in hints exists for this group
+                gsh_size = GroupSizeHint.strategy(group, methods, strategy_name)
+                if gsh_size is None:
                     continue
                 if "PAD" in group.short_name:
                     splits = split_into_sizes(gsh_size, [3, 2, 1])
