@@ -2,6 +2,7 @@ import logging
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.db.utils import IntegrityError
 
 from friprosveta.models import Subject
 from friprosveta.studis import Studij
@@ -24,9 +25,9 @@ class Command(BaseCommand):
         logger = logging.getLogger(__name__)
         logger.info("Entering sync_subjects")
 
-        studij = Studij(2017)
+        studij = Studij(2018)
         subjects = studij.get_predmeti()
-        subjects_added = []
+        subjects_added = dict()
         for subject in subjects:
             logger.debug("Processing subject with code {0}".format(subject["sifra"]))
             fri_subjects_count = Subject.objects.filter(
@@ -40,9 +41,9 @@ with code {0} in our database.".format(subject['sifra'])
                 subject_name = subject['naslov']['sl']
                 logger.info("Created subject {1} ({0})".format(
                     subject['sifra'], subject_name))
-                subjects_added.append(
-                    Subject(code=subject['sifra'], name=subject_name)
-                )
+                if subject['sifra'] in subjects_added:
+                    logger.error(f"Duplicated subject code {subject['sifra']}")
+                subjects_added[subject['sifra']] = Subject(code=subject['sifra'], name=subject_name)
             else:
                 logger.debug("Updating subject")
                 urnik_subject = Subject.objects.get(code=subject['sifra'])
@@ -52,8 +53,11 @@ with code {0} in our database.".format(subject['sifra'])
                     logger.debug("Updated subject {1} ({0})".format(
                         subject['sifra'], urnik_subject.name)
                     )
-        for subject in subjects_added:
-            subject.save()
+        for subject in subjects_added.values():
+            try:
+                subject.save()
+            except IntegrityError:
+                logger.exception(f"Error saving subject {subject}")
         logger.info("Added {0} subjects.".format(len(subjects_added)))
         return len(subjects_added)
 
