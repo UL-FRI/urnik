@@ -30,8 +30,6 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
         parser.add_argument(
             '--force',
             action='store_true',
-            dest='subject',
-            default=False,
             help='Create timetable if it does not exists.'),
 
         parser.add_argument(
@@ -42,8 +40,8 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
 
         parser.add_argument(
             '--location', nargs=1,
-            default='Lepi pot FRI',
-            help='Location of the activities. Defaults to "Lepi pot FRI".'),
+            default='Večna pot FRI',
+            help='Location of the activities. Defaults to "Večna pot FRI".'),
 
     def get_semester(self, year, semester_id):
         sifranti = Sifranti()
@@ -55,7 +53,7 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
     @transaction.atomic
     def handle(self, *args, **options):
         logger.info("Entering handle")
-        if options['force'][0]:
+        if options['force']:
             logger.debug("Force is True")
             tt = Timetable.objects.filter(slug=options["timetable_slug"][0])
             assert len(tt) <= 1, "Timetable slug ({0}) should be unique.".format(args[0])
@@ -78,7 +76,7 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
 
         else:
             tt = Timetable.objects.get(slug=options["timetable_slug"][0])
-        location = Location.objects.get(name=options['location'][0])
+        location = Location.objects.get(name=options['location'])
         subject = None
         if options['subject_code'] is not None:
             subject = options['subject_code'][0]
@@ -164,12 +162,10 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
 
         izvajanja_subject_ids = defaultdict(list)
         for izvajanje in izvajanja:
-            izvajanja_subject_ids[izvajanje['idpredmet']].append(izvajanje)
+            if not izvajanje['izvaja_partnerska_institucija']:
+                izvajanja_subject_ids[izvajanje['idpredmet']].append(izvajanje)
 
-        for cikel in najave.get_predmeti_cikli():
-            if cikel['izvaja_partnerska_institucija']:
-                continue
-            
+        for cikel in najave.get_predmeti_cikli():            
             subject_code = cikel['predmet_sifra']
             # Skip subjects we should no update
             if update_subject is not None and update_subject != subject_code:
