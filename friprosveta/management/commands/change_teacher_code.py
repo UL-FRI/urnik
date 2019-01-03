@@ -38,12 +38,12 @@ class Command(BaseCommand):
     Enrol students into a given timetable.
     """
 
+    def add_arguments(self, parser):
+        parser.add_argument('old_code', type=str)
+        parser.add_argument('new_code', type=str)
+
     args = 'change_teacher_code old_code new_code'
     help = 'Change teacher code.'
 
     def handle(self, *args, **options):
-        if len(args) != 2:
-            print("See help")
-            return
-
-        change_teacher_code(args[0], args[1])
+        change_teacher_code(options['old_code'], options['new_code'])

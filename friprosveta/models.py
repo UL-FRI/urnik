@@ -174,18 +174,27 @@ class GroupSizeHint(models.Model):
             classyear = int(group.classyear)
         except ValueError:
             classyear = 8
-        logger.debug("grou`p study: {0}".format(group_study_short_name))
+        logger.debug("group study: {0}".format(group_study_short_name))
         logger.debug("group classyear: {0}".format(classyear))
         for a in group.activities.all():
             group_subjects.add(a.activity.subject)
         logger.debug("group_subjects: {0}".format(group_subjects))
-        se = StudentEnrollment.objects.filter(
-            groupset=groupset,
-            subject__in=group_subjects,
-            study__short_name=group_study_short_name,
-            classyear=classyear
+        base_enrollments = StudentEnrollment.objects.filter(
+                groupset=groupset,
+                subject__in=group_subjects,
         )
-        if enrollment_types is not None:
+        logger.debug(f"Base size: {base_enrollments.count}")
+        if group_study_short_name == 'PAD':
+            se = base_enrollments.exclude(
+                enrollment_type__in=[4, 26]
+            )
+        else:
+            se = base_enrollments.filter(
+                study__short_name=group_study_short_name,
+                classyear=classyear,
+                enrollment_type__in=[4, 26]
+            )
+        if enrollment_types is not None and group_study_short_name != 'PAD':
             se = se.filter(enrollment_type__in=enrollment_types)
         students = set()
         for e in se:

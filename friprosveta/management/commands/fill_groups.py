@@ -43,6 +43,18 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
 
     @transaction.atomic
     def fill_groups_by_size(self, tt, subjects, write_to_db=False, unenroll_first=False):
+        def exchange_students_on_subject(s, tt):
+            ret = set()
+            for a in tt.activities.filter(subject=s):
+                ret = ret.union(exchange_students_on_activity(a))
+            return ret
+
+        def exchange_students_on_activity(a):
+            students = set()
+            for g in a.groups.filter(short_name__startswith='EX_'):
+                students.update(g.students.all())
+            return students
+
         # study = fm.Study.objects.get(short_name=group.study)
         # students = study.enrolledStudentsClassyear(tt, int(group.classyear)).order_by("surname", "name").all()
         # group.students.clear()
@@ -55,9 +67,11 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
             self.stdout.write("{} {}".format(subject.short_name, subject.code))
             debug_group_dict = dict()
             foo_group_list = list()
+            exchange_students = exchange_students_on_subject(subject, tt)
             for activity in subject.activities.filter(activityset=tt.activityset):
                 #    print "  ", activity.short_name
-                for group in activity.groups.filter(groupset=tt.groupset).distinct():
+                # Gregor: exclude exchange groups from listing
+                for group in activity.groups.filter(groupset=tt.groupset).exclude(short_name__startswith='EX_').distinct():
                     #        print "  ->", group.short_name
                     dy = groups_by_activitytype.get(activity.type, {})
                     groups_by_activitytype[activity.type] = dy  # get a reference to groups by year
@@ -99,6 +113,8 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
                                 students = set(normal_enrollments.filter(
                                     study=study, classyear=int(classyear)
                                 ).values_list('student', flat=True))
+                                # Added by Gregor: remove exchange students
+                            students = students - exchange_students
                         except Exception as e:
                             self.stderr.write(
                                 "Problem finding students for {0}-{1}: {2}".format(classyear, study_name, e))

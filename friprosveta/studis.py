@@ -235,42 +235,66 @@ class Najave(Studis):
         return True
 
 
+class Oseba:
+    def __init__(self, data, osebe):
+        """
+        Construct instance of class Oseba with data from dictionary.
+        Beware: not every string is a valid variable name, use with caution.
+        """
+        self.osebe = osebe
+        self.__dict__.update(data)
+
+    @property
+    def is_teacher(self):
+        return self.osebe.is_teacher(self)
+
+
 class Osebe(Studis):
-    def get_nazivi(self):
-        return self.data('/sifrantiapi/nazivdelavca')
-
-    def get_osebe(self):
-        return self.data('/osebeapi/oseba?aktiven=false')
-
-    def get_teachers(self):
-        osebe = self.get_osebe()
-        teachers = [teacher for teacher in osebe
-                    if teacher['status_prikazan'] != 0]
-        return teachers
-
-    def get_teacher_details(self, teacher_code):
-        """
-        Return data for a teacher with the given code.
-        :param teacher_code:
-        :return: dictionary obtained from Studis.
-        """
-        url = ("/osebeapi/oseba?$filter=sifra_predavatelja eq '{}'".format(teacher_code))
-        # url = "osebeapi/oseba?$filter=sifra_predavatelja%20eq%20%27000014%27"
-        # print(url)
-        teacher = self.data(url)
-        assert len(teacher) <= 1, "At most one teacher with code {} should exist in Studij".format(teacher_code)
-        return teacher
-
-    def get_teacher_codes(self):
+    def __init__(self):
+        super(Studis, self).__init__()
         teacher_titles = ['asistent', 'asistent-raziskovalec',
                           'izredni profesor', 'docent', 'predavatelj',
                           'redni profesor', 'strokovni sodelavec',
                           'višji predavatelj']
+        self.teacher_titles_ids = set([title['id'] for title in self.get_nazivi()
+                                       if title['full_title']['sl'] in teacher_titles])
 
-        teacher_titles_ids = set([title['id'] for title in self.get_nazivi()
-                                  if title['full_title']['sl'] in teacher_titles])
+    def get_nazivi(self):
+        return self.data('/sifrantiapi/nazivdelavca')
 
-        teacher_codes = [teacher['sifra_predavatelja']
-                         for teacher in self.get_teachers()
-                         if len(set(teacher['habilitacija']) & teacher_titles_ids) > 0]
-        return teacher_codes
+    def get_osebe(self, aktiven=False):
+        """
+        Return info about all persons in studis.
+        If parameter aktiven is True it returns only persons with aktiven status set to True,
+        otherwise it returns all persons.
+        """
+        url = '/osebeapi/oseba'
+        if not aktiven:
+            url += '?aktiven=false'
+        return [Oseba(person_data, self) for person_data in self.data(url)]
+
+    def is_teacher(self, oseba):
+        """
+        Is given person a teacher? (ali ima veljavno habilitacijo)
+        """
+        return len(set(oseba.habilitacija) & self.teacher_titles_ids) > 0
+
+    def get_teachers(self):
+        """
+        Return all persons with valid habilitation.
+        """
+        return [teacher for teacher in self.get_osebe() if teacher.status_prikazan and teacher.is_teacher]
+
+    def get_teacher_details(self, teacher_code):
+        """
+        Return data for a teacher with the given code. Only data for the given teacher is fetched from Studis.
+        :param teacher_code: code of the teacher.
+        :return: class Oseba when teacher exists or None.
+        """
+        url = ("/osebeapi/oseba?$filter=sifra_predavatelja eq '{}'".format(teacher_code))
+        teacher = [Oseba(person_data) for person_data in self.data(url)]
+        assert len(teacher) <= 1, "At most one teacher with code {} should exist in Studij".format(teacher_code)
+        return teacher[0] if teacher else None
+
+    def get_teacher_codes(self):
+        return [teacher.sifra_predavatelja for teacher in self.get_teachers()]
