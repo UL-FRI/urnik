@@ -59,7 +59,7 @@
 
 <div {% if not request.user.is_superuser %} hidden {% endif %}>
 {% for f in realization_formsets %}
-<h2>{{  f.instance.displayName  }}</h2>
+<h2>{{  f.instance.displayName  }} (trajanje: {{f.instance.duration}})</h2>
 <a href={% url "assignments" timetable_slug=timetable_slug subject_code=subject.code %}>{{f.instance.name}}</a>
     <div class="realizations">
     {{f.management_form}}
