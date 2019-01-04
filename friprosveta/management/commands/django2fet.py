@@ -369,7 +369,7 @@ def activities_consecutive(tt):
                 al.add(str(iar.id))
         groups.add((pref.weight, tuple(al)))
         al = set()
-        for i in pref.tag.activity_realizations.filter(activity__activityset__timetable=tt):
+        for i in pref.tag.activity_realizations.filter(activity__activityset__timetable=tt).order_by('id'):
             al.add(str(i.id))
         groups.add((pref.weight, tuple(al)))
     for (w, g) in groups:
