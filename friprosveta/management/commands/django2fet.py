@@ -364,7 +364,7 @@ def activities_consecutive(tt):
     for pref in timetable.models.TagDescriptivePreference.objects.filter(typename='CONSECUTIVE',
                                                                          preferenceset__timetable=tt).distinct():
         al = set()
-        for i in pref.tag.activities.filter(activityset__timetable=tt):
+        for i in pref.tag.activities.filter(activityset__timetable=tt).order_by('id'):
             for iar in i.realizations.all():
                 al.add(str(iar.id))
         groups.add((pref.weight, tuple(al)))
