@@ -438,10 +438,11 @@ class ActivityRealization(timetable.models.ActivityRealization):
             return d['DEMONSTRATOR']
         return d['DRUGO']  # npr. 2 asistenta za majhno skupino.
 
-    def assign_groups(self, up_to_size=None, mix_studies=False):
+    def assign_groups(self, up_to_size=None, mix_studies=False, add_pad=True):
         """
         Assign groups to this realization. Groups are taken from its activity. Fill it up to up_to_size.
         If up_to_size is not given it is filled up to intended_size property on the realization.
+        If add_pad is true, always add students from PAD study.
         Unassigned means that:
         1) Group is listed in the activity.
         2) Group is not assigned to any realization from this activity.
@@ -475,6 +476,7 @@ class ActivityRealization(timetable.models.ActivityRealization):
         unassigned_groups = list(unassigned_groups.exclude(realizations__in=other_activity_realizations))
         logger.debug("UG: {}".format(unassigned_groups))
         if self.groups.exists():
+            # Add only groups from studies already on realization
             mix_studies = True
             ok_studies = set([g.study for g in self.groups.all()])
             unassigned_groups = [g for g in unassigned_groups if g.study in ok_studies]
@@ -789,7 +791,7 @@ class Timetable(timetable.models.Timetable):
 
     @property
     def teachers(self):
-        return Teacher.objects.filter(activities__activityset__timetable=self).distinct()
+        return Teacher.objects.filter(activity_realizations__activity__activityset__timetable=self).distinct()
 
     def teachers_type(self, type):
         return Teacher.objects.filter(activities__activityset__timetable=self,

@@ -7,3 +7,4 @@ test_fixtures/
 .venv
 *.iml
 .idea/
+.mypy_cache/
