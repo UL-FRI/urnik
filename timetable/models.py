@@ -534,6 +534,12 @@ class TimetableSite(models.Model):
     site = models.ForeignKey(Site, on_delete=models.CASCADE)
     default = models.BooleanField()
 
+    def __str__(self):
+        desc = "{} => {}".format(self.site.domain, self.timetable.name)
+        if self.default:
+            desc += " (DEFAULT)"
+        return desc
+
 
 class Timetable(models.Model):
     def __str__(self):

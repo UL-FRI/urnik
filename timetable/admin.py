@@ -148,6 +148,8 @@ admin.site.register(Teacher, TeacherAdmin)
 admin.site.register(Timetable, TimetableAdmin)
 admin.site.register(Location)
 admin.site.register(TimetableSet, TimetableSetAdmin)
+admin.site.register(TimetableSite)
+
 
 admin.site.register(GroupPreference, GroupPreferenceAdmin)
 admin.site.register(GroupValuePreference, GroupValuePreferenceAdmin)
