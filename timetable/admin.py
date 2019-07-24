@@ -19,7 +19,7 @@ class ActivityAutocompleteAdmin(ImportExportActionModelAdmin):
 
 
 class TeacherAdmin(ImportExportActionModelAdmin):
-    search_fields = ('user__first_name', 'user__last_name', 'activities__name', 'activities__shortName')
+    search_fields = ('user__first_name', 'user__last_name', 'activities__name', 'activities__short_name')
     filter_horizontal = ('activities',)
 
 
@@ -51,7 +51,7 @@ class GroupAdmin(ImportExportActionModelAdmin):
 class AllocationAdmin(ImportExportActionModelAdmin):
     search_fields = (
         'activityRealization__teachers__user__first_name', 'activityRealization__teachers__user__last_name',
-        'activityRealization__activity__name', 'activityRealization__activity__shortName', 'timetable__name')
+        'activityRealization__activity__name', 'activityRealization__activity__short_name', 'timetable__name')
 
     list_filter = ('timetable__timetable_sets',)
 
@@ -63,16 +63,16 @@ class TeacherTimePreferenceAdmin(ImportExportActionModelAdmin):
 
 class TagAdmin(ImportExportActionModelAdmin):
     search_fields = ('name', 'teacher__user__first_name', 'teacher__user__last_name',
-                     'activity__name', 'activity__shortName',
-                     'activityRealization__activity__name', 'activityRealization__activity__shortName',
-                     'group__name', 'group__shortName')
+                     'activity__name', 'activity__short_name',
+                     'activityRealization__activity__name', 'activityRealization__activity__short_name',
+                     'group__name', 'group__short_name')
     filter_horizontal = ('teachers', 'activities', 'groups', 'activity_realizations')
 
 
 class ActivityRealizationAdmin(ImportExportActionModelAdmin):
     filter_horizontal = ('groups', 'teachers')
     search_fields = ('teachers__user__first_name', 'teachers__user__last_name',
-                     'activity__name', 'activity__shortName', 'groups__name')
+                     'activity__name', 'activity__short_name', 'groups__name')
 
 
 class TimetableSetAdmin(ImportExportActionModelAdmin):
