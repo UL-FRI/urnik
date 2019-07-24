@@ -23,13 +23,14 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
 '''
 
     def add_arguments(self, parser):
-        parser.add_argument('timetable_slug', nargs=1, type=str)
-        parser.add_argument('year', nargs=1, type=str)
-        parser.add_argument('semester_id', nargs=1, type=str)
+        parser.add_argument('timetable_slug', type=str)
+        parser.add_argument('year', type=int)
+        parser.add_argument('semester_id', type=str)
 
         parser.add_argument(
             '--force',
             action='store_true',
+            dest='force',
             help='Create timetable if it does not exists.'),
 
         parser.add_argument(
@@ -53,9 +54,10 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
     @transaction.atomic
     def handle(self, *args, **options):
         logger.info("Entering handle")
+        print(options)
         if options['force']:
             logger.debug("Force is True")
-            tt = Timetable.objects.filter(slug=options["timetable_slug"][0])
+            tt = Timetable.objects.filter(slug=options["timetable_slug"])
             assert len(tt) <= 1, "Timetable slug ({0}) should be unique.".format(args[0])
             if len(tt) == 1:
                 tt = tt[0]
@@ -75,14 +77,14 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
                 tt.save()
 
         else:
-            tt = Timetable.objects.get(slug=options["timetable_slug"][0])
+            tt = Timetable.objects.get(slug=options["timetable_slug"])
         location = Location.objects.get(name=options['location'])
         subject = None
         if options['subject_code'] is not None:
-            subject = options['subject_code'][0]
+            subject = options['subject_code']
 
-        year = int(options["year"][0])
-        semester_id = int(options["semester_id"][0])
+        year = int(options["year"])
+        semester_id = int(options["semester_id"])
         semester = self.get_semester(year, semester_id)
         logger.debug("Gor semester {}".format(semester))
         self.sync_activities_with_fri_najave(tt, semester, year, location, subject)
@@ -162,10 +164,12 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
 
         izvajanja_subject_ids = defaultdict(list)
         for izvajanje in izvajanja:
-            if not izvajanje['izvaja_partnerska_institucija']:
-                izvajanja_subject_ids[izvajanje['idpredmet']].append(izvajanje)
+            izvajanja_subject_ids[izvajanje['idpredmet']].append(izvajanje)
 
-        for cikel in najave.get_predmeti_cikli():            
+        for cikel in najave.get_predmeti_cikli():
+            if cikel.get('izvaja_partnerska_institucija', False):
+                continue
+            
             subject_code = cikel['predmet_sifra']
             # Skip subjects we should no update
             if update_subject is not None and update_subject != subject_code:
