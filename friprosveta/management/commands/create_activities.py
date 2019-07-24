@@ -54,7 +54,6 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
     @transaction.atomic
     def handle(self, *args, **options):
         logger.info("Entering handle")
-        print(options)
         if options['force']:
             logger.debug("Force is True")
             tt = Timetable.objects.filter(slug=options["timetable_slug"])
@@ -167,9 +166,6 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
             izvajanja_subject_ids[izvajanje['idpredmet']].append(izvajanje)
 
         for cikel in najave.get_predmeti_cikli():
-            if cikel.get('izvaja_partnerska_institucija', False):
-                continue
-            
             subject_code = cikel['predmet_sifra']
             # Skip subjects we should no update
             if update_subject is not None and update_subject != subject_code:
@@ -187,6 +183,9 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
                 continue
 
             izvajanje = izvajanja[0]
+            if izvajanje['izvaja_partnerska_institucija']:
+                logger.info('This izvajanje is managed by other faculty, skip')
+                continue
             logger.info("Looking for subject code {0}".format(subject_code).encode("utf-8"))
             try:
                 subject = Subject.objects.get(code=subject_code)
