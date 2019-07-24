@@ -22,7 +22,7 @@ class ActivityAdmin(ImportExportActionModelAdmin):
 
 class StudentAdmin(ImportExportActionModelAdmin):
     filter_horizontal = ('groups',)
-    search_fields = ('name', 'surname', 'id', 'groups__name', 'groups__shortName')
+    search_fields = ('name', 'surname', 'id', 'groups__name', 'groups__short_name')
 
 
 class CathedraAdmin(ImportExportActionModelAdmin):

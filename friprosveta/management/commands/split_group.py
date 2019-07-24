@@ -22,7 +22,7 @@ class Command(BaseCommand):
         last_space = group.name.rfind(' ')
         baselongname = group.name[:last_space]
         group_number = 1
-        groups = activity.groups.filter(shortName__contains=basename)
+        groups = activity.groups.filter(short_name__contains=basename)
         start = max([int(g.groupnum) for g in groups]) + 1
         parent = group.parent
         groupset = group.groupset

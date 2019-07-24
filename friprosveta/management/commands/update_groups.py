@@ -120,7 +120,7 @@ in the timetable {1}".format(subject, timetable).encode("utf-8")
                     continue
                 if friprosveta.models.StudentEnrollment.objects.filter(subject=subject,
                                                                        groupset=timetable.groupset,
-                                                                       study__shortName=group.study).count() == 0:
+                                                                       study__short_name=group.study).count() == 0:
                     if group.study in safe_to_delete_studies or raw_input(
                             'No enrolment data found for group {0}. Delete (Y/n)? '.format(group)) in ['y', 'Y']:
                         print('Deleting')
