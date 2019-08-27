@@ -7,7 +7,7 @@ django-impersonate
 django-filter
 django-pyodbc
 django-sqlserver
-# djangorestframework==3.6.3
+# djangorestframework
 django-autocomplete-light
 django-js-reverse
 django-debug-toolbar
