@@ -1061,10 +1061,13 @@ def activity_requirements(request):
 @login_required
 @transaction.atomic
 def teacher_single_preferences(request, timetable_slug, teacher_id=None):
+    self_preferences = False
     try:
         if teacher_id is not None:
             teacher = friprosveta.models.Teacher.objects.get(id=int(teacher_id))
+            self_preferences = (request.user.teacher.id == int(teacher_id))
         else:
+            self_preferences = True
             teacher = request.user.teacher
         tt = Timetable.objects.get(slug=timetable_slug)
         pset = tt.preferenceset
@@ -1084,6 +1087,7 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
     problem_msg = "?"
     got_post_msg = ""
     if request.method == 'POST':
+        can_edit = request.user.is_staff or self_preferences
         preference_form = timetable.forms.TeacherPreferenceForm(request.POST, prefix='pref-')
         # own_act_formset = timetable.forms.ActivityRequirementsFormset(request.POST, request.FILES, prefix="ownact-")
         own_act_formset = timetable.forms.ActivityMinimalFormset(request.POST, request.FILES, prefix="ownact-")
@@ -1095,7 +1099,8 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
                 not preference_form.preferenceset().locked
                 or request.user.is_staff) \
                 and own_act_formset.is_valid() \
-                and others_act_formset.is_valid():
+                and others_act_formset.is_valid() \
+                and can_edit:
             preference_form.save()
             try:
                 own_act_formset.save()
@@ -1180,6 +1185,8 @@ def teacher_preference_list(request, timetable_slug):
     q = FTeacher.objects.filter(
         activities__activityset=tt.activityset
     ).distinct().order_by('user__last_name', 'user__first_name')
+    if not request.user.is_staff:
+        q = q.filter(id=user.teacher.id)    
 
     class FTeacherListView(ListView):
         template_name = "friprosveta/teacher_preference_list.html"
