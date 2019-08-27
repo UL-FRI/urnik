@@ -1030,11 +1030,10 @@ class Subject(models.Model):
                 name = "{0}, {1}, skupina {2}".format(base_name, type, i)
                 short_name = "{0}_{2}_{1:02d}".format(base_short_name, i, type)
                 g = Group.objects.update_or_create(
-                    name=name,
                     short_name=short_name,
                     parent=parent_group,
                     groupset=parent_group.groupset,
-                    defaults={'size': size}
+                    defaults={'size': size, 'name': name}
                 )[0]
                 groups.append(g)
             return groups
@@ -1058,7 +1057,7 @@ class Subject(models.Model):
                         tmp.save()
                 gsh_size = GroupSizeHint.strategy(group, methods, strategy_name)
                 if gsh_size is None:
-                    continue
+                    ...
                 if "PAD" in group.short_name:
                     splits = split_into_sizes(gsh_size, [3, 2, 1])
                 else:
@@ -1084,6 +1083,10 @@ class Subject(models.Model):
                 predmetnik[2]['title']['sl'],
                 predmetnik[1]['title']['sl'],
             )
+            # Smer
+            if predmetnik[3]['short_title'] is not None:
+                short_name += f"-{predmetnik[3]['short_title']}"
+                name += f", smer {predmetnik[3]['title']['sl']}"
             return (short_name, name)
 
         def get_study(predmetnik):
@@ -1141,6 +1144,11 @@ class Subject(models.Model):
                 predmetnik[2]['title']['sl'],
                 predmetnik[1]['title']['sl'],
             )
+            # Smer
+            if predmetnik[3]['short_title'] is not None:
+                short_name += f"-{predmetnik[3]['short_title']}"
+                name += f", smer {predmetnik[3]['title']['sl']}"
+
             return short_name, name
 
         groupset = tt.groupset

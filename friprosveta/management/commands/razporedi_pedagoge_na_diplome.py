@@ -79,7 +79,7 @@ class Command(BaseCommand):
 
         for alokacija in allocations:
             print(alokacija)
-            while len(alokacija_ucitelj[alokacija]) < naeno:
+            while len(alokacija_ucitelj[alokacija]) < naeno and teachers:
                 print(alokacija_ucitelj[alokacija])
                 print(alokacija)
                 print('Prosti', teachers)

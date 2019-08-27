@@ -34,7 +34,7 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
             help='Create timetable if it does not exists.'),
 
         parser.add_argument(
-            '--subject_code', nargs=1,
+            '--subject_code',
             dest='subject_code',
             default=None,
             help='Update activities only for the subject with given code.'),
@@ -85,7 +85,7 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
         year = int(options["year"])
         semester_id = int(options["semester_id"])
         semester = self.get_semester(year, semester_id)
-        logger.debug("Gor semester {}".format(semester))
+        logger.debug("Got semester {}".format(semester))
         self.sync_activities_with_fri_najave(tt, semester, year, location, subject)
         logger.info("Exiting handle")
 
@@ -149,7 +149,7 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
 
             add_duration = 0
             # Weird fix: sometimes hours are attributed to seminar
-            if izvajanje['st_ur_seminarja'] is not None and lecture_type_id != 6:
+            if izvajanje['st_ur_seminarja'] is not None and lecture_type_id not in [1, 6]:
                 add_duration = izvajanje['st_ur_seminarja']
             total_duration = add_duration + izvajanje[mapping_urnik_studis[lecture_type_id]]
             return total_duration / 15
@@ -190,7 +190,7 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
             try:
                 subject = Subject.objects.get(code=subject_code)
             except Exception:
-                logger.Exception()
+                logger.Exception(f"Error retrieving subject with code {subject_code}")
                 continue
             logger.debug("Processing subject {}".format(subject))
             lecture_types = subject_lecture_types(cikel)
