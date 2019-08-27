@@ -8,3 +8,4 @@ test_fixtures/
 *.iml
 .idea/
 .mypy_cache/
+.vscode/
