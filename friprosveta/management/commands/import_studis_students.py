@@ -32,6 +32,10 @@ def get_study_classyear(studijsko_drevo, entry_id):
                                     entries[2]['short_title'].strip())
     try:
         study = "{}-{}".format(entries[1]['short_title'].strip(), entry2_short)
+        # Če imamo podatek dodaj smer
+        if entries[3]['short_title'] is not None:
+            study += f"-{entries[3]['short_title']}"
+
     except Exception:
         study = "{}".format(entry2_short)
     study = study_mapper.get(study, study)
