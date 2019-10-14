@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from random import choice
 
 from friprosveta.models import Teacher, Activity
 from friprosveta.studis import Osebe
@@ -46,13 +47,7 @@ class Command(BaseCommand):
 
     def razporedi(self, teachers, allocations):
         def je_prost(ucitelj, alokacija, proste_ure):
-            for zahtevana_ura in alokacija.hours:
-                if zahtevana_ura not in proste_ure[ucitelj][alokacija.day]:
-                    return False
-            return True
-
-        def teacher_compare(t1, t2):
-            ucitelji_mozne_alokacije[t1].count
+            return all(hour in proste_ure[ucitelj][alokacija.day] for hour in alokacija.hours)
 
         tt = allocations[0].timetable
         proste_ure = {ucitelj: ucitelj.free_hours(tt, 0.5) for ucitelj in teachers}
@@ -65,37 +60,22 @@ class Command(BaseCommand):
                                     for ucitelj in teachers}
 
         teachers = sorted(teachers, key=lambda ucitelj: len(ucitelji_mozne_alokacije[ucitelj]))
-        # Filter out teachers that can not take place at any exam
-        teachers = [teacher for teacher in teachers if len(ucitelji_mozne_alokacije[teacher]) > 0]
-
-        for t in teachers:
-            print(len(ucitelji_mozne_alokacije[t]))
-
-        allocations = sorted(allocations, key=lambda alokacija:
-        len(alokacije_mozni_ucitelji[alokacija]))
+    
         alokacija_ucitelj = {alokacija: [] for alokacija in allocations}
-
         naeno = len(teachers) / len(allocations)
-
-        for alokacija in allocations:
-            print(alokacija)
-            while len(alokacija_ucitelj[alokacija]) < naeno and teachers:
-                print(alokacija_ucitelj[alokacija])
-                print(alokacija)
-                print('Prosti', teachers)
-                najden = False
-                for ucitelj in teachers:
-                    if (ucitelj in alokacije_mozni_ucitelji[alokacija] and
-                            ucitelj not in alokacija_ucitelj[alokacija]):
-                        alokacija_ucitelj[alokacija].append(ucitelj)
-                        najden = True
-                        break
-                if najden:
-                    teachers.remove(ucitelj)
+        for teacher in teachers:
+            teacher_allocations = ucitelji_mozne_alokacije[teacher]
+            found_allocation = None
+            for allocation in teacher_allocations:
+                if len(alokacija_ucitelj[allocation]) < naeno:
+                    found_allocation = allocation
+                    break
+            if found_allocation is None:
+                found_allocation = choice(teacher_allocations)
+            alokacija_ucitelj[found_allocation].append(teacher)
 
         for alokacija in alokacija_ucitelj:
-            user = ucitelj.user
-            print(alokacija, ",".join(["{0} {1}".format(user.first_name, user.last_name)
+            print(alokacija, ",".join(["{0} {1}".format(ucitelj.user.first_name, ucitelj.user.last_name)
                                         for ucitelj in alokacija_ucitelj[alokacija]]))
             alokacija.teachers.clear()
             for ucitelj in alokacija_ucitelj[alokacija]:
