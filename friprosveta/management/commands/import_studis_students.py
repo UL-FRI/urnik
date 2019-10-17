@@ -5,17 +5,18 @@ from friprosveta.models import Subject
 from friprosveta.studis import Sifranti, Studij, Studenti
 
 
-def get_parents(studijsko_drevo, entry_id):
+def get_parents(studijsko_drevo, entry_id, type_=5):
     """
     The method get on dict class is used for a reason:
     if the given key does not exist, it returns None
     instead of raising an Exception.
     """
     entries = dict()
-    entry = studijsko_drevo.get(entry_id)
+    entry = studijsko_drevo.get((entry_id, type_))
     while entry:
         entries[entry["type"]] = entry
-        entry = studijsko_drevo.get(entry.get("parent"))
+        type_ -= 1
+        entry = studijsko_drevo.get(entry.get("parent"), type_)
     return entries
 
 
@@ -100,7 +101,7 @@ Year is the first part in current studijsko leto 2014/2015 -> 2014.'''
         self.studis_activities = studij.get_izvajanja()
         self.stdout.write("Data loaded")
         self.subjects = {subject['id']: subject for subject in subjects}
-        self.studijsko_drevo = {e['id']: e for e in studijsko_drevo}
+        self.studijsko_drevo = {(e['id'], e['type']): e for e in studijsko_drevo}
         # self.stderr.write("{}".format(self.studijsko_drevo))
         self.enrol_students(timetable)
         # regular_studies_subjects = self.getRegularSubjects(timetable)
