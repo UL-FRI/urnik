@@ -114,8 +114,9 @@ body {
     text-align: center;
 }
 
-a.link-subject:hover ~ .entry-hover {
+a.link-subject:hover ~ .entry-hover, .entry-hover:hover {
     display: block;
+    pointer-events: auto;
 }
 
 a {
