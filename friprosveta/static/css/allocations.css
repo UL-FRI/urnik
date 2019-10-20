@@ -32,7 +32,8 @@ body {
 
 .grid-day {
     grid-row: day-row-start / day-row-end;
-    margin: auto;
+    align-self: center;
+    justify-self: center;
 }
 
 @media (max-width: 35em) {
@@ -49,7 +50,8 @@ body {
 
 .grid-hour {
     grid-column: hour-column-start / hour-column-end;
-    margin: auto;
+    align-self: center;
+    justify-self: center;
 }
 
 .grid-entry {
