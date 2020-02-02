@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.forms import formsets
 from django.http import Http404
-from django.shortcuts import render_to_response
+from django.shortcuts import render
 from django.template import RequestContext
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import UpdateView
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 def index(request):
     params = {}
-    return render_to_response('timetable/index.html', params)
+    return render(request, 'timetable/index.html', params)
 
 
 def results(request):
@@ -34,19 +34,21 @@ def results(request):
         'teachers': Teacher.objects.filter().order_by('user__first_name', 'user__last_name'),
         'classrooms': Classroom.objects.all(),
         'studyGroups': Group.objects.filter(parent=None)}
-    return render_to_response('timetable/results.html', params)
+    return render(request, 'timetable/results.html', params)
 
 
 def timetable_preference_links(request):
     timetables = Timetable.objects.order_by('period.start').all()
-    return render_to_response(
+    return render(
+        request,
         'timetable/teacher_preference_links.html',
         {'timetables': timetables})
 
 
 def teacher_preference_links(request, timetable_id=None):
     teachers = Teacher.objects.order_by('surname', 'name', 'sifra').filter()
-    return render_to_response(
+    return render(
+        request
         'timetable/teacher_preference_links.html',
         {'teachers': teachers, 'timetable_id': timetable_id})
 
@@ -188,7 +190,7 @@ def allocations(request):
     day_header = []
     for day in range(len(WEEKDAYS)):
         day_header.append((daynames[WEEKDAYS[day][0]], max_overlaps_day[day]))
-    return render_to_response('timetable/allocations.html', {
+    return render(request, 'timetable/allocations.html', {
         'timetable': timetable,
         'teacher': teacher,
         'classroom': classroom,
@@ -232,7 +234,7 @@ def activity_requirements(request):
                            initial=[{}] * len(activities) + [{'teachers': [teacher]}], prefix="usr-")
     else:
         user_formset = ActivityRequirementsFormset(prefix="usr-")
-    return render_to_response('timetable/activity_requirements.html',
+    return render(request, 'timetable/activity_requirements.html',
                               {'user_formset': user_formset, 'complete_formset': complete_formset,
                                'teacher': teacher},
                               context_instance=RequestContext(request))
@@ -273,7 +275,7 @@ def teacher_single_preferences(request, timetable_id=None):
                                                      initial=[{}] * len(activities) + [{'teachers': [teacher]}],
                                                      prefix="actreq-")
         preference_form = TeacherPreferenceForm(teacher=teacher, preferenceset=pset, prefix="pref-")
-    return render_to_response('timetable/teacher_single_preferences.html',
+    return render(request, 'timetable/teacher_single_preferences.html',
                               {'form': preference_form,
                                'activity_requirement_formset': actreq_formset,
                                },
@@ -315,7 +317,7 @@ def all_teacher_preferences(request):
         management_form = formsets.ManagementForm(initial={'INITIAL_FORMS': nforms,
                                                            'MAX_NUM_FORMS': nforms, 'TOTAL_FORMS': nforms})
         # restored_preferences = TeacherPreference.objects.all()
-    return render_to_response('timetable/teacher_formset_preferences.html',
+    return render(request, 'timetable/teacher_formset_preferences.html',
                               {'teachers': teachers, 'periods': periods,
                                'WORKHOURS': WORKHOURS, 'WEEKDAYS': WEEKDAYS,
                                'management_form': management_form,
@@ -326,7 +328,7 @@ def all_teacher_preferences(request):
 
 @login_required
 def group_overview(request):
-    return render_to_response("friprosveta/group_overview.html",
+    return render(request, "friprosveta/group_overview.html",
                               {'object_list': visible_timetables(request)}, context_instance=RequestContext(request))
 
 
@@ -365,11 +367,10 @@ def group_single_preferences(request, group_id=None, timetable_id=None):
             problems = True
     if not problems:
         preference_form = GroupPreferenceForm(group=group, preferenceset=pset, prefix="pref-")
-    return render_to_response('friprosveta/group_preferences.html',
-                              {'form': preference_form,
-                               'got_post': got_post,
-                               },
-                              context_instance=RequestContext(request))
+    return render(request, 'friprosveta/group_preferences.html',
+                  {'form': preference_form,
+                   'got_post': got_post,
+                   }, context_instance=RequestContext(request))
 
 
 class ActivityDetailView(DetailView):
