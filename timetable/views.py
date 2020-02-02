@@ -48,7 +48,7 @@ def timetable_preference_links(request):
 def teacher_preference_links(request, timetable_id=None):
     teachers = Teacher.objects.order_by('surname', 'name', 'sifra').filter()
     return render(
-        request
+        request,
         'timetable/teacher_preference_links.html',
         {'teachers': teachers, 'timetable_id': timetable_id})
 
