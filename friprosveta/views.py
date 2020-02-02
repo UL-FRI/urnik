@@ -18,7 +18,7 @@ from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q, Sum
 from django.http import Http404, HttpResponse, HttpResponseRedirect, HttpResponseForbidden, JsonResponse
-from django.shortcuts import get_object_or_404, render_to_response, redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.html import escape
@@ -534,7 +534,7 @@ def problematic_allocations(request, timetable_slug=None):
                             "individual_overlaps": individual_overlaps,
                             "classroom_utilization": classroom_utilization,
                             "css_class": css_class})
-    return render_to_response('friprosveta/problematic_allocations.html', locals())
+    return render(request, 'friprosveta/problematic_allocations.html', locals())
 
 
 def allocations(request, timetable_slug=None):
