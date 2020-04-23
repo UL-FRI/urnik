@@ -481,31 +481,29 @@ def allocations_json(request, timetable_slug=None):
                                            request.user.is_staff)
 
     #returns more information about allocations
-    r = request.GET
-    if 'mode' in r:
-        l = r['mode']
-        if l == 'ext':
-            AllocationVM = namedtuple('AllocationVM', ['object', 'day_index', 'hour_index', 'duration'])
+    request_r = request.GET
+    if 'mode' in request_r:
+        mode_l = request_r['mode']
+        if mode_l == 'ext':
+            multiple_allocations = namedtuple('AllocationVM', ['object', 'day_index', 'hour_index', 'duration'])
             weekday_mapping = {wd[0]: i for i, wd in enumerate(WEEKDAYS)}
             hour_mapping = {wh[0]: i for i, wh in enumerate(WORKHOURS)}
-            allocation_vms = [AllocationVM(
-                object=a,
-                day_index=weekday_mapping[a.day],
-                hour_index=hour_mapping[a.start],
-                duration=a.duration,
-            ) for a in filtered_allocations]
+            allocation_vms = [multiple_allocations(
+                object=allocation,
+                day_index=weekday_mapping[allocation.day],
+                hour_index=hour_mapping[allocation.start],
+                duration=allocation.duration,
+            ) for allocation in filtered_allocations]
 
             allocation_vms = sorted(allocation_vms, key=lambda avm: avm.day_index)
             allocations_by_day = [(d, list(avm_grouper))
                                   for d, avm_grouper in itertools.groupby(allocation_vms, lambda avm: avm.object.day)]
             allocations_ext = dict() 
-            for a in allocations_by_day:
+            for day,subjects in allocations_by_day:
                 allocations_day = []
-                for predmet in a[1]:
-                    prObj =  predmet[0]
-                    teachers = []
-                    for i in prObj.activityRealization.teachers.all():
-                        teachers.append(str(i))
+                for subject in subjects:
+                    prObj =  subject.object
+                    teachers = [str(i) for i in prObj.activityRealization.teachers.all()]
                     allocation_single = {
                         "name": prObj.activityRealization.activity.name,
                         "tag": prObj.activityRealization.activity.short_name,
@@ -516,8 +514,8 @@ def allocations_json(request, timetable_slug=None):
                         "teachers": teachers          
                     } 
                     allocations_day.append(allocation_single)
-                allocations_ext[a[0]] = allocations_day
-            return HttpResponse(json.dumps(allocations_ext))
+                allocations_ext[day] = allocations_day
+            return JsonResponse(allocations_ext)
 
     # logger.debug("Filtered allocations after _allocation_set")
     # logger.debug("{}".format(filtered_allocations))
