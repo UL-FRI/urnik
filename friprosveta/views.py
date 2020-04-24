@@ -11,6 +11,7 @@ import django.forms
 import icalendar
 import palettable
 import pytz
+import json
 # from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
@@ -478,6 +479,38 @@ def allocations_json(request, timetable_slug=None):
     filtered_allocations = _allocation_set(param_ids,
                                            tt.allocations,
                                            request.user.is_staff)
+
+    #returns more information about allocations
+    request_r = request.GET
+    if 'mode' in request_r:
+        mode_l = request_r['mode']
+        if mode_l == 'ext':
+            weekday_mapping = {wd[0]: i for i, wd in enumerate(WEEKDAYS)}
+            hour_mapping = {wh[0]: i for i, wh in enumerate(WORKHOURS)}
+            for allocation in filtered_allocations:
+                allocation.day_index = weekday_mapping[allocation.day]
+                allocation.hour_index = hour_mapping[allocation.start]
+            allocation_vms = sorted(filtered_allocations, key=lambda avm: avm.day_index)
+            allocations_by_day = [(day, list(avm_grouper))
+                                  for day, avm_grouper in itertools.groupby(allocation_vms, lambda avm: avm.day)]
+            allocations_ext = dict() 
+            for day, allocations in allocations_by_day:
+                allocations_day = []
+                for allocation in allocations:
+                    teachers = [str(i) for i in allocation.teachers.all()]
+                    allocation_single = {
+                        "name":allocation.activityRealization.activity.name,
+                        "tag":allocation.activityRealization.activity.short_name,
+                        "classroom":str(allocation.classroom),
+                        "durration":allocation.duration,
+                        "start":allocation.start,  
+                        "type":allocation.activityRealization.activity.type,
+                        "teachers":teachers          
+                    } 
+                    allocations_day.append(allocation_single)
+                allocations_ext[day] = allocations_day
+            return JsonResponse(allocations_ext)
+
     # logger.debug("Filtered allocations after _allocation_set")
     # logger.debug("{}".format(filtered_allocations))
     json_data = serializers.serialize("json", filtered_allocations)
