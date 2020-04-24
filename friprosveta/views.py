@@ -485,33 +485,27 @@ def allocations_json(request, timetable_slug=None):
     if 'mode' in request_r:
         mode_l = request_r['mode']
         if mode_l == 'ext':
-            multiple_allocations = namedtuple('AllocationVM', ['object', 'day_index', 'hour_index', 'duration'])
             weekday_mapping = {wd[0]: i for i, wd in enumerate(WEEKDAYS)}
             hour_mapping = {wh[0]: i for i, wh in enumerate(WORKHOURS)}
-            allocation_vms = [multiple_allocations(
-                object=allocation,
-                day_index=weekday_mapping[allocation.day],
-                hour_index=hour_mapping[allocation.start],
-                duration=allocation.duration,
-            ) for allocation in filtered_allocations]
-
-            allocation_vms = sorted(allocation_vms, key=lambda avm: avm.day_index)
+            for allocation in filtered_allocations:
+                allocation.day_index = weekday_mapping[allocation.day]
+                allocation.hour_index = hour_mapping[allocation.start]
+            allocation_vms = sorted(filtered_allocations, key=lambda avm: avm.day_index)
             allocations_by_day = [(d, list(avm_grouper))
-                                  for d, avm_grouper in itertools.groupby(allocation_vms, lambda avm: avm.object.day)]
+                                  for d, avm_grouper in itertools.groupby(allocation_vms, lambda avm: avm.day)]
             allocations_ext = dict() 
-            for day,subjects in allocations_by_day:
+            for day, allocations in allocations_by_day:
                 allocations_day = []
-                for subject in subjects:
-                    prObj =  subject.object
-                    teachers = [str(i) for i in prObj.activityRealization.teachers.all()]
+                for subject in allocations:
+                    teachers = [str(i) for i in subject.activityRealization.teachers.all()]
                     allocation_single = {
-                        "name": prObj.activityRealization.activity.name,
-                        "tag": prObj.activityRealization.activity.short_name,
-                        "classroom": str(prObj.classroom),
-                        "durration": prObj.duration,
-                        "start": prObj.start,  
-                        "type": prObj.activityRealization.activity.type,
-                        "teachers": teachers          
+                        "name":subject.activityRealization.activity.name,
+                        "tag":subject.activityRealization.activity.short_name,
+                        "classroom":str(subject.classroom),
+                        "durration":subject.duration,
+                        "start":subject.start,  
+                        "type":subject.activityRealization.activity.type,
+                        "teachers":teachers          
                     } 
                     allocations_day.append(allocation_single)
                 allocations_ext[day] = allocations_day
