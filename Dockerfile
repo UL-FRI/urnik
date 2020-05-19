@@ -50,7 +50,7 @@ COPY --chown=timetable:timetable wait-for-it.sh /
 
 
 # Install dependencies
-RUN pip3 install -r urnik/requirements_development.txt
+RUN pip3 install -r urnik/requirements_production.txt
 RUN pip3 install --upgrade --force-reinstall  pyldap
 
 # Collect Django static files
