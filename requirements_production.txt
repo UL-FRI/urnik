@@ -77,7 +77,7 @@ python-ldap==3.2.0
 python-memcached==1.59
 python-tds==1.10.0
 pytz==2020.1
-PyYAML==5.3.1
+PyYAML==5.4
 pyzmq==19.0.1
 raven==6.10.0
 requests==2.23.0
