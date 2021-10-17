@@ -24,4 +24,4 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: gregorjerse/timetable:17_10_2021
+          tags: ulfri/timetable:2021
