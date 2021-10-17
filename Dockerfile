@@ -35,7 +35,8 @@ RUN apt-get update \
   libsasl2-dev \
   libldap2-dev \
   unixodbc-dev \
-   && rm -rf /var/lib/apt/lists/*
+  libmariadb-dev \
+  && rm -rf /var/lib/apt/lists/*
 
 
 WORKDIR /home/timetable
