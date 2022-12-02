@@ -5,10 +5,9 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from friprosveta.models import Teacher, Activity, Subject, LectureType
-from friprosveta.studis import Sifranti, Studij, Najave
-from timetable.models import PreferenceSet, Location
-from timetable.models import Timetable, ActivitySet
+from friprosveta.models import Activity, LectureType, Subject, Teacher
+from friprosveta.studis import Najave, Sifranti, Studij
+from timetable.models import ActivitySet, Location, PreferenceSet, Timetable
 
 logger = logging.getLogger(__name__)
 

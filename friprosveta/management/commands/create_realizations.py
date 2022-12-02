@@ -2,8 +2,7 @@ import heapq
 
 from django.core.management.base import BaseCommand
 
-from friprosveta.models import ActivityRealization
-from friprosveta.models import Timetable, REALIZATIONSIZES
+from friprosveta.models import REALIZATIONSIZES, ActivityRealization, Timetable
 from timetable.models import TimetableSet
 
 

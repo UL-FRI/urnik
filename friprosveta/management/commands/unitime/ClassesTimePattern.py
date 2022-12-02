@@ -1,9 +1,8 @@
 import datetime
 
-from .common import PreferenceLevel, Database, allocation_days
-from timetable.models import WORKHOURS
+from timetable.models import WORKHOURS, ActivityRealization, Classroom, Teacher
 
-from timetable.models import ActivityRealization, Classroom, Teacher
+from .common import Database, PreferenceLevel, allocation_days
 
 # 7 8 9 10 11 12 13 14 15 16 17 18 19 20
 default_lecture_time_pattern = (

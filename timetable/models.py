@@ -1,13 +1,12 @@
 import datetime
-from _collections import defaultdict
 
+from _collections import defaultdict
 from django.contrib.auth.models import User
-from django.db import models
-from django.db.models import Count, Q
 from django.contrib.sites.models import Site
 from django.contrib.sites.shortcuts import get_current_site
+from django.db import models
+from django.db.models import Count, Q
 from django.utils.translation import ugettext as _
-
 
 WEEKDAYS = (
     ("MON", "ponedeljek"),

@@ -1,8 +1,8 @@
 import codecs
 import json
 from contextlib import suppress
-from urllib.request import Request, urlopen, quote
 from typing import Union
+from urllib.request import Request, quote, urlopen
 
 from django.conf import settings
 

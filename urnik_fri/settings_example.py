@@ -1,8 +1,9 @@
 import ldap
-from django_auth_ldap.config import LDAPSearch, GroupOfNamesType
-from friprosveta.ul_groupname import ULNestedGroupOfNamesType
-from .settings_common import *
+from django_auth_ldap.config import GroupOfNamesType, LDAPSearch
 
+from friprosveta.ul_groupname import ULNestedGroupOfNamesType
+
+from .settings_common import *
 
 ADMINS = (("username", "email@email.si"),)
 

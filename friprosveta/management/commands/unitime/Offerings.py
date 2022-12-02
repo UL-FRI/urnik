@@ -1,7 +1,8 @@
 import friprosveta
-from frinajave.models import TeacherSubjectCycles, ACTIVITY_TEACHERS_SIZE
+from frinajave.models import ACTIVITY_TEACHERS_SIZE, TeacherSubjectCycles
 from friprosveta.models import StudentEnrollment
-from unitime.models import CourseOffering, Class
+from unitime.models import Class, CourseOffering
+
 from .common import type_itype_mapping
 
 

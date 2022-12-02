@@ -5,7 +5,7 @@ import time
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django_auth_ldap.backend import LDAPBackend
-from ldap3 import Server, Connection, ALL
+from ldap3 import ALL, Connection, Server
 
 from friprosveta.models import Teacher
 from timetable.models import User

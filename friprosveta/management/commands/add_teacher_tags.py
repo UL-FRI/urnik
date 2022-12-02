@@ -1,6 +1,8 @@
 import logging
+
 from django.core.management.base import BaseCommand, CommandError
-from timetable.models import TagValuePreference, Timetable, Tag
+
+from timetable.models import Tag, TagValuePreference, Timetable
 
 logger = logging.getLogger("friprosveta")
 

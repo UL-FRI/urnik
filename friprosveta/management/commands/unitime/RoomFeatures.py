@@ -1,4 +1,5 @@
 from timetable.models import Resource
+
 from .common import Database
 
 

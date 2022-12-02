@@ -1,10 +1,10 @@
 from django.core.management.base import BaseCommand
 
 from friprosveta.models import (
-    GroupSizeHint,
-    Timetable,
     ENROLMENTTYPES,
+    GroupSizeHint,
     StudentEnrollment,
+    Timetable,
 )
 
 

@@ -9,21 +9,21 @@ from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext as _
 
 from timetable.models import (
-    TeacherValuePreference,
-    TeacherTimePreference,
-    TeacherDescriptivePreference,
-    Group,
-    GroupTimePreference,
-    Activity,
-    ActivityRealization,
-    TagTimePreference,
-    Tag,
-    Preference,
+    PREFERENCELEVELS,
     WEEKDAYS,
     WORKHOURS,
+    Activity,
+    ActivityRealization,
+    Group,
+    GroupTimePreference,
+    Preference,
     PreferenceSet,
+    Tag,
+    TagTimePreference,
     Teacher,
-    PREFERENCELEVELS,
+    TeacherDescriptivePreference,
+    TeacherTimePreference,
+    TeacherValuePreference,
 )
 
 

@@ -10,9 +10,9 @@ Global room features need to be crated before this update,
 and their abbreviation must match the roomFeature.feature attribute.
 """
 
-from .CreateXML import create_xml
-
 import timetable.models
+
+from .CreateXML import create_xml
 
 
 def buildings_and_rooms(tt, campus, term, year):

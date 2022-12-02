@@ -1,38 +1,37 @@
+import itertools
 import sys
 from datetime import datetime, timedelta
-
-import itertools
 from typing import List
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.test import TestCase
-from django.conf import settings
 
 from exchange.controllers import (
+    get_allocation_student_group,
     get_allocations_for_subject,
     get_available_exchanges,
-    get_student_exchanges,
-    get_teacher_subject_list,
-    get_student_subject_list,
-    teacher_teaches_subject,
-    parse_student_from_ambiguous_identifier,
     get_current_student_subject_allocation,
-    process_exchange_request_matches,
-    get_allocation_student_group,
-    process_new_exchange_request,
-    number_of_students_in_allocation,
-    get_subject_exchanges,
+    get_student_exchanges,
+    get_student_subject_list,
     get_student_subject_other_allocations,
+    get_subject_exchanges,
+    get_teacher_subject_list,
     is_exchange_acceptable,
+    number_of_students_in_allocation,
+    parse_student_from_ambiguous_identifier,
+    process_exchange_request_matches,
+    process_new_exchange_request,
+    teacher_teaches_subject,
 )
 from exchange.models import (
     Exchange,
-    FormProcessingError,
     ExchangeType,
+    FormProcessingError,
     SubjectPreference,
 )
-from friprosveta.models import Student, Subject, Timetable, Teacher, Activity
+from friprosveta.models import Activity, Student, Subject, Teacher, Timetable
 from timetable.models import Allocation
 
 

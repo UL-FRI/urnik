@@ -1,41 +1,41 @@
+from collections import defaultdict
 from functools import wraps
 
-from collections import defaultdict
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponseBadRequest
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
 
 from exchange import controllers
 from exchange.controllers import (
-    get_teacher_subject_list,
-    teacher_teaches_subject,
-    get_student_subject_list,
     get_allocations_for_subject,
-    process_new_exchange_request,
-    get_current_student_subject_allocation,
-    parse_student_from_ambiguous_identifier,
     get_available_exchanges,
+    get_current_student_subject_allocation,
     get_student_exchanges,
-    get_subject_exchanges,
+    get_student_subject_list,
     get_student_subject_other_allocations,
+    get_subject_exchanges,
+    get_teacher_subject_list,
     is_exchange_cancellable,
+    parse_student_from_ambiguous_identifier,
+    process_new_exchange_request,
+    teacher_teaches_subject,
 )
 from exchange.forms import (
     ExchangeCreationForm,
-    SubjectPreferenceForm,
     StudentSelectionForm,
+    SubjectPreferenceForm,
     TeacherExchangeCreationForm,
 )
 from exchange.models import (
-    FormProcessingError,
-    SubjectPreference,
     Exchange,
     ExchangeType,
+    FormProcessingError,
+    SubjectPreference,
 )
-from friprosveta.models import Subject, Teacher, Activity, Student
-from timetable.models import Timetable, default_timetable, Allocation
+from friprosveta.models import Activity, Student, Subject, Teacher
+from timetable.models import Allocation, Timetable, default_timetable
 
 
 def restrict_to_student(func):

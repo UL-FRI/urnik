@@ -5,7 +5,7 @@ from xml.etree import ElementTree as ET
 
 from django.core.management.base import BaseCommand
 
-from friprosveta.models import Teacher, ActivityRealization, Timetable
+from friprosveta.models import ActivityRealization, Teacher, Timetable
 from timetable.models import WEEKDAYS, WORKHOURS, Allocation, Classroom
 
 

@@ -1,5 +1,5 @@
 import logging
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict, namedtuple
 
 from django import forms
 from django.contrib.auth.decorators import login_required
@@ -14,18 +14,18 @@ from django.views.generic.list import ListView
 
 from timetable.forms import (
     ActivityRequirementsFormset,
-    TeacherPreferenceForm,
     GroupPreferenceForm,
+    TeacherPreferenceForm,
 )
 from timetable.models import (
-    Timetable,
-    Group,
-    Classroom,
-    Teacher,
-    Allocation,
-    Activity,
-    WORKHOURS,
     WEEKDAYS,
+    WORKHOURS,
+    Activity,
+    Allocation,
+    Classroom,
+    Group,
+    Teacher,
+    Timetable,
 )
 
 logger = logging.getLogger(__name__)

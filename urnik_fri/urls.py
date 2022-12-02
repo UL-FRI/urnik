@@ -1,8 +1,7 @@
-from django.conf.urls import url, include
 import django.views
+from django.conf.urls import include, url
 from django.contrib import admin
 from django.contrib.auth.views import LoginView, LogoutView
-
 
 admin.autodiscover()
 

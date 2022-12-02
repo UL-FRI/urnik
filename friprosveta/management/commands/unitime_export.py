@@ -1,9 +1,10 @@
 from optparse import make_option
 
-from .unitime import ExportAll
 from django.core.management.base import BaseCommand, CommandError
 
 import friprosveta
+
+from .unitime import ExportAll
 
 
 class Command(BaseCommand):

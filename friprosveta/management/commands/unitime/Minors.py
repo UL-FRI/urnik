@@ -1,6 +1,5 @@
 from .CreateXML import create_xml
 
-
 # To so za nas študijske smeri, torej verjetno študiji
 
 

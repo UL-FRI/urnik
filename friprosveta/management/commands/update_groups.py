@@ -8,9 +8,9 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from enroll_students_to_subjects import get_study_classyear
-from friprosveta.utils.utils import Utils
 
 import friprosveta
+from friprosveta.utils.utils import Utils
 
 
 class Command(BaseCommand):

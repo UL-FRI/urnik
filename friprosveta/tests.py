@@ -1,20 +1,17 @@
+import unittest
 from datetime import datetime, timedelta
 
-from django.test import TestCase
 from django.contrib.sites.models import Site
-from django.test import Client
+from django.test import Client, TestCase
 from django.test.client import RequestFactory
-
-from friprosveta.studis import Studij
-from friprosveta.management.commands.import_studis_students import get_parents
-from friprosveta.management.commands.fill_groups import Command as fgc
-from friprosveta.models import GroupSizeHint
-
-from timetable.models import default_timetable
-
 from model_mommy import mommy
+
 import friprosveta
-import unittest
+from friprosveta.management.commands.fill_groups import Command as fgc
+from friprosveta.management.commands.import_studis_students import get_parents
+from friprosveta.models import GroupSizeHint
+from friprosveta.studis import Studij
+from timetable.models import default_timetable
 
 
 class MyTestCase(TestCase):

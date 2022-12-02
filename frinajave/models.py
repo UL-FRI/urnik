@@ -1,3 +1,4 @@
+import logging
 from collections import defaultdict
 from itertools import combinations
 
@@ -5,7 +6,6 @@ from django.db import models
 
 from friprosveta.models import LectureType
 from timetable.models import TimetableSet
-import logging
 
 INSTRUCTION_STYLE = (
     (1, "Enojni"),

@@ -3,13 +3,14 @@ import logging
 from collections import defaultdict
 from operator import attrgetter, itemgetter
 
-import frinajave
-import friprosveta
-import timetable.models
 from django.conf import settings
 from django.core.cache import cache
 from django.db import models
 from django.db.models import Q
+
+import frinajave
+import friprosveta
+import timetable.models
 from friprosveta.studis import Studenti
 from timetable.models import Group
 

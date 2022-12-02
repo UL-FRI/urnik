@@ -4,9 +4,8 @@ from collections import defaultdict
 from django.core.management.base import BaseCommand
 
 from friprosveta.models import Timetable
-from friprosveta.studis import Studij, Najave
-from timetable.models import Tag, TagTimePreference, PreferenceSet
-from timetable.models import WORKHOURS
+from friprosveta.studis import Najave, Studij
+from timetable.models import WORKHOURS, PreferenceSet, Tag, TagTimePreference
 
 logger = logging.getLogger("friprosveta")
 

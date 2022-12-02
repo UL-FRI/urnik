@@ -1,29 +1,27 @@
-from bisect import bisect_left
 import colorsys
 import datetime
 import itertools
+import json
 import logging
 from bisect import bisect_left
-from collections import OrderedDict, defaultdict
-from collections import namedtuple
+from collections import OrderedDict, defaultdict, namedtuple
 
 import django.forms
 import icalendar
 import palettable
 import pytz
-import json
 
 # from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth.decorators import login_required
 from django.core import serializers
-from django.core.exceptions import PermissionDenied, ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import transaction
 from django.db.models import Q, Sum
 from django.http import (
     Http404,
     HttpResponse,
-    HttpResponseRedirect,
     HttpResponseForbidden,
+    HttpResponseRedirect,
     JsonResponse,
 )
 from django.shortcuts import get_object_or_404, redirect, render
@@ -32,7 +30,7 @@ from django.utils.decorators import method_decorator
 from django.utils.html import escape
 from django.utils.translation import ugettext as _
 from django.views.generic.detail import DetailView
-from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.views.generic.edit import CreateView, DeleteView, UpdateView
 from django.views.generic.list import ListView
 
 import frinajave
@@ -42,14 +40,14 @@ import timetable.forms
 import timetable.views
 from friprosveta.forms import AssignmentForm, NajavePercentageForm
 from timetable.models import (
-    Timetable,
-    Group,
+    WEEKDAYS,
+    WORKHOURS,
+    Activity,
     ActivityRealization,
     Allocation,
-    Activity,
-    WORKHOURS,
-    WEEKDAYS,
+    Group,
     Tag,
+    Timetable,
     default_timetable,
 )
 

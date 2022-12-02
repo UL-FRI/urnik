@@ -3,8 +3,9 @@ from typing import Dict, List
 from django import forms
 
 from exchange.controllers import get_current_student_subject_allocation
-from friprosveta.models import Student, Activity, Teacher
+from friprosveta.models import Activity, Student, Teacher
 from timetable.models import Timetable
+
 from .models import Allocation, SubjectPreference
 
 

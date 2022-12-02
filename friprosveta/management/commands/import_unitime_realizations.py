@@ -1,8 +1,8 @@
 from django.core.management.base import BaseCommand, CommandError
-from unitime.common import Database
 
-from friprosveta.models import Teacher, Timetable, Subject, Activity, LectureType
+from friprosveta.models import Activity, LectureType, Subject, Teacher, Timetable
 from timetable.models import ActivityRealization, Allocation, Classroom
+from unitime.common import Database
 
 
 class Command(BaseCommand):

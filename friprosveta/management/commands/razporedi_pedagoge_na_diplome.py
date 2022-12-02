@@ -1,7 +1,8 @@
-from django.core.management.base import BaseCommand
 from random import choice
 
-from friprosveta.models import Teacher, Activity
+from django.core.management.base import BaseCommand
+
+from friprosveta.models import Activity, Teacher
 from friprosveta.studis import Osebe
 from timetable.models import Allocation
 

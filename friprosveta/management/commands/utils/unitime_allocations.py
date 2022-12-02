@@ -1,11 +1,14 @@
-from friprosveta.models import LectureType, Student
-from friprosveta.models import Teacher, Subject
-from timetable.models import ActivityRealization, Allocation, Classroom
-from timetable.models import Group
-from unitime.models import Solution, TimePattern, TimePref
-from unitime.models import StudentClassEnrl
-from ..unitime.common import Database, index_days
-from ..unitime.common import PreferenceLevel, day_mapping, itype_type_mapping
+from friprosveta.models import LectureType, Student, Subject, Teacher
+from timetable.models import ActivityRealization, Allocation, Classroom, Group
+from unitime.models import Solution, StudentClassEnrl, TimePattern, TimePref
+
+from ..unitime.common import (
+    Database,
+    PreferenceLevel,
+    day_mapping,
+    index_days,
+    itype_type_mapping,
+)
 
 
 def students_for_assignment(assignment, solution_id):

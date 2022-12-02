@@ -33,3 +33,4 @@ ldap3
 raven
 model_mommy  # Makes creating models for testing easier
 black  # Python code formatter
+isort  # Sort imports in Python source code

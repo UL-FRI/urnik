@@ -1,12 +1,11 @@
-from enum import Enum
 import logging
+from enum import Enum
 
 from django.db import models
 from django.db.models import Model, Q
 
-from friprosveta.models import Subject, Student
+from friprosveta.models import Student, Subject
 from timetable.models import Allocation
-
 
 logger = logging.getLogger(__name__)
 

@@ -1,8 +1,7 @@
 from django.core.management.base import BaseCommand
 
-from friprosveta.models import StudentEnrollment, Timetable, Study, Student
-from friprosveta.models import Subject
-from friprosveta.studis import Sifranti, Studij, Studenti, Najave
+from friprosveta.models import Student, StudentEnrollment, Study, Subject, Timetable
+from friprosveta.studis import Najave, Sifranti, Studenti, Studij
 
 
 def get_parents(studijsko_drevo, entry_id, type_=5):

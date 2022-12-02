@@ -1,6 +1,6 @@
-from .CreateXML import create_xml
-
 from friprosveta.models import Study
+
+from .CreateXML import create_xml
 
 
 def academic_classification(campus, term, year):

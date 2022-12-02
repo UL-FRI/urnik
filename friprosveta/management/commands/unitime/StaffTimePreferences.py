@@ -1,5 +1,6 @@
 from timetable.models import TeacherTimePreference
-from .common import Database, PreferenceLevel, to_start_index, level_to_type
+
+from .common import Database, PreferenceLevel, level_to_type, to_start_index
 
 
 def staff_time_preferences(tt):

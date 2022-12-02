@@ -3,6 +3,7 @@ from django.views.generic import TemplateView
 from django.views.generic.list import ListView
 
 from timetable.models import TimetableSet
+
 from . import views
 
 # from .restapi import SubjectDetailsView, SubjectsView

@@ -1,21 +1,22 @@
 import logging
-from typing import Optional, Dict, List, Union
-from datetime import datetime
 from collections import Counter
+from datetime import datetime
+from typing import Dict, List, Optional, Union
 
 import pytz
 from django.contrib.auth.models import User
 from django.db import transaction
-from django.db.models import F, Q, Model
+from django.db.models import F, Model, Q
 
-from friprosveta.models import Student, Timetable, Subject, Teacher, Activity
+from friprosveta.models import Activity, Student, Subject, Teacher, Timetable
 from timetable.models import Allocation, Group
+
 from .models import (
-    Exchange,
-    SubjectPreference,
-    FormProcessingError,
     TIMETABLE_EXCHANGE_GROUP_PREFIX,
+    Exchange,
     ExchangeType,
+    FormProcessingError,
+    SubjectPreference,
 )
 
 logger = logging.getLogger(__name__)

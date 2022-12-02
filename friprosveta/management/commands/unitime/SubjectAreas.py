@@ -1,6 +1,6 @@
 import friprosveta.models
-from .CreateXML import create_xml
 
+from .CreateXML import create_xml
 
 # To so predmeti, ki se izvajajo
 

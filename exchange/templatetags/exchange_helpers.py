@@ -1,4 +1,4 @@
-from collections import namedtuple, defaultdict
+from collections import defaultdict, namedtuple
 from typing import List
 
 from django import template
@@ -7,7 +7,7 @@ from django.urls import reverse
 from exchange.controllers import is_exchange_acceptable, is_exchange_cancellable
 from exchange.models import Exchange
 from friprosveta.models import Activity
-from timetable.models import Allocation, WEEKDAYS, WORKHOURS
+from timetable.models import WEEKDAYS, WORKHOURS, Allocation
 
 register = template.Library()
 

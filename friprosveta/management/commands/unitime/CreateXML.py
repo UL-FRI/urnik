@@ -1,6 +1,5 @@
 from xml.dom.minidom import Document
 
-
 # Create XML from array.
 # Array structure:
 # - [parent, dictionary, [children], parent, dictionary, [children], ...]
