@@ -5,10 +5,7 @@ def student_enrollments(timetable, campus, term, year):
         for subject in student.enrolledSubjects(timetable):
             demands += [
                 "class",
-                {
-                    "subject": "{0}".format(subject.code),
-                    "courseNbr": "101"
-                },
+                {"subject": "{0}".format(subject.code), "courseNbr": "101"},
                 [],
             ]
         entry = [
@@ -16,12 +13,12 @@ def student_enrollments(timetable, campus, term, year):
             {
                 "externalId": str(student.id),
             },
-            demands
+            demands,
         ]
         entries += entry
     enrollments = [
         "studentEnrollments",
         {"campus": campus, "term": term, "year": year},
-        entries
+        entries,
     ]
     return enrollments

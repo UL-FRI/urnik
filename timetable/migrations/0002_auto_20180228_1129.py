@@ -8,23 +8,23 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('timetable', '0001_initial'),
+        ("timetable", "0001_initial"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='activity',
-            old_name='shortName',
-            new_name='short_name',
+            model_name="activity",
+            old_name="shortName",
+            new_name="short_name",
         ),
         migrations.RenameField(
-            model_name='classroom',
-            old_name='shortName',
-            new_name='short_name',
+            model_name="classroom",
+            old_name="shortName",
+            new_name="short_name",
         ),
         migrations.RenameField(
-            model_name='group',
-            old_name='shortName',
-            new_name='short_name',
+            model_name="group",
+            old_name="shortName",
+            new_name="short_name",
         ),
     ]

@@ -39,11 +39,11 @@ class Command(BaseCommand):
     """
 
     def add_arguments(self, parser):
-        parser.add_argument('old_code', type=str)
-        parser.add_argument('new_code', type=str)
+        parser.add_argument("old_code", type=str)
+        parser.add_argument("new_code", type=str)
 
-    args = 'change_teacher_code old_code new_code'
-    help = 'Change teacher code.'
+    args = "change_teacher_code old_code new_code"
+    help = "Change teacher code."
 
     def handle(self, *args, **options):
-        change_teacher_code(options['old_code'], options['new_code'])
+        change_teacher_code(options["old_code"], options["new_code"])

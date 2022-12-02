@@ -18,6 +18,7 @@ class SubjectsView(generics.ListAPIView):
     """
     List all subject objects.
     """
+
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsManagerOrNone)
@@ -27,7 +28,8 @@ class SubjectDetailsView(generics.RetrieveUpdateDestroyAPIView):
     """
     Get subject details.
     """
-    lookup_field = 'code'
+
+    lookup_field = "code"
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
     permission_classes = (permissions.IsAuthenticated, IsManagerOrNone)

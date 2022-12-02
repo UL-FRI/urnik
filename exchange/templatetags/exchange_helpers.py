@@ -20,15 +20,27 @@ def _exchange_sorted_helper(exchange: Exchange):
     for i, (h, _) in enumerate(WORKHOURS):
         hour_map[h] = i
 
-    result = day_map.get(exchange.allocation_from.day, -1) * 100 + hour_map.get(exchange.allocation_from.start, -1)
+    result = day_map.get(exchange.allocation_from.day, -1) * 100 + hour_map.get(
+        exchange.allocation_from.start, -1
+    )
     if exchange.allocation_to:
-        result += day_map.get(exchange.allocation_to.day, -1) * 10 + hour_map.get(exchange.allocation_to.start, -1)
+        result += day_map.get(exchange.allocation_to.day, -1) * 10 + hour_map.get(
+            exchange.allocation_to.start, -1
+        )
     return result
 
 
 @register.inclusion_tag("exchange/template_exchange_list.html")
-def render_exchanges(exchanges, show_subject=True, third_person=False, manager_student=None,
-                     show_student=True, show_finalized=False, show_cancelled=False, show_cancel_link=True):
+def render_exchanges(
+    exchanges,
+    show_subject=True,
+    third_person=False,
+    manager_student=None,
+    show_student=True,
+    show_finalized=False,
+    show_cancelled=False,
+    show_cancel_link=True,
+):
     """Directive-like helper.
 
     Args:
@@ -51,33 +63,70 @@ def render_exchanges(exchanges, show_subject=True, third_person=False, manager_s
     sorted_exchanges = sorted(filtered_exchanges, key=_exchange_sorted_helper)
 
     view_models = []
-    vm = namedtuple('ExchangeViewModel', ['type', 'allocation_from', 'allocation_to', 'initiator_student',
-                                          'requested_finalizer_student', 'date_created', 'date_finalized',
-                                          'cancelled', 'subject', 'has_initiator_student', 'accept_link',
-                                          'cancel_link'])
+    vm = namedtuple(
+        "ExchangeViewModel",
+        [
+            "type",
+            "allocation_from",
+            "allocation_to",
+            "initiator_student",
+            "requested_finalizer_student",
+            "date_created",
+            "date_finalized",
+            "cancelled",
+            "subject",
+            "has_initiator_student",
+            "accept_link",
+            "cancel_link",
+        ],
+    )
     for ex in sorted_exchanges:
-        subject = Activity.from_timetable_activity(ex.allocation_from.activityRealization.activity).subject
-        view_models.append(vm(
-            subject="{}".format(subject.name),
-            type=ex.get_type().name,
-            allocation_from="{} at {}".format(ex.allocation_from.day, ex.allocation_from.start),
-            allocation_to="{} at {}".format(ex.allocation_to.day, ex.allocation_to.start),
-            has_initiator_student=ex.initiator_student is not None,
-            initiator_student="{} {}".format(ex.initiator_student.name.title(), ex.initiator_student.surname.title())
-                              if ex.initiator_student is not None else None,
-            requested_finalizer_student="{}".format(str(ex.requested_finalizer_student)),
-            date_created="{}".format(str(ex.date_created)),
-            date_finalized="{}".format(str(ex.date_finalized)),
-            cancelled=bool(ex.date_cancelled),
-            accept_link=reverse("accept_exchange", kwargs={
-                "timetable_slug": ex.allocation_from.timetable.slug,
-                "exchange_id": ex.id
-            }) if manager_student and is_exchange_acceptable(ex, manager_student) else None,
-            cancel_link=reverse("cancel_exchange", kwargs={
-                "timetable_slug": ex.allocation_from.timetable.slug,
-                "exchange_id": ex.id
-            }) if manager_student and is_exchange_cancellable(ex, manager_student) else None
-        ))
+        subject = Activity.from_timetable_activity(
+            ex.allocation_from.activityRealization.activity
+        ).subject
+        view_models.append(
+            vm(
+                subject="{}".format(subject.name),
+                type=ex.get_type().name,
+                allocation_from="{} at {}".format(
+                    ex.allocation_from.day, ex.allocation_from.start
+                ),
+                allocation_to="{} at {}".format(
+                    ex.allocation_to.day, ex.allocation_to.start
+                ),
+                has_initiator_student=ex.initiator_student is not None,
+                initiator_student="{} {}".format(
+                    ex.initiator_student.name.title(),
+                    ex.initiator_student.surname.title(),
+                )
+                if ex.initiator_student is not None
+                else None,
+                requested_finalizer_student="{}".format(
+                    str(ex.requested_finalizer_student)
+                ),
+                date_created="{}".format(str(ex.date_created)),
+                date_finalized="{}".format(str(ex.date_finalized)),
+                cancelled=bool(ex.date_cancelled),
+                accept_link=reverse(
+                    "accept_exchange",
+                    kwargs={
+                        "timetable_slug": ex.allocation_from.timetable.slug,
+                        "exchange_id": ex.id,
+                    },
+                )
+                if manager_student and is_exchange_acceptable(ex, manager_student)
+                else None,
+                cancel_link=reverse(
+                    "cancel_exchange",
+                    kwargs={
+                        "timetable_slug": ex.allocation_from.timetable.slug,
+                        "exchange_id": ex.id,
+                    },
+                )
+                if manager_student and is_exchange_cancellable(ex, manager_student)
+                else None,
+            )
+        )
 
     return {
         "exchanges": view_models,
@@ -85,5 +134,5 @@ def render_exchanges(exchanges, show_subject=True, third_person=False, manager_s
         "show_student": show_student,
         "show_cancel_link": show_cancel_link,
         "source_word": "Their" if not third_person else "From",
-        "destination_word": "for your" if not third_person else "to"
+        "destination_word": "for your" if not third_person else "to",
     }

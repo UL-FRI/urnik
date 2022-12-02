@@ -14,50 +14,55 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    args = 'create_activities timetable_slug year semester'
-    help = '''Create activities in the given timetable according to najave in studis.
+    args = "create_activities timetable_slug year semester"
+    help = """Create activities in the given timetable according to najave in studis.
 Usage: create_activities  timetable_slug year semester force
 Semester can be 1 (zimski), 2(poletni), 3(celoletni) or 4(blocni).
 When force option is enabled and no such timetable exists it will be created.
 Beware: all existing activities (and all its children) WILL BE DELETED.
-'''
+"""
 
     def add_arguments(self, parser):
-        parser.add_argument('timetable_slug', type=str)
-        parser.add_argument('year', type=int)
-        parser.add_argument('semester_id', type=str)
+        parser.add_argument("timetable_slug", type=str)
+        parser.add_argument("year", type=int)
+        parser.add_argument("semester_id", type=str)
 
         parser.add_argument(
-            '--force',
-            action='store_true',
-            dest='force',
-            help='Create timetable if it does not exists.'),
+            "--force",
+            action="store_true",
+            dest="force",
+            help="Create timetable if it does not exists.",
+        ),
 
         parser.add_argument(
-            '--subject_code',
-            dest='subject_code',
+            "--subject_code",
+            dest="subject_code",
             default=None,
-            help='Update activities only for the subject with given code.'),
+            help="Update activities only for the subject with given code.",
+        ),
 
         parser.add_argument(
-            '--location', nargs=1,
-            default='Večna pot FRI',
-            help='Location of the activities. Defaults to "Večna pot FRI".'),
+            "--location",
+            nargs=1,
+            default="Večna pot FRI",
+            help='Location of the activities. Defaults to "Večna pot FRI".',
+        ),
 
     def get_semester(self, year, semester_id):
         sifranti = Sifranti()
         semestri = sifranti.get_semestri(year)
-        semester = filter(lambda semester: semester['id'] == semester_id,
-                        semestri)
+        semester = filter(lambda semester: semester["id"] == semester_id, semestri)
         return list(semester)[0]
 
     @transaction.atomic
     def handle(self, *args, **options):
         logger.info("Entering handle")
-        if options['force']:
+        if options["force"]:
             logger.debug("Force is True")
             tt = Timetable.objects.filter(slug=options["timetable_slug"])
-            assert len(tt) <= 1, "Timetable slug ({0}) should be unique.".format(args[0])
+            assert len(tt) <= 1, "Timetable slug ({0}) should be unique.".format(
+                args[0]
+            )
             if len(tt) == 1:
                 tt = tt[0]
             else:
@@ -65,22 +70,26 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
                 logger.debug("No timetable '{0}' found, creating one.".format(args[0]))
                 aset, created = ActivitySet.objects.get_or_create(name=args[0])
                 if created:
-                    logger.debug("No activityset '{0}' found, creating.".format(args[0]))
+                    logger.debug(
+                        "No activityset '{0}' found, creating.".format(args[0])
+                    )
                     aset.save()
                 tt.activityset = aset
                 pset, created = PreferenceSet.objects.get_or_create(name=args[0])
                 if created:
-                    logger.debug("No preferenceset '{0}' found, creating.".format(args[0]))
+                    logger.debug(
+                        "No preferenceset '{0}' found, creating.".format(args[0])
+                    )
                     pset.save()
                 tt.preferenceset = pset
                 tt.save()
 
         else:
             tt = Timetable.objects.get(slug=options["timetable_slug"])
-        location = Location.objects.get(name=options['location'])
+        location = Location.objects.get(name=options["location"])
         subject = None
-        if options['subject_code'] is not None:
-            subject = options['subject_code']
+        if options["subject_code"] is not None:
+            subject = options["subject_code"]
 
         year = int(options["year"])
         semester_id = int(options["semester_id"])
@@ -90,7 +99,9 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
         logger.info("Exiting handle")
 
     @transaction.atomic
-    def sync_activities_with_fri_najave(self, timetable, semester, year, location, update_subject):
+    def sync_activities_with_fri_najave(
+        self, timetable, semester, year, location, update_subject
+    ):
         """
         Sinhronizira učitelje v najavah z učitelji v aktivnostih.
         Če je potrebno, ustvari nove aktivnosti.
@@ -101,7 +112,9 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
         logger.info("Entering syncActivitiesWithFRINajave")
 
         def activity_name(subject, lecture_type):
-            name = "{0}({1})_{2}".format(subject.name, subject.code, lecture_type.short_name)
+            name = "{0}({1})_{2}".format(
+                subject.name, subject.code, lecture_type.short_name
+            )
             logger.debug("Generated name {}".format(name))
             return name
 
@@ -114,9 +127,12 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
             logger.debug("Processing {}".format(cikel))
             codes = set()
             mapping_urnik_studis = {1: [1, 7], 2: [3], 3: [2], 4: [8], 6: [4]}
-            for izvajalec in cikel['izvajalci']:
-                if izvajalec['tip_izvajanja']['id'] in mapping_urnik_studis[lecture_type_id]:
-                    codes.add(izvajalec['delavec_sifra'])
+            for izvajalec in cikel["izvajalci"]:
+                if (
+                    izvajalec["tip_izvajanja"]["id"]
+                    in mapping_urnik_studis[lecture_type_id]
+                ):
+                    codes.add(izvajalec["delavec_sifra"])
             logger.debug("Got codes for {}: {}".format(lecture_type_id, codes))
             return codes
 
@@ -131,8 +147,20 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
             # {u'id': 6, 'title': {u'en': None, 'sl': 'Koordinator'}},
             # {u'id': 7, 'title': {u'en': None, 'sl': 'Nosilec'}},
             # {u'id': 8, 'title': {u'en': None, 'sl': 'Laborant'}}]
-            mapping_studis_urnik = {1: 1, 2: 3, 3: 2, 4: 6, 5: None, 6: None, 7: 1, 8: 2}
-            lecture_types_ids = set(mapping_studis_urnik[t['tip_izvajanja']['id']] for t in cikel['izvajalci'])
+            mapping_studis_urnik = {
+                1: 1,
+                2: 3,
+                3: 2,
+                4: 6,
+                5: None,
+                6: None,
+                7: 1,
+                8: 2,
+            }
+            lecture_types_ids = set(
+                mapping_studis_urnik[t["tip_izvajanja"]["id"]]
+                for t in cikel["izvajalci"]
+            )
             lecture_types_ids.discard(None)
             return lecture_types_ids
 
@@ -141,20 +169,29 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
             Get subject duration. The duration of subject depends on subject and lecture type.
             It is read from Studis database.
             """
-            mapping_urnik_studis = {1: 'st_ur_predavanj', 2: 'st_ur_lab_vaj', 3: 'st_ur_avd_vaj',
-                                    6: 'st_ur_seminarja', 8: 'st_ur_lab_vaj',
-                                    }
+            mapping_urnik_studis = {
+                1: "st_ur_predavanj",
+                2: "st_ur_lab_vaj",
+                3: "st_ur_avd_vaj",
+                6: "st_ur_seminarja",
+                8: "st_ur_lab_vaj",
+            }
             if izvajanje[mapping_urnik_studis[lecture_type_id]] is None:
                 return None
 
             add_duration = 0
             # Weird fix: sometimes hours are attributed to seminar
-            if izvajanje['st_ur_seminarja'] is not None and lecture_type_id not in [1, 6]:
-                add_duration = izvajanje['st_ur_seminarja']
-            total_duration = add_duration + izvajanje[mapping_urnik_studis[lecture_type_id]]
+            if izvajanje["st_ur_seminarja"] is not None and lecture_type_id not in [
+                1,
+                6,
+            ]:
+                add_duration = izvajanje["st_ur_seminarja"]
+            total_duration = (
+                add_duration + izvajanje[mapping_urnik_studis[lecture_type_id]]
+            )
             return total_duration / 15
 
-        semester_id = semester['id']
+        semester_id = semester["id"]
         studij = Studij(year)
         sifranti = Sifranti()
         najave = Najave(year)
@@ -163,30 +200,40 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
 
         izvajanja_subject_ids = defaultdict(list)
         for izvajanje in izvajanja:
-            izvajanja_subject_ids[izvajanje['idpredmet']].append(izvajanje)
+            izvajanja_subject_ids[izvajanje["idpredmet"]].append(izvajanje)
+
+        # print(izvajanja_subject_ids)
 
         for cikel in najave.get_predmeti_cikli():
-            subject_code = cikel['predmet_sifra']
+            subject_code = cikel["predmet_sifra"]
             # Skip subjects we should no update
             if update_subject is not None and update_subject != subject_code:
                 continue
 
             found = False
-            izvajanja = izvajanja_subject_ids[cikel['predmet_id']]
+            izvajanja = izvajanja_subject_ids[cikel["predmet_id"]]
             for izvajanje in izvajanja:
                 izvajanje_id = izvajanje["id"].split("-")[1].strip()
-                cikel_izvajanje_id = str(cikel["izvajanje_id"]) 
+                cikel_izvajanje_id = str(cikel["izvajanje_id"])
+                print(type(izvajanje_id), type(cikel_izvajanje_id))
+                print(izvajanje_id, cikel_izvajanje_id)
                 if cikel_izvajanje_id == izvajanje_id:
                     found = True
             if not found:
-                logger.info("No matching izvajanje for cikel {0}, skipping".format(cikel).encode("utf-8"))
+                logger.info(
+                    "No matching izvajanje for cikel {0}, skipping".format(
+                        cikel
+                    ).encode("utf-8")
+                )
                 continue
 
             izvajanje = izvajanja[0]
-            if izvajanje['izvaja_partnerska_institucija']:
-                logger.info('This izvajanje is managed by other faculty, skip')
+            if izvajanje["izvaja_partnerska_institucija"]:
+                logger.info("This izvajanje is managed by other faculty, skip")
                 continue
-            logger.info("Looking for subject code {0}".format(subject_code).encode("utf-8"))
+            logger.info(
+                "Looking for subject code {0}".format(subject_code).encode("utf-8")
+            )
             try:
                 subject = Subject.objects.get(code=subject_code)
             except Exception:
@@ -200,8 +247,9 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
                 logger.debug("Processing lt {}".format(lecture_type_id))
                 lecture_type = LectureType.objects.get(pk=lecture_type_id)
                 logger.debug("lt {}".format(lecture_type))
-                activities = subject.activities.filter(lecture_type=lecture_type,
-                                                       activityset=timetable.activityset)
+                activities = subject.activities.filter(
+                    lecture_type=lecture_type, activityset=timetable.activityset
+                )
                 logger.debug("Got activities {}".format(activities))
                 teacher_codes = get_teacher_codes(cikel, lecture_type_id)
                 logger.debug("Got teacher codes {}".format(teacher_codes))
@@ -215,19 +263,30 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
                         teachers.append(teacher)
                     except ObjectDoesNotExist as e:
                         logger.exception(
-                            "Teacher with code {0} on subject {1} does not exist".format(code, subject.code))
+                            "Teacher with code {0} on subject {1} does not exist".format(
+                                code, subject.code
+                            )
+                        )
 
                 if activities.count() == 0:
-                    logger.debug("Activity of type {0} for {1} not found. Creating one.".format(lecture_type, subject))
+                    logger.debug(
+                        "Activity of type {0} for {1} not found. Creating one.".format(
+                            lecture_type, subject
+                        )
+                    )
                     if duration is None:
-                        logger.debug('Duration for type {0} is 0, skipping.'.format(lecture_type))
+                        logger.debug(
+                            "Duration for type {0} is 0, skipping.".format(lecture_type)
+                        )
                         continue
                     activity = Activity(
-                        subject=subject, lecture_type=lecture_type,
-                        activityset=timetable.activityset, duration=duration,
+                        subject=subject,
+                        lecture_type=lecture_type,
+                        activityset=timetable.activityset,
+                        duration=duration,
                         name=activity_name(subject, lecture_type),
                         short_name=activity_short_name(subject, lecture_type),
-                        type=lecture_type.short_name
+                        type=lecture_type.short_name,
                     )
                     activity.save()
                     activity.locations.add(location)

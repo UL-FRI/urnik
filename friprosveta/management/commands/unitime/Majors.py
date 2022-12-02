@@ -1,3 +1,5 @@
+from friprosveta.models import Study
+
 from .CreateXML import create_xml
 
 
@@ -5,24 +7,30 @@ from .CreateXML import create_xml
 
 
 # TODO: added campus, term, year as arguments
-def majors(campus, term, year):
+def majors(tt, campus, term, year):
     entries = []
-    for study in studies:
-
-        if study.smer is not None:
-            continue  # Only top-level studies
-        entry = ["posMajor",
-                 {"externalId": str(study.id),
-                  "code": study.shortname.replace(' ', '_'),
-                  # TODO: tukaj ne sme biti presledkov. Upam, da bo takole bolje.
-                  "name": study.name[:50],  # Mora biti krajši od 50 znakov
-                  "academicArea": "CS"}, []]
+    for study in Study.objects.all():
+        entry = [
+            "posMajor",
+            {
+                "externalId": str(study.id),
+                "code": study.short_name.replace(" ", "_"),
+                # TODO: tukaj ne sme biti presledkov. Upam, da bo takole bolje.
+                "name": study.name[:50],  # Mora biti krajši od 50 znakov
+                "academicArea": "CS",
+            },
+            [],
+        ]
         entries += entry
 
-    classifications = ["posMajors", {"campus": campus, "term": term, "year": year}, entries]
+    classifications = [
+        "posMajors",
+        {"campus": campus, "term": term, "year": year},
+        entries,
+    ]
     return classifications
 
 
 if __name__ == "__main__":
     doc = create_xml(majors())
-    print(doc.toprettyxml(indent="  ").encode('utf8'))
+    print(doc.toprettyxml(indent="  ").encode("utf8"))

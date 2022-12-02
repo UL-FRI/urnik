@@ -12,18 +12,19 @@ class Command(BaseCommand):
     Students with enrollment type 4, 26 are enrolled into
     'regular' groups, others into PAD group.
     """
-    args = 'update_group_sizes_from_hints method_name'
-    help = '''Usage:
+
+    args = "update_group_sizes_from_hints method_name"
+    help = """Usage:
 update_group_sizes_from_hints method_name
 
 Set sizes of groups according to hints.
-'''
+"""
 
     def add_arguments(self, parser):
-        parser.add_argument('method_name', nargs=1, type=str)
+        parser.add_argument("method_name", nargs=1, type=str)
 
     def handle(self, *args, **options):
-        method_name = options['method_name'][0]
+        method_name = options["method_name"][0]
         for e in GroupSizeHint.objects.filter(method=method_name):
             e.group.size = e.size
             e.group.save()

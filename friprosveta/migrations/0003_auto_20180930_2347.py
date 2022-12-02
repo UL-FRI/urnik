@@ -6,20 +6,20 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('timetable', '0002_auto_20180228_1129'),
-        ('friprosveta', '0002_auto_20180228_1129'),
+        ("timetable", "0002_auto_20180228_1129"),
+        ("friprosveta", "0002_auto_20180228_1129"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='group',
-            name='group_ptr',
+            model_name="group",
+            name="group_ptr",
         ),
         migrations.RemoveField(
-            model_name='group',
-            name='studies',
+            model_name="group",
+            name="studies",
         ),
         migrations.DeleteModel(
-            name='Group',
+            name="Group",
         ),
     ]

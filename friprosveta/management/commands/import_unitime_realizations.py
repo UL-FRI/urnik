@@ -23,21 +23,30 @@ def import_unitime_activities(tt, solution):
     Read all scheduling subparts for these allocations and create activities and
     corresponding realizations and alocations.
     """
-    day_mapping = {64: "MON", 32: "TUE", 16: "WED", 8: "THU",
-                   4: "FRI", 2: "SAT", 1: "SUN"}
-    itype_type_mapping = {10: 'P', 30: 'LV', 20: 'AV'}
+    day_mapping = {
+        64: "MON",
+        32: "TUE",
+        16: "WED",
+        8: "THU",
+        4: "FRI",
+        2: "SAT",
+        1: "SUN",
+    }
+    itype_type_mapping = {10: "P", 30: "LV", 20: "AV"}
     db = Database()
-    query = ("SELECT c.uniqueid, slot, days, r.external_uid, "
-             "di.external_uid, ss.uniqueid, ss.min_per_week, ss.itype "
-             "FROM assignment AS a "
-             "JOIN assigned_rooms AS ar ON (a.uniqueid = ar.assignment_id) "
-             "JOIN assigned_instructors AS ai ON (a.uniqueid = ai.assignment_id) "
-             "JOIN  departmental_instructor AS di ON "
-             "(di.uniqueid = ai.instructor_id) "
-             "JOIN class_ AS c ON (c.uniqueid = a.class_id) "
-             "JOIN room AS r ON (r.uniqueid = ar.room_id) "
-             "JOIN scheduling_subpart AS ss ON (ss.uniqueid = c.subpart_id) "
-             "WHERE solution_id={0}").format(solution)
+    query = (
+        "SELECT c.uniqueid, slot, days, r.external_uid, "
+        "di.external_uid, ss.uniqueid, ss.min_per_week, ss.itype "
+        "FROM assignment AS a "
+        "JOIN assigned_rooms AS ar ON (a.uniqueid = ar.assignment_id) "
+        "JOIN assigned_instructors AS ai ON (a.uniqueid = ai.assignment_id) "
+        "JOIN  departmental_instructor AS di ON "
+        "(di.uniqueid = ai.instructor_id) "
+        "JOIN class_ AS c ON (c.uniqueid = a.class_id) "
+        "JOIN room AS r ON (r.uniqueid = ar.room_id) "
+        "JOIN scheduling_subpart AS ss ON (ss.uniqueid = c.subpart_id) "
+        "WHERE solution_id={0}"
+    ).format(solution)
     db.execute(query)
     allocations = db.fetch_all_rows()
     # Subparts represent allocations
@@ -55,7 +64,9 @@ def import_unitime_activities(tt, solution):
         query = """SELECT co.external_uid FROM scheduling_subpart AS ss
         JOIN instr_offering_config AS ioc ON (ss.config_id=ioc.uniqueid)
         JOIN course_offering AS co ON (co.instr_offr_id=ioc.instr_offr_id)
-        WHERE ss.uniqueid={0}""".format(subpart_id)
+        WHERE ss.uniqueid={0}""".format(
+            subpart_id
+        )
         db.execute(query)
         assert db.rowcount == 1, "There should be exactly one subject per subpart"
         subject = Subject.objects.get(pk=db.fetch_next_row()[0])
@@ -75,15 +86,17 @@ def import_unitime_activities(tt, solution):
         activity.save()
         for teacher in teachers:
             activity.teachers.add(teacher)
-        # Get all allocations and iterate through all class ids 
+        # Get all allocations and iterate through all class ids
         # Classes represent realizations
         activity_allocations = [a for a in allocations if a[5] == subpart_id]
         class_ids = set([a[0] for a in activity_allocations])
         for class_id in class_ids:
             class_allocations = [a for a in activity_allocations if a[0] == class_id]
             class_teacher_ids = [a[4] for a in class_allocations]
-            class_teachers = [Teacher.objects.get(pk=teacher_id) for teacher_id in class_teacher_ids]
-            slot, day, room_id = class_allocations[1:1 + 3]
+            class_teachers = [
+                Teacher.objects.get(pk=teacher_id) for teacher_id in class_teacher_ids
+            ]
+            slot, day, room_id = class_allocations[1 : 1 + 3]
             day = day_mapping[day]
             hour = slot / 12
             # minute = slot % 12 * 5
@@ -94,11 +107,13 @@ def import_unitime_activities(tt, solution):
             realization = ActivityRealization(activity=activity)
             realization.save()
             realization.teachers.add(*class_teachers)
-            Allocation(timetable=tt,
-                       activityRealization=realization,
-                       classroom=room,
-                       day=day,
-                       start=allocation_time).save()
+            Allocation(
+                timetable=tt,
+                activityRealization=realization,
+                classroom=room,
+                day=day,
+                start=allocation_time,
+            ).save()
 
 
 def import_unitime_realizations(tt, solution):
@@ -115,10 +130,17 @@ def import_unitime_realizations(tt, solution):
     - find corresponding class_ entries
     - create realization and (if it exists) also allocation.
     """
-    day_mapping = {64: "MON", 32: "TUE", 16: "WED", 8: "THU",
-                   4: "FRI", 2: "SAT", 1: "SUN"}
+    day_mapping = {
+        64: "MON",
+        32: "TUE",
+        16: "WED",
+        8: "THU",
+        4: "FRI",
+        2: "SAT",
+        1: "SUN",
+    }
     db = Database()
-    type_itype_mapping = {'P': 10, 'LV': 30, 'AV': 20, 'TUT': 35}
+    type_itype_mapping = {"P": 10, "LV": 30, "AV": 20, "TUT": 35}
 
     for activity in tt.activities.all():
         print("Processing {0}".format(activity))
@@ -128,7 +150,9 @@ def import_unitime_realizations(tt, solution):
         query = """SELECT ss.uniqueid FROM scheduling_subpart AS ss JOIN
         instr_offering_config AS ioc ON (ss.config_id=ioc.uniqueid)
         JOIN course_offering AS co ON (co.instr_offr_id=ioc.instr_offr_id)
-        WHERE co.external_uid={0} AND ss.itype={1}""".format(subject.id, itype)
+        WHERE co.external_uid={0} AND ss.itype={1}""".format(
+            subject.id, itype
+        )
         db.execute(query)
         if db.rowcount != 1:
             print("Error while processing {0}".format(activity.name))
@@ -136,7 +160,9 @@ def import_unitime_realizations(tt, solution):
             continue
         scheduling_subpart_id = db.fetch_next_row()[0]
         query = """SELECT uniqueid, external_uid FROM class_ WHERE
-        subpart_id={0}""".format(scheduling_subpart_id)
+        subpart_id={0}""".format(
+            scheduling_subpart_id
+        )
         db.execute(query)
         rows = db.fetch_all_rows()
         # class_ids = [e[0] for e in db.fetch_all_rows()]
@@ -154,14 +180,17 @@ def import_unitime_realizations(tt, solution):
                 "(di.uniqueid = ai.instructor_id) "
                 "JOIN class_ AS c ON (c.uniqueid = a.class_id) "
                 "JOIN room AS r ON (r.uniqueid = ar.room_id) "
-                "WHERE solution_id={0} AND c.uniqueid={1}").format(solution, class_id)
+                "WHERE solution_id={0} AND c.uniqueid={1}"
+            ).format(solution, class_id)
             db.execute(query)
             if db.rowcount == 0:
                 print("No class")
                 continue
             rows = db.fetch_all_rows()
             teacher_ids = [e[3] for e in rows if e[3] is not None]
-            teachers = [Teacher.objects.get(id=teacher_id) for teacher_id in teacher_ids]
+            teachers = [
+                Teacher.objects.get(id=teacher_id) for teacher_id in teacher_ids
+            ]
             slot, day, room_id, _ = rows[0]
             day = day_mapping[day]
             hour = slot / 12
@@ -181,9 +210,11 @@ def import_unitime_realizations(tt, solution):
                 print("No matching realization for {0}".format(realization_id))
 
             realization.allocations.all().delete()
-            Allocation(timetable=tt,
-                       activityRealization=realization,
-                       classroom=room,
-                       day=day,
-                       start=allocation_time).save()
+            Allocation(
+                timetable=tt,
+                activityRealization=realization,
+                classroom=room,
+                day=day,
+                start=allocation_time,
+            ).save()
     db.close()

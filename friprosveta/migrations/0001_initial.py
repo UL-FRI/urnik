@@ -13,219 +13,476 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('timetable', '0001_initial'),
+        ("timetable", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Activity',
+            name="Activity",
             fields=[
-                ('activity_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='timetable.Activity')),
+                (
+                    "activity_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="timetable.Activity",
+                    ),
+                ),
             ],
-            bases=('timetable.activity',),
+            bases=("timetable.activity",),
         ),
         migrations.CreateModel(
-            name='Cathedra',
+            name="Cathedra",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=256)),
-            ],
-        ),
-        migrations.CreateModel(
-            name='Group',
-            fields=[
-                ('group_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='timetable.Group')),
-                ('enrollment_types', models.CharField(blank=True, default='', help_text='Valid enrollment types for this group', max_length=65536, validators=[django.core.validators.RegexValidator(re.compile('^\\d+(?:\\,\\d+)*\\Z', 32), code='invalid', message='Enter only digits separated by commas.')], verbose_name='valid enrolment types')),
-                ('class_years', models.CharField(help_text='Class year of students in this group', max_length=65536, validators=[django.core.validators.RegexValidator(re.compile('^\\d+(?:\\,\\d+)*\\Z', 32), code='invalid', message='Enter only digits separated by commas.')], verbose_name='group class year')),
-                ('visible_in_navigation', models.BooleanField(default=False, help_text='Visible in group list in navigation menu on main urnik web page', verbose_name='visible in navigation')),
-                ('intended_type', models.CharField(choices=[('LAB', 'Laborant vaje'), ('LV', 'Laboratorijske vaje'), ('AV', 'Avditorne vaje'), ('P', 'Predavanja'), ('TUT', 'Tutorstvo'), ('REP', 'Repetitorij')], max_length=4)),
-            ],
-            bases=('timetable.group',),
-        ),
-        migrations.CreateModel(
-            name='GroupSizeHint',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('method', models.CharField(help_text='Method used to calculate the size', max_length=128)),
-                ('size', models.IntegerField(default=0, help_text='Calculated size of the group')),
-            ],
-        ),
-        migrations.CreateModel(
-            name='Kaprica',
-            fields=[
-                ('group', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, serialize=False, to='timetable.Group')),
-                ('regular', models.BooleanField(default=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=256)),
             ],
         ),
         migrations.CreateModel(
-            name='LectureType',
+            name="Group",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=128, unique=True)),
-                ('short_name', models.CharField(max_length=4, unique=True)),
-                ('duration', models.IntegerField()),
+                (
+                    "group_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="timetable.Group",
+                    ),
+                ),
+                (
+                    "enrollment_types",
+                    models.CharField(
+                        blank=True,
+                        default="",
+                        help_text="Valid enrollment types for this group",
+                        max_length=65536,
+                        validators=[
+                            django.core.validators.RegexValidator(
+                                re.compile("^\\d+(?:\\,\\d+)*\\Z", 32),
+                                code="invalid",
+                                message="Enter only digits separated by commas.",
+                            )
+                        ],
+                        verbose_name="valid enrolment types",
+                    ),
+                ),
+                (
+                    "class_years",
+                    models.CharField(
+                        help_text="Class year of students in this group",
+                        max_length=65536,
+                        validators=[
+                            django.core.validators.RegexValidator(
+                                re.compile("^\\d+(?:\\,\\d+)*\\Z", 32),
+                                code="invalid",
+                                message="Enter only digits separated by commas.",
+                            )
+                        ],
+                        verbose_name="group class year",
+                    ),
+                ),
+                (
+                    "visible_in_navigation",
+                    models.BooleanField(
+                        default=False,
+                        help_text="Visible in group list in navigation menu on main urnik web page",
+                        verbose_name="visible in navigation",
+                    ),
+                ),
+                (
+                    "intended_type",
+                    models.CharField(
+                        choices=[
+                            ("LAB", "Laborant vaje"),
+                            ("LV", "Laboratorijske vaje"),
+                            ("AV", "Avditorne vaje"),
+                            ("P", "Predavanja"),
+                            ("TUT", "Tutorstvo"),
+                            ("REP", "Repetitorij"),
+                        ],
+                        max_length=4,
+                    ),
+                ),
+            ],
+            bases=("timetable.group",),
+        ),
+        migrations.CreateModel(
+            name="GroupSizeHint",
+            fields=[
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "method",
+                    models.CharField(
+                        help_text="Method used to calculate the size", max_length=128
+                    ),
+                ),
+                (
+                    "size",
+                    models.IntegerField(
+                        default=0, help_text="Calculated size of the group"
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Student',
+            name="Kaprica",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=128)),
-                ('surname', models.CharField(max_length=128)),
-                ('studentId', models.CharField(max_length=8, unique=True)),
+                (
+                    "group",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        serialize=False,
+                        to="timetable.Group",
+                    ),
+                ),
+                ("regular", models.BooleanField(default=True)),
             ],
         ),
         migrations.CreateModel(
-            name='StudentEnrollment',
+            name="LectureType",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('classyear', models.IntegerField(default=0)),
-                ('enrollment_type', models.CharField(choices=[(4, 'Prvi vpis v letnik'), (41, 'Vzporedni vpis'), (42, 'Prvi vpis diplomanta'), (43, 'Prepis'), (44, 'Dodatno leto (absolvent)'), (5, 'Ponavljanje letnika'), (7, 'Podaljšanje statusa po končanem dodatnem letu'), (21, 'Izjemno podaljšanje statusa'), (1, 'Vpis po merilih za prehode'), (45, 'Vpis v semester skupnega študijskega programa'), (47, 'Vpis po merilih za prehode v isti letnik'), (51, 'Prvi vpis v program - v višji letnik na podlagi priznanih obveznosti'), (46, 'Vpis za zaključek'), (3, 'Občan'), (23, 'Pavzer'), (25, 'Študentje drugih fakultet UL'), (26, 'Študentje skupnega programa kjer fakulteta ni nosilec'), (27, 'Študentje drugih univerz'), (28, 'Polaganje izpitov izven študijskega programa'), (48, 'Študentje drugih univerz brez poročanja EVŠ'), (49, 'Pavzerji skupnih študijskih programov')], max_length=4)),
-                ('regular_enrollment', models.BooleanField(default=True)),
-                ('source', models.CharField(choices=[('studis_preenrolment', 'Študis - predvpis'), ('studis_unconfirmed', 'Študis - v postopku'), ('studis_confirmed', 'Študis - potrjen')], max_length=64, null=True)),
-                ('groupset', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='enrolled_students', to='timetable.GroupSet')),
-                ('student', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='enrolled_subjects', to='friprosveta.Student')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=128, unique=True)),
+                ("short_name", models.CharField(max_length=4, unique=True)),
+                ("duration", models.IntegerField()),
             ],
         ),
         migrations.CreateModel(
-            name='Study',
+            name="Student",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('shortName', models.CharField(max_length=32)),
-                ('name', models.TextField()),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=128)),
+                ("surname", models.CharField(max_length=128)),
+                ("studentId", models.CharField(max_length=8, unique=True)),
             ],
         ),
         migrations.CreateModel(
-            name='Subject',
+            name="StudentEnrollment",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('code', models.CharField(blank=True, max_length=16, unique=True)),
-                ('name', models.CharField(max_length=256)),
-                ('short_name', models.CharField(blank=True, default='', max_length=32)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("classyear", models.IntegerField(default=0)),
+                (
+                    "enrollment_type",
+                    models.CharField(
+                        choices=[
+                            (4, "Prvi vpis v letnik"),
+                            (41, "Vzporedni vpis"),
+                            (42, "Prvi vpis diplomanta"),
+                            (43, "Prepis"),
+                            (44, "Dodatno leto (absolvent)"),
+                            (5, "Ponavljanje letnika"),
+                            (7, "Podaljšanje statusa po končanem dodatnem letu"),
+                            (21, "Izjemno podaljšanje statusa"),
+                            (1, "Vpis po merilih za prehode"),
+                            (45, "Vpis v semester skupnega študijskega programa"),
+                            (47, "Vpis po merilih za prehode v isti letnik"),
+                            (
+                                51,
+                                "Prvi vpis v program - v višji letnik na podlagi priznanih obveznosti",
+                            ),
+                            (46, "Vpis za zaključek"),
+                            (3, "Občan"),
+                            (23, "Pavzer"),
+                            (25, "Študentje drugih fakultet UL"),
+                            (
+                                26,
+                                "Študentje skupnega programa kjer fakulteta ni nosilec",
+                            ),
+                            (27, "Študentje drugih univerz"),
+                            (28, "Polaganje izpitov izven študijskega programa"),
+                            (48, "Študentje drugih univerz brez poročanja EVŠ"),
+                            (49, "Pavzerji skupnih študijskih programov"),
+                        ],
+                        max_length=4,
+                    ),
+                ),
+                ("regular_enrollment", models.BooleanField(default=True)),
+                (
+                    "source",
+                    models.CharField(
+                        choices=[
+                            ("studis_preenrolment", "Študis - predvpis"),
+                            ("studis_unconfirmed", "Študis - v postopku"),
+                            ("studis_confirmed", "Študis - potrjen"),
+                        ],
+                        max_length=64,
+                        null=True,
+                    ),
+                ),
+                (
+                    "groupset",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="enrolled_students",
+                        to="timetable.GroupSet",
+                    ),
+                ),
+                (
+                    "student",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="enrolled_subjects",
+                        to="friprosveta.Student",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='SubjectHeadTeachers',
+            name="Study",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('start', models.DateTimeField()),
-                ('end', models.DateTimeField(blank=True, null=True)),
-                ('subject', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='friprosveta.Subject')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("shortName", models.CharField(max_length=32)),
+                ("name", models.TextField()),
             ],
         ),
         migrations.CreateModel(
-            name='ActivityRealization',
+            name="Subject",
             fields=[
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("code", models.CharField(blank=True, max_length=16, unique=True)),
+                ("name", models.CharField(max_length=256)),
+                ("short_name", models.CharField(blank=True, default="", max_length=32)),
             ],
+        ),
+        migrations.CreateModel(
+            name="SubjectHeadTeachers",
+            fields=[
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("start", models.DateTimeField()),
+                ("end", models.DateTimeField(blank=True, null=True)),
+                (
+                    "subject",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="friprosveta.Subject",
+                    ),
+                ),
+            ],
+        ),
+        migrations.CreateModel(
+            name="ActivityRealization",
+            fields=[],
             options={
-                'proxy': True,
-                'indexes': [],
+                "proxy": True,
+                "indexes": [],
             },
-            bases=('timetable.activityrealization',),
+            bases=("timetable.activityrealization",),
         ),
         migrations.CreateModel(
-            name='Location',
-            fields=[
-            ],
+            name="Location",
+            fields=[],
             options={
-                'proxy': True,
-                'indexes': [],
+                "proxy": True,
+                "indexes": [],
             },
-            bases=('timetable.location',),
+            bases=("timetable.location",),
         ),
         migrations.CreateModel(
-            name='Teacher',
-            fields=[
-            ],
+            name="Teacher",
+            fields=[],
             options={
-                'proxy': True,
-                'indexes': [],
+                "proxy": True,
+                "indexes": [],
             },
-            bases=('timetable.teacher',),
+            bases=("timetable.teacher",),
         ),
         migrations.CreateModel(
-            name='Timetable',
-            fields=[
-            ],
+            name="Timetable",
+            fields=[],
             options={
-                'proxy': True,
-                'indexes': [],
+                "proxy": True,
+                "indexes": [],
             },
-            bases=('timetable.timetable',),
+            bases=("timetable.timetable",),
         ),
         migrations.AddField(
-            model_name='subjectheadteachers',
-            name='teacher',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='friprosveta.Teacher'),
+            model_name="subjectheadteachers",
+            name="teacher",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to="friprosveta.Teacher"
+            ),
         ),
         migrations.AddField(
-            model_name='subject',
-            name='heads',
-            field=models.ManyToManyField(related_name='subjects', through='friprosveta.SubjectHeadTeachers', to='friprosveta.Teacher'),
+            model_name="subject",
+            name="heads",
+            field=models.ManyToManyField(
+                related_name="subjects",
+                through="friprosveta.SubjectHeadTeachers",
+                to="friprosveta.Teacher",
+            ),
         ),
         migrations.AddField(
-            model_name='subject',
-            name='managers',
-            field=models.ManyToManyField(related_name='managed_subjects', to='friprosveta.Teacher'),
+            model_name="subject",
+            name="managers",
+            field=models.ManyToManyField(
+                related_name="managed_subjects", to="friprosveta.Teacher"
+            ),
         ),
         migrations.AddField(
-            model_name='subject',
-            name='students',
-            field=models.ManyToManyField(related_name='subjects', through='friprosveta.StudentEnrollment', to='friprosveta.Student'),
+            model_name="subject",
+            name="students",
+            field=models.ManyToManyField(
+                related_name="subjects",
+                through="friprosveta.StudentEnrollment",
+                to="friprosveta.Student",
+            ),
         ),
         migrations.AddField(
-            model_name='studentenrollment',
-            name='study',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='enrolled_students', to='friprosveta.Study'),
+            model_name="studentenrollment",
+            name="study",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="enrolled_students",
+                to="friprosveta.Study",
+            ),
         ),
         migrations.AddField(
-            model_name='studentenrollment',
-            name='subject',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='enrolled_students', to='friprosveta.Subject'),
+            model_name="studentenrollment",
+            name="subject",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="enrolled_students",
+                to="friprosveta.Subject",
+            ),
         ),
         migrations.AddField(
-            model_name='student',
-            name='follows',
-            field=models.ManyToManyField(related_name='followers', to='timetable.ActivityRealization'),
+            model_name="student",
+            name="follows",
+            field=models.ManyToManyField(
+                related_name="followers", to="timetable.ActivityRealization"
+            ),
         ),
         migrations.AddField(
-            model_name='student',
-            name='groups',
-            field=models.ManyToManyField(related_name='students', to='timetable.Group'),
+            model_name="student",
+            name="groups",
+            field=models.ManyToManyField(related_name="students", to="timetable.Group"),
         ),
         migrations.AddField(
-            model_name='groupsizehint',
-            name='group',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='timetable.Group'),
+            model_name="groupsizehint",
+            name="group",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to="timetable.Group"
+            ),
         ),
         migrations.AddField(
-            model_name='group',
-            name='studies',
-            field=models.ManyToManyField(help_text='Studies of students on the group', to='friprosveta.Study', verbose_name='group studies'),
+            model_name="group",
+            name="studies",
+            field=models.ManyToManyField(
+                help_text="Studies of students on the group",
+                to="friprosveta.Study",
+                verbose_name="group studies",
+            ),
         ),
         migrations.AddField(
-            model_name='cathedra',
-            name='heads',
-            field=models.ManyToManyField(related_name='head_of_cathedras', to='timetable.Teacher'),
+            model_name="cathedra",
+            name="heads",
+            field=models.ManyToManyField(
+                related_name="head_of_cathedras", to="timetable.Teacher"
+            ),
         ),
         migrations.AddField(
-            model_name='cathedra',
-            name='members',
-            field=models.ManyToManyField(blank=True, related_name='cathedras', to='timetable.Teacher'),
+            model_name="cathedra",
+            name="members",
+            field=models.ManyToManyField(
+                blank=True, related_name="cathedras", to="timetable.Teacher"
+            ),
         ),
         migrations.AddField(
-            model_name='cathedra',
-            name='najave_deputies',
-            field=models.ManyToManyField(blank=True, related_name='cathedras_handled', to='timetable.Teacher'),
+            model_name="cathedra",
+            name="najave_deputies",
+            field=models.ManyToManyField(
+                blank=True, related_name="cathedras_handled", to="timetable.Teacher"
+            ),
         ),
         migrations.AddField(
-            model_name='activity',
-            name='lecture_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='activities', to='friprosveta.LectureType'),
+            model_name="activity",
+            name="lecture_type",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="activities",
+                to="friprosveta.LectureType",
+            ),
         ),
         migrations.AddField(
-            model_name='activity',
-            name='subject',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='activities', to='friprosveta.Subject'),
+            model_name="activity",
+            name="subject",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="activities",
+                to="friprosveta.Subject",
+            ),
         ),
     ]

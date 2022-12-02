@@ -10,25 +10,30 @@ class Command(BaseCommand):
             if clear_managers:
                 s.managers.clear()
             # print s
-            dpt = maroltnajave.models.Delavecpredmett.objects.filter(subject__sifra=s.code, type=1, valid=True,
-                                                                     obdobje__in=obdobja)
+            dpt = maroltnajave.models.Delavecpredmett.objects.filter(
+                subject__sifra=s.code, type=1, valid=True, obdobje__in=obdobja
+            )
             # ce ne znamo najti katedre, med managerje dodamo nosilca
             mgrs = set()
             if len(dpt) == 0:
-                for t in friprosveta.models.Teacher.objects.filter(activities__activity__subject=s,
-                                                                   activities__type='P').distinct():
+                for t in friprosveta.models.Teacher.objects.filter(
+                    activities__activity__subject=s, activities__type="P"
+                ).distinct():
                     #                    print "ako je prazno ", t, type(t)
                     mgrs.add(t)
             for d in dpt:
                 try:
-                    c = friprosveta.models.Cathedra.objects.get(name=d.teacher.katedra.naziv)
+                    c = friprosveta.models.Cathedra.objects.get(
+                        name=d.teacher.katedra.naziv
+                    )
                     headt = c.heads.all()[0]
                     mgrs.add(friprosveta.models.Teacher.objects.get(id=headt.id))
                     # print("glava ", headt, type(headt), friprosveta.models.Teacher.objects.get(id = headt.id))
                     if len(c.najave_deputies.all()) == 0:
                         print(" na ", s, " dodajam izvajalce:")
-                        for t in friprosveta.models.Teacher.objects.filter(activities__activity__subject=s,
-                                                                           activities__type='P').distinct():
+                        for t in friprosveta.models.Teacher.objects.filter(
+                            activities__activity__subject=s, activities__type="P"
+                        ).distinct():
                             #                            print "z aktivnosti ", t, type(t)
                             print("    ", t)
                             mgrs.add(t)
@@ -62,6 +67,8 @@ class Command(BaseCommand):
             return
 
         timetable = friprosveta.models.Timetable.objects.get(slug=args[0])
-        obdobja = maroltnajave.models.Obdobjet.by_dates(timetable.start, timetable.end)[0]
+        obdobja = maroltnajave.models.Obdobjet.by_dates(timetable.start, timetable.end)[
+            0
+        ]
         self.add_catedra_heads_and_deputies(obdobja, True)
         self.add_staff()

@@ -10,6 +10,7 @@ import timetable.models
 def add_number_of(l, s):
     return [[s, str(len(l))]] + l
 
+
 # import django2fet
 # hackity hack -----------------------------------
 
@@ -40,7 +41,7 @@ def add_number_of(l, s):
 
 # ignore_subjects = ['63240', '63232', '63748', '63245', '63247', '63757', '63759', '63813', '63809', '63812', '63743', '63803', '63805', '63815', '63807', '63817']
 ignore_subjects = []
-rewrite_subjects = {'63746': '63223'}
+rewrite_subjects = {"63746": "63223"}
 
 
 class Group:
@@ -74,38 +75,43 @@ class Group:
         return len(self.students)
 
     def __str__(self):
-        return "ID: {3}: {0}, {1}, {2}".format(self.name, self.size, self.students, id(self.students))
+        return "ID: {3}: {0}, {1}, {2}".format(
+            self.name, self.size, self.students, id(self.students)
+        )
 
 
 def group_types(groups):
     types = []
     for group in groups:
-        if group.type not in types: types.append(group.type)
+        if group.type not in types:
+            types.append(group.type)
     return types
 
 
 def get_year_for_group(group):
-    return int(group.name.split('_')[0])
+    return int(group.name.split("_")[0])
 
 
 def get_study_for_group(group_short_name):
     """Get a study from a group stort name."""
-    if len(group_short_name.split('_')) < 2:
+    if len(group_short_name.split("_")) < 2:
         return "UNKNOWN"
-    study_name = group_short_name.split('_')[1]
+    study_name = group_short_name.split("_")[1]
     return study_name
 
 
 def parse_groups(current_timetable):
-    """Creata a groupname -> group 
-       and subject code -> group *class Group above in this file* 
-       mapping for the current timetable."""
+    """Creata a groupname -> group
+    and subject code -> group *class Group above in this file*
+    mapping for the current timetable."""
     subject_group = dict()
     groupname_group = dict()
     realizations = []
 
     for subject in current_timetable.subjects.all():
-        for activity in subject.activities.filter(activityset=current_timetable.activityset):
+        for activity in subject.activities.filter(
+            activityset=current_timetable.activityset
+        ):
 
             for realization in activity.realizations.all():
                 assert realization not in realizations
@@ -113,20 +119,29 @@ def parse_groups(current_timetable):
 
             for group in activity.groups.all():
                 if group.short_name not in groupname_group:
-                    groupname_group[group.short_name] = Group(group.short_name, group.size,
-                                                              get_study_for_group(group.short_name), group)
+                    groupname_group[group.short_name] = Group(
+                        group.short_name,
+                        group.size,
+                        get_study_for_group(group.short_name),
+                        group,
+                    )
                     # Add all students to this group
                     for student in group.students.all():
                         groupname_group[group.short_name].enrol(student.studentId)
 
-                if activity.type not in groupname_group[group.short_name].types: groupname_group[
-                    group.short_name].types.append(activity.type)
+                if activity.type not in groupname_group[group.short_name].types:
+                    groupname_group[group.short_name].types.append(activity.type)
 
                 if subject.code.strip() not in subject_group:
                     subject_group[subject.code.strip()] = []
 
-                if groupname_group[group.short_name] not in subject_group[subject.code.strip()]:
-                    subject_group[subject.code.strip()].append(groupname_group[group.short_name])
+                if (
+                    groupname_group[group.short_name]
+                    not in subject_group[subject.code.strip()]
+                ):
+                    subject_group[subject.code.strip()].append(
+                        groupname_group[group.short_name]
+                    )
     return groupname_group, subject_group, realizations
 
 
@@ -136,13 +151,16 @@ def subject_studies(subject_code, subject_group):
     studies = []
     for group in groups:
         group_study = get_study_for_group(group.name)
-        if group_study not in studies: studies.append(group_study)
+        if group_study not in studies:
+            studies.append(group_study)
     return studies
 
 
-def fix_regular_subjects_enrollments(current_timetable, regular_subjects_map, new_study):
+def fix_regular_subjects_enrollments(
+    current_timetable, regular_subjects_map, new_study
+):
     """
-    Za predmete na študijih kjer ni izbirnosti pogleda, kateri študentje obiskujejo vse predmete na 
+    Za predmete na študijih kjer ni izbirnosti pogleda, kateri študentje obiskujejo vse predmete na
     danem študiju/letniku. Te potem pusti pri miru, ostalim pa popravi vpis, in sicer jim spremeni študij
     na newStudy.
 
@@ -165,37 +183,58 @@ def fix_regular_subjects_enrollments(current_timetable, regular_subjects_map, ne
         print("Changing {0} {1}".format(study, classyear))
         study = friprosveta.models.Study.objects.get(short_name=study)
 
-        regular_subjects_list = list(friprosveta.models.Subject.objects.filter(code__in=regular_subjects))
+        regular_subjects_list = list(
+            friprosveta.models.Subject.objects.filter(code__in=regular_subjects)
+        )
         students_on_all_regular_subjects = friprosveta.models.Student.objects.filter(
-            enrolled_subjects__groupset=current_timetable.groupset, enrolled_subjects__classyear=classyear,
-            enrolled_subjects__study=study).distinct()
+            enrolled_subjects__groupset=current_timetable.groupset,
+            enrolled_subjects__classyear=classyear,
+            enrolled_subjects__study=study,
+        ).distinct()
         students_not_on_any_regular_subject = friprosveta.models.Student.objects.filter(
-            enrolled_subjects__groupset=current_timetable.groupset, enrolled_subjects__classyear=classyear,
-            enrolled_subjects__study=study).distinct()
+            enrolled_subjects__groupset=current_timetable.groupset,
+            enrolled_subjects__classyear=classyear,
+            enrolled_subjects__study=study,
+        ).distinct()
 
-        for subject in friprosveta.models.Subject.objects.filter(code__in=regular_subjects):
-            enrolled_students = subject.enrolled_students_study_classyear(current_timetable, study, classyear)
+        for subject in friprosveta.models.Subject.objects.filter(
+            code__in=regular_subjects
+        ):
+            enrolled_students = subject.enrolled_students_study_classyear(
+                current_timetable, study, classyear
+            )
             students_on_all_regular_subjects = students_on_all_regular_subjects.filter(
-                enrolled_subjects__groupset=current_timetable.groupset, enrolled_subjects__classyear=classyear,
-                enrolled_subjects__study=study, enrolled_subjects__subject=subject)
-            students_not_on_any_regular_subject = students_not_on_any_regular_subject.exclude(id__in=enrolled_students)
+                enrolled_subjects__groupset=current_timetable.groupset,
+                enrolled_subjects__classyear=classyear,
+                enrolled_subjects__study=study,
+                enrolled_subjects__subject=subject,
+            )
+            students_not_on_any_regular_subject = (
+                students_not_on_any_regular_subject.exclude(id__in=enrolled_students)
+            )
 
         print("On all: {0}".format(students_on_all_regular_subjects.count()))
         print("Nowhere: {0}".format(students_not_on_any_regular_subject.count()))
 
         for student in students_not_on_any_regular_subject:
-            student_enrollments_on_study = student.enrolled_subjects.filter(groupset=current_timetable.groupset,
-                                                                            study=study, classyear=classyear)
+            student_enrollments_on_study = student.enrolled_subjects.filter(
+                groupset=current_timetable.groupset, study=study, classyear=classyear
+            )
             change_enrollment_study(student_enrollments_on_study, new_study)
 
-        for subject in friprosveta.models.Subject.objects.filter(code__in=regular_subjects):
-            students_only_on_subject = subject.enrolled_students_study_classyear(current_timetable, study,
-                                                                                 classyear).exclude(
-                id__in=students_on_all_regular_subjects)
+        for subject in friprosveta.models.Subject.objects.filter(
+            code__in=regular_subjects
+        ):
+            students_only_on_subject = subject.enrolled_students_study_classyear(
+                current_timetable, study, classyear
+            ).exclude(id__in=students_on_all_regular_subjects)
 
             for student in students_only_on_subject:
-                student_enrollments_on_study = student.enrolled_subjects.filter(groupset=current_timetable.groupset,
-                                                                                study=study, classyear=classyear)
+                student_enrollments_on_study = student.enrolled_subjects.filter(
+                    groupset=current_timetable.groupset,
+                    study=study,
+                    classyear=classyear,
+                )
                 print("Changed {0}".format(student_enrollments_on_study.count()))
                 change_enrollment_study(student_enrollments_on_study, new_study)
 
@@ -204,14 +243,16 @@ def fix_regular_subjects_enrollments(current_timetable, regular_subjects_map, ne
 # Sifra: šifra predmeta
 # semester: zemski (Z) ali letni (L), irrelavant za naju
 # letnik: letnik študenta
-# skupina: študij 
+# skupina: študij
 # kraj: vedno Lj?
 # predmet: ime predmeta
 # ime_priimek: ime in priimek
 # vpisan: T ali F , za naju ni važno (že pofiltriramo ven)
 def enrol_students_in_database(students, subject_group, current_timetable):
     for student in friprosveta.models.Student.objects.all():
-        for group in student.groups.filter(groupset__timetables__exact=current_timetable).distinct():
+        for group in student.groups.filter(
+            groupset__timetables__exact=current_timetable
+        ).distinct():
             student.groups.remove(group)
             student.save()
 
@@ -243,16 +284,28 @@ def enrol_students_in_database(students, subject_group, current_timetable):
             continue
         assert study in studies
 
-        (databaseStudent, created) = friprosveta.models.Student.objects.get_or_create(name=student_name,
-                                                                                      surname=student_surname,
-                                                                                      studentId=student_id)
-        print(student_name, student_surname, study, year, student_id, subject, studies, created)
-        types = ['P']
+        (databaseStudent, created) = friprosveta.models.Student.objects.get_or_create(
+            name=student_name, surname=student_surname, studentId=student_id
+        )
+        print(
+            student_name,
+            student_surname,
+            study,
+            year,
+            student_id,
+            subject,
+            studies,
+            created,
+        )
+        types = ["P"]
         for t in types:
             all_groups = subject_group[subject]
             groups = filter(
-                lambda group: group.study == study and t in group.types and get_year_for_group(group) == year,
-                subject_group[subject])
+                lambda group: group.study == study
+                and t in group.types
+                and get_year_for_group(group) == year,
+                subject_group[subject],
+            )
             already_enrolled = False
             for group in groups:
                 num = group.group.students.filter(studentId=student_id).count()
@@ -268,7 +321,9 @@ def enrol_students_in_database(students, subject_group, current_timetable):
                 if group.is_enrolled(student.vpisna.strip()):
                     found_group = True
                     break
-                if (group.current_size() < group.size) and (not group.is_enrolled(student.vpisna.strip())):
+                if (group.current_size() < group.size) and (
+                    not group.is_enrolled(student.vpisna.strip())
+                ):
                     group.enrol(student.vpisna.strip())
                     databaseStudent.groups.add(group.group)
                     databaseStudent.save()
@@ -279,11 +334,18 @@ def enrol_students_in_database(students, subject_group, current_timetable):
             if not found_group:
                 print("NOT FOUND!!!!!!!!!!!!!!!")
                 print(map(lambda g: g.group, groups))
-                mingroup = min(filter(lambda group: group.study == study, groups), key=lambda group: group.group.size)
-                print("Group for student {0} ({1}) for subject {2} ({3}) not found ".format(student.ime_priimek.strip(),
-                                                                                            student.vpisna.strip(),
-                                                                                            subject,
-                                                                                            student.predmet.strip()))
+                mingroup = min(
+                    filter(lambda group: group.study == study, groups),
+                    key=lambda group: group.group.size,
+                )
+                print(
+                    "Group for student {0} ({1}) for subject {2} ({3}) not found ".format(
+                        student.ime_priimek.strip(),
+                        student.vpisna.strip(),
+                        subject,
+                        student.predmet.strip(),
+                    )
+                )
                 print(group.group.size)
                 if True:
                     print("OK")
@@ -297,7 +359,7 @@ def enrol_students_in_database(students, subject_group, current_timetable):
 # Sifra: šifra predmeta
 # semester: zemski (Z) ali letni (L), irrelavant za naju
 # letnik: letnik študenta
-# skupina: študij 
+# skupina: študij
 # kraj: vedno Lj?
 # predmet: ime predmeta
 # ime_priimek: ime in priimek
@@ -312,7 +374,8 @@ def enrol_students(students, subject_group):
         year = int(student.letnik.strip())
 
         subject = student.sifra.strip()
-        if subject in ignore_subjects: continue
+        if subject in ignore_subjects:
+            continue
 
         if subject in rewrite_subjects:
             subject = rewrite_subjects[subject]
@@ -324,11 +387,14 @@ def enrol_students(students, subject_group):
         studies = subject_studies(subject, subject_group)
         assert study in studies
 
-        types = ['P', 'LV', 'AV']
+        types = ["P", "LV", "AV"]
         for t in types:
             groups = filter(
-                lambda group: group.study == study and t in group.types and get_year_for_group(group) == year,
-                subject_group[subject])
+                lambda group: group.study == study
+                and t in group.types
+                and get_year_for_group(group) == year,
+                subject_group[subject],
+            )
 
             if len(groups) == 0:
                 continue
@@ -339,7 +405,9 @@ def enrol_students(students, subject_group):
                     found_group = True
                     break
 
-                if (group.current_size() < group.size) and (not group.is_enrolled(student.vpisna.strip())):
+                if (group.current_size() < group.size) and (
+                    not group.is_enrolled(student.vpisna.strip())
+                ):
                     # print "Enroling"
                     group.enrol(student.vpisna.strip())
                     found_group = True
@@ -350,11 +418,18 @@ def enrol_students(students, subject_group):
             if not found_group:
                 print("NOT FOUND!!!!!!!!!!!!!!")
                 print("Groups: " + groups)
-                mingroup = min(filter(lambda group: group.study == study, groups), key=lambda group: group.group.size)
-                print("Group for student {0} ({1}) for subject {2} ({3}) not found ".format(student.ime_priimek.strip(),
-                                                                                            student.vpisna.strip(),
-                                                                                            subject,
-                                                                                            student.predmet.strip()))
+                mingroup = min(
+                    filter(lambda group: group.study == study, groups),
+                    key=lambda group: group.group.size,
+                )
+                print(
+                    "Group for student {0} ({1}) for subject {2} ({3}) not found ".format(
+                        student.ime_priimek.strip(),
+                        student.vpisna.strip(),
+                        subject,
+                        student.predmet.strip(),
+                    )
+                )
                 print(group.group.size)
                 # if raw_input("Should I increase size of the group {0} by one (y/n)? ".format(mingroup)) == 'y':
                 if True:
@@ -378,12 +453,12 @@ def get_enrolled_students(realization, groupname_group):
 def get_enroled_students_database(realization, students_cache, groupset=None):
     """
     Return a set of students enrolled to a realization.
-    
+
     Students are obtained by iterating over groups on realization and
     returning union of students in groups.
-    
-    If a groupset is given, students enrelled to the group with the same name in 
-    the given groupset are returned. 
+
+    If a groupset is given, students enrelled to the group with the same name in
+    the given groupset are returned.
     """
 
     subject = realization.activity.activity.subject
@@ -392,9 +467,10 @@ def get_enroled_students_database(realization, students_cache, groupset=None):
         for group in realization.groups.all():
 
             if groupset is not None:
-                # A group is a match if it has a same short name and is on the same subject 
-                matched_groups = groupset.groups.filter(short_name=group.short_name,
-                                                        activities__in=subject.activities.all())
+                # A group is a match if it has a same short name and is on the same subject
+                matched_groups = groupset.groups.filter(
+                    short_name=group.short_name, activities__in=subject.activities.all()
+                )
                 if matched_groups.count() != 1:
                     continue
                 else:
@@ -404,17 +480,22 @@ def get_enroled_students_database(realization, students_cache, groupset=None):
             if group.study == "IZ" or group.study == "EV":
                 continue
 
-            group_students = set(group.students.all().values_list("studentId", flat=True).distinct())
+            group_students = set(
+                group.students.all().values_list("studentId", flat=True).distinct()
+            )
             students = students.union(group_students)
         students_cache[realization] = students
     return students_cache[realization]
 
 
-def realizations_must_not_overlap_new(currentTimetable, groupname_group, realizations, razor=2):
+def realizations_must_not_overlap_new(
+    currentTimetable, groupname_group, realizations, razor=2
+):
     not_overlap_pairs = []
     for realization1 in realizations:
         for realization2 in realizations:
-            if realization1.id >= realization2.id: continue
+            if realization1.id >= realization2.id:
+                continue
             sr1 = get_enrolled_students(realization1, groupname_group)
             sr2 = get_enrolled_students(realization2, groupname_group)
             problematic = sr1.intersection(sr2)
@@ -422,11 +503,12 @@ def realizations_must_not_overlap_new(currentTimetable, groupname_group, realiza
                 not_overlap_pairs.append((len(problematic), realization1, realization2))
 
 
-def realizations_must_not_overlap_database(current_timetable, razor, razor_dict={},
-                                           groupset=None, skip_pairs=[]):
+def realizations_must_not_overlap_database(
+    current_timetable, razor, razor_dict={}, groupset=None, skip_pairs=[]
+):
     """
     skip_pairs: a list of tuples of lecture types, which should be ignored.
-    If lecture <-> lecture overlaps are to be ignored, then it should be 
+    If lecture <-> lecture overlaps are to be ignored, then it should be
     set to [('P', 'P')].
     """
     not_overlap_pairs = []
@@ -436,6 +518,9 @@ def realizations_must_not_overlap_database(current_timetable, razor, razor_dict=
         for realization2 in rs:
             type1 = realization1.activity.type
             type2 = realization2.activity.type
+            if type1 == type2 and type1 == "P":
+                print("Skipping lectures overlaps!!!")
+                continue
             skip = False
             for pair in skip_pairs:
                 if sorted((type1, type2)) == sorted(pair):
@@ -443,27 +528,33 @@ def realizations_must_not_overlap_database(current_timetable, razor, razor_dict=
                     break
             if skip:
                 continue
-            r = razor_dict.get((realization1.activity.type,
-                                realization2.activity.type), None)
+            r = razor_dict.get(
+                (realization1.activity.type, realization2.activity.type), None
+            )
             if r is None:
-                r = razor_dict.get((realization2.activity.type,
-                                    realization1.activity.type),
-                                   razor)
-            sr1 = get_enroled_students_database(realization1, student_cache,
-                                                groupset)
-            sr2 = get_enroled_students_database(realization2, student_cache,
-                                                groupset)
+                r = razor_dict.get(
+                    (realization2.activity.type, realization1.activity.type), razor
+                )
+            sr1 = get_enroled_students_database(realization1, student_cache, groupset)
+            sr2 = get_enroled_students_database(realization2, student_cache, groupset)
             problematic = sr1.intersection(sr2)
             if len(problematic) > r:
-                not_overlap_pairs.append((len(problematic), realization1,
-                                          realization2))
+                not_overlap_pairs.append((len(problematic), realization1, realization2))
 
     l = []
     for i in not_overlap_pairs:
-        l.append(['ConstraintActivitiesNotOverlapping', None, [
-            ['Weight_Percentage', '100'], ['Number_of_Activities', '2'],
-            ['Activity_Id', str(i[1].id)],
-            ['Activity_Id', str(i[2].id)]]])
+        l.append(
+            [
+                "ConstraintActivitiesNotOverlapping",
+                None,
+                [
+                    ["Weight_Percentage", "100"],
+                    ["Number_of_Activities", "2"],
+                    ["Activity_Id", str(i[1].id)],
+                    ["Activity_Id", str(i[2].id)],
+                ],
+            ]
+        )
     return l
 
 
@@ -476,17 +567,20 @@ def realizations_must_not_overlap(assignments, classes, razor=2):
             a1 = ar1.activity.activity
             a2 = ar2.activity.activity
 
-            if ar1.id >= ar2.id or (a1.type == 'P' and a2.type == 'P'):
+            if ar1.id >= ar2.id or (a1.type == "P" and a2.type == "P"):
                 continue
             st2 = assignments[ar2]
             ns2 = len(classes[ar2.activity.activity.subject.code])
 
             number_of_problematic_students = len(st1 & st2)
 
-            if number_of_problematic_students > razor or number_of_problematic_students > min(ns1, ns2) / 4:
+            if (
+                number_of_problematic_students > razor
+                or number_of_problematic_students > min(ns1, ns2) / 4
+            ):
                 not_overlap_pairs.append((number_of_problematic_students, ar1, ar2))
-                #    timetable.models.ActivityRealization.get(id=int(ar1.id)), 
-                #    timetable.models.ActivityRealization.get(id=int(ar2.id))))   
+                #    timetable.models.ActivityRealization.get(id=int(ar1.id)),
+                #    timetable.models.ActivityRealization.get(id=int(ar2.id))))
                 # print ar1, "<==>", ar2
     return not_overlap_pairs
 
@@ -535,24 +629,30 @@ def students_groups_classes(l):
 def get_number_of_students_for_realization(realization, groupname):
     ret = 0
     for group in realization.groups.all():
-        if group.short_name.startswith(groupname): ret += group.size
+        if group.short_name.startswith(groupname):
+            ret += group.size
 
     # print "{0}, {1} -> {2}".format(realization, groupname, ret)
     return ret
 
 
-def assign_students_to_realizations(tt, students, groups_students, student_study, classes_study, classnames, classes):
+def assign_students_to_realizations(
+    tt, students, groups_students, student_study, classes_study, classnames, classes
+):
     subject_codes = classnames.keys()
     # Realizacije na katere so študenti vpisani
     # ključ je realizacija, pod njo pa dictionary:
-    # Ključ je letnik, smer, vrednost pa seznam študentov, ki smo jih že dodelili na tole.  
+    # Ključ je letnik, smer, vrednost pa seznam študentov, ki smo jih že dodelili na tole.
     assignments = dict()
 
     exercises = ["LV", "AV", "LAB", "P"]
     for subject_code in subject_codes:
-        activities = friprosveta.models.Activity.objects.filter(activityset=tt.activityset,
-                                                                subject__code=subject_code, type__in=exercises,
-                                                                locations__name__contains="Ljubljana").distinct()
+        activities = friprosveta.models.Activity.objects.filter(
+            activityset=tt.activityset,
+            subject__code=subject_code,
+            type__in=exercises,
+            locations__name__contains="Ljubljana",
+        ).distinct()
         if len(activities) == 0:
             # print "No activity for subject {0}".format(subject_code)
             continue
@@ -564,19 +664,26 @@ def assign_students_to_realizations(tt, students, groups_students, student_study
             # print "Student {0}, {1}".format(student_code, group_name)
             for activity in activities:
                 # print "Processing {0}, {1}".format(activity, activity.subject.name)
-                activity_realizations = timetable.models.ActivityRealization.objects.filter(activity=activity,
-                                                                                            groups__short_name__contains=group_name).distinct()
+                activity_realizations = (
+                    timetable.models.ActivityRealization.objects.filter(
+                        activity=activity, groups__short_name__contains=group_name
+                    ).distinct()
+                )
                 # print "Realizations for group {0} for {1}".format(group_name, activity), activity_realizations
                 # assert len(activity_realizations) > 0
                 # print "Realizations", activity_realizations
                 realization_found = False
                 for realization in activity_realizations:
                     enroled_students = assignments.get(realization, set())
-                    enroled_students_from_study = filter(lambda student: student in groups_students[group_name],
-                                                         assignments.get(realization, set()))
+                    enroled_students_from_study = filter(
+                        lambda student: student in groups_students[group_name],
+                        assignments.get(realization, set()),
+                    )
 
                     assignments[realization] = enroled_students
-                    free_space = get_number_of_students_for_realization(realization, group_name)
+                    free_space = get_number_of_students_for_realization(
+                        realization, group_name
+                    )
                     if len(enroled_students_from_study) >= free_space:
                         # print "Processing {0} for {1}: no more space".format(subject_code, group_name)
                         continue
@@ -604,26 +711,36 @@ def realizations_must_not_overlap_thirdversion(assignments, classes, razor=2):
             a1 = ar1.activity.activity
             a2 = ar2.activity.activity
 
-            if ar1.id >= ar2.id or (a1.type == 'P' and a2.type == 'P'):
+            if ar1.id >= ar2.id or (a1.type == "P" and a2.type == "P"):
                 continue
             st2 = assignments[ar2]
             ns2 = len(classes[ar2.activity.activity.subject.code])
 
             number_of_problematic_students = len(st1 & st2)
 
-            if number_of_problematic_students > razor or number_of_problematic_students > min(ns1, ns2) / 4:
+            if (
+                number_of_problematic_students > razor
+                or number_of_problematic_students > min(ns1, ns2) / 4
+            ):
                 not_overlap_pairs.append((number_of_problematic_students, ar1, ar2))
-                #    timetable.models.ActivityRealization.get(id=int(ar1.id)), 
-                #    timetable.models.ActivityRealization.get(id=int(ar2.id))))   
+                #    timetable.models.ActivityRealization.get(id=int(ar1.id)),
+                #    timetable.models.ActivityRealization.get(id=int(ar2.id))))
                 # print ar1, "<==>", ar2
     return not_overlap_pairs
 
 
 def notoverlap_gregor(tt, l, threshold=2):
-    students, groups_students, student_study, classes_study, classnames, classes = students_groups_classes(l)
-    assignments = assign_students_to_realizations(tt, students, groups_students, student_study, classes_study,
-                                                  classnames,
-                                                  classes)
+    (
+        students,
+        groups_students,
+        student_study,
+        classes_study,
+        classnames,
+        classes,
+    ) = students_groups_classes(l)
+    assignments = assign_students_to_realizations(
+        tt, students, groups_students, student_study, classes_study, classnames, classes
+    )
     return realizations_must_not_overlap(assignments, classes, threshold)
 
 
@@ -639,10 +756,7 @@ def avg_overlap(c1, c2):
 def notoverlap_polz(tt, students, threshold=1):
     l = []
     studentdict = {}
-    group_dict = {
-        'UN-RI-IN': 'UN-RI',
-        'UN-RI-PO': 'UN-RI',
-        'UN-RI-RS': 'UN-RI'}
+    group_dict = {"UN-RI-IN": "UN-RI", "UN-RI-PO": "UN-RI", "UN-RI-RS": "UN-RI"}
     qwerkyset = set()
     for i in students:
         nskupina = group_dict.get(unicode(i.skupina), unicode(i.skupina.strip()))
@@ -660,13 +774,13 @@ def notoverlap_polz(tt, students, threshold=1):
                 i = g
                 while i.parent is not None:
                     i = i.parent
-                (year, group) = i.short_name.split('_')
+                (year, group) = i.short_name.split("_")
                 yeargroups1.add((year, group))
             for g in r2.groups.all():
                 i = g
                 while i.parent is not None:
                     i = i.parent
-                (year, group) = i.short_name.split('_')
+                (year, group) = i.short_name.split("_")
                 yeargroups2.add((year, group))
             overlap = 0
             for studygroup in yeargroups1 & yeargroups2:
@@ -696,14 +810,22 @@ def min_realization_overlap(r1, r2, students, studygroup, qwerkyset):
     #                print "  posebni:", studygroup, rsize[i]
     for i, activity in enumerate([r1.activity, r2.activity]):
         for r in activity.realizations.exclude(id=r1.id):
-            for g in r.groups.filter(short_name__startswith="{0}_{1}".format(*students)):
+            for g in r.groups.filter(
+                short_name__startswith="{0}_{1}".format(*students)
+            ):
                 # print " others:", g
                 otherssize[i] += g.size()
-    if len(s1) != rsize[0] + otherssize[0] and (studygroup, r1.activity.id) not in qwerkyset:
+    if (
+        len(s1) != rsize[0] + otherssize[0]
+        and (studygroup, r1.activity.id) not in qwerkyset
+    ):
         qwerkyset.add((studygroup, r1.activity.id))
     #    print studygroup, r1
     #    print "  {0} estudent:{1}, najave:{2}".format(r1.activity.name, len(s1), rsize[0])
-    if len(s2) != rsize[1] + otherssize[1] and (studygroup, r2.activity.id) not in qwerkyset:
+    if (
+        len(s2) != rsize[1] + otherssize[1]
+        and (studygroup, r2.activity.id) not in qwerkyset
+    ):
         qwerkyset.add((studygroup, r2.activity.id))
     #    print studygroup, r2
     #    print "  {0} estudent:{1}, najave:{2}".format(r2.activity.short_name, len(s2), rsize[1])
@@ -728,25 +850,42 @@ def avg_realization_overlap(r1, r2):
 def must_not_overlap(r, thresh=10):
     l1 = []
     for i in r:
-        if (i[0] > thresh):
+        if i[0] > thresh:
             l1.append(i)
     return l1
 
 
-def read_files(fnames, Line=namedtuple('Line', ['vpisna', 'upn', 'sifra', 'semester', 'letnik', 'skupina', 'kraj',
-                                                'ime_priimek', 'predmet', 'vpisan', 'tip_vpisa'])):
+def read_files(
+    fnames,
+    Line=namedtuple(
+        "Line",
+        [
+            "vpisna",
+            "upn",
+            "sifra",
+            "semester",
+            "letnik",
+            "skupina",
+            "kraj",
+            "ime_priimek",
+            "predmet",
+            "vpisan",
+            "tip_vpisa",
+        ],
+    ),
+):
     l = []
     for fname in fnames:
         print("opening file")
         f = open(fname)
         print("file opened")
-        l1 = unicode(f.read(), 'utf-16')
+        l1 = unicode(f.read(), "utf-16")
         print("read data")
         # s = l1.encode('utf8')
         s = l1
-        for i in s.split('\n')[1:]:
-            if i != '':
-                l.append(Line(*i.split('\t')))
+        for i in s.split("\n")[1:]:
+            if i != "":
+                l.append(Line(*i.split("\t")))
         f.close()
     return l
 
@@ -754,9 +893,15 @@ def read_files(fnames, Line=namedtuple('Line', ['vpisna', 'upn', 'sifra', 'semes
 def overlaps_list(pairs):
     l = []
     for k, iar, jar in pairs:
-        nl = [['Activity_Id', str(iar.id)], ['Activity_Id', str(jar.id)]]
-        l.append(['ConstraintActivitiesNotOverlapping', None, [
-            ['Weight_Percentage', '100']] + add_number_of(nl, 'Number_of_Activities')])
+        nl = [["Activity_Id", str(iar.id)], ["Activity_Id", str(jar.id)]]
+        l.append(
+            [
+                "ConstraintActivitiesNotOverlapping",
+                None,
+                [["Weight_Percentage", "100"]]
+                + add_number_of(nl, "Number_of_Activities"),
+            ]
+        )
     return l
 
 
@@ -765,9 +910,13 @@ def get_main_group_for_study_class_year(study_shortname, classyear, current_time
     for group in current_timetable.groups.filter(parent=None).distinct():
         if group.study == study_shortname and int(group.classyear) == int(classyear):
             groups.add(group)
-    assert len(
-        groups) == 1, "Exactly one top-level group per study/classyear/timetable should exist ({0}, {1}, {2}): {3}".format(
-        study_shortname, classyear, current_timetable, groups).encode("utf-8")
+    assert (
+        len(groups) == 1
+    ), "Exactly one top-level group per study/classyear/timetable should exist ({0}, {1}, {2}): {3}".format(
+        study_shortname, classyear, current_timetable, groups
+    ).encode(
+        "utf-8"
+    )
     return groups.pop()
 
 
@@ -778,11 +927,12 @@ def get_subjects_for_group(group):
     return list(subjects)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if len(sys.argv) < 4:
         print("example usage:")
         print(
-            '  ./crossections.py (enrol|calculate) "FRI2012/2013, zimski semester" [../../estudent/*LJ*12_10_2011.txt ...]')
+            '  ./crossections.py (enrol|calculate) "FRI2012/2013, zimski semester" [../../estudent/*LJ*12_10_2011.txt ...]'
+        )
         exit(1)
 
     timetableName = sys.argv[2]
@@ -794,7 +944,7 @@ if __name__ == '__main__':
     l = read_files(sys.argv[3:])
     # l = read_files(["/home/gregor/Dokumenti/Raziskovanje/urnik/git/urnik/estudent/FRI_obv_pr_LJ_LET_30_1_2012.txt"])
 
-    lf = filter(lambda x: x.vpisan[0] == 'T', l)
+    lf = filter(lambda x: x.vpisan[0] == "T", l)
     (groupname_group, subject_group, realizations) = parse_groups(currentTimetable)
 
     if action == "enrol":
@@ -804,16 +954,26 @@ if __name__ == '__main__':
 
         regular_studies_years = ((1, "BUN-RI"), (2, "BUN-RI"), (1, "BVS-RI"))
         regular_studies_top_groups = dict(
-            (entry, get_main_group_for_study_class_year(entry[1], entry[0], currentTimetable)) for entry in
-            regular_studies_years)
+            (
+                entry,
+                get_main_group_for_study_class_year(
+                    entry[1], entry[0], currentTimetable
+                ),
+            )
+            for entry in regular_studies_years
+        )
         regular_studies_subjects = dict(
-            (key, get_subjects_for_group(group)) for key, group in regular_studies_top_groups.iteritems())
+            (key, get_subjects_for_group(group))
+            for key, group in regular_studies_top_groups.iteritems()
+        )
         regular_subjects_map = regular_studies_subjects
 
         padstudy = friprosveta.models.Study.objects.get(short_name="PAD")
-        fix_regular_subjects_enrollments(currentTimetable, regular_subjects_map, padstudy)
+        fix_regular_subjects_enrollments(
+            currentTimetable, regular_subjects_map, padstudy
+        )
 
-    elif action == 'calculate':
+    elif action == "calculate":
         x = realizations_must_not_overlap_database(currentTimetable, razor=7)
 
         # print len(x), len(x[0])

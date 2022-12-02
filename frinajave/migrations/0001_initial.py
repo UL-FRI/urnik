@@ -11,21 +11,48 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('timetable', '0001_initial'),
+        ("timetable", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='TeacherSubjectCycles',
+            name="TeacherSubjectCycles",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('teacher_code', models.CharField(max_length=16)),
-                ('subject_code', models.CharField(max_length=16)),
-                ('instruction_type', models.IntegerField(choices=[(1, 'Enojni'), (2, 'Dva asistenta'), (3, 'Z demonstratorjem')], null=True)),
-                ('lecture_type', models.IntegerField()),
-                ('cycles', models.DecimalField(decimal_places=3, default=0.0, max_digits=18)),
-                ('comment', models.TextField(blank=True)),
-                ('timetable_set', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='timetable.TimetableSet')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("teacher_code", models.CharField(max_length=16)),
+                ("subject_code", models.CharField(max_length=16)),
+                (
+                    "instruction_type",
+                    models.IntegerField(
+                        choices=[
+                            (1, "Enojni"),
+                            (2, "Dva asistenta"),
+                            (3, "Z demonstratorjem"),
+                        ],
+                        null=True,
+                    ),
+                ),
+                ("lecture_type", models.IntegerField()),
+                (
+                    "cycles",
+                    models.DecimalField(decimal_places=3, default=0.0, max_digits=18),
+                ),
+                ("comment", models.TextField(blank=True)),
+                (
+                    "timetable_set",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="timetable.TimetableSet",
+                    ),
+                ),
             ],
         ),
     ]

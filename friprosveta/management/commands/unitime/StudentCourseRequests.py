@@ -6,8 +6,16 @@ def student_course_requests(timetable, campus, term, year):
     enrollments = StudentEnrollment.objects.filter(groupset=timetable.groupset)
     # Hack: enroll external students to subjects to indicate
     # they can not have lectures at the time
-    external_studies_short_names = ['BUN-RM', 'BUN-UI', 'BM-KO', 'BM-RM',
-                                    'BUN-KO', 'BM-PRI', 'BM-MM', 'BUN-MM']
+    external_studies_short_names = [
+        "BUN-RM",
+        "BUN-UI",
+        "BM-KO",
+        "BM-RM",
+        "BUN-KO",
+        "BM-PRI",
+        "BM-MM",
+        "BUN-MM",
+    ]
     classes = [1, 2, 3]
     for student in timetable.students:
         demands = []
@@ -18,7 +26,7 @@ def student_course_requests(timetable, campus, term, year):
             if subject not in timetable.subjects:
                 continue
             # Ignore 'evidencno vpisani' students
-            if enrollment.study.short_name in ['EV']:
+            if enrollment.study.short_name in ["EV"]:
                 continue
             demands += [
                 "courseOffering",
@@ -26,20 +34,24 @@ def student_course_requests(timetable, campus, term, year):
                     "subjectArea": "{0}".format(subject.code),
                     "courseNumber": "101",
                 },
-                []
+                [],
             ]
-            if enrollment.study.short_name in external_studies_short_names and \
-                    external is False and enrollment.classyear in classes:
+            if (
+                enrollment.study.short_name in external_studies_short_names
+                and external is False
+                and enrollment.classyear in classes
+            ):
                 external = True
-                subject_name = 'z_{0}_{1}'.format(enrollment.classyear,
-                                                  enrollment.study.short_name)
+                subject_name = "z_{0}_{1}".format(
+                    enrollment.classyear, enrollment.study.short_name
+                )
                 demands += [
                     "courseOffering",
                     {
                         "subjectArea": "{0}".format(subject_name.lower()),
                         "courseNumber": "101",
                     },
-                    []
+                    [],
                 ]
         entry = [
             "student",
@@ -56,14 +68,10 @@ def student_course_requests(timetable, campus, term, year):
                     [],
                     "acadArea",
                     {"abbv": "CS", "classification": student.study(timetable)},
-                    []
-                ]
-            ]
+                    [],
+                ],
+            ],
         ]
         entries += entry
-    enrollments = [
-        "request",
-        {"campus": campus, "term": term, "year": year},
-        entries
-    ]
+    enrollments = ["request", {"campus": campus, "term": term, "year": year}, entries]
     return enrollments

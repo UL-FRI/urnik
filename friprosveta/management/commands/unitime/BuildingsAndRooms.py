@@ -34,50 +34,69 @@ def buildings_and_rooms(tt, campus, term, year):
                 continue
             features = []
             for resource in room.resources.all():
-                features += ["roomFeature", {
-                    "feature": str(resource.id),
-                    "value": resource.name[:20],
-                }, []]
+                features += [
+                    "roomFeature",
+                    {
+                        "feature": str(resource.id),
+                        "value": resource.name[:20],
+                    },
+                    [],
+                ]
 
             # INFO:
             # scheduledRoomType = genClassroom, computingLab or departmental
             # instructional = T or F  {T ==> typically used for instruction}.
 
-            is_computer_classroom = room.resources.filter(name=computer_resource_name).count() == 1
-            scheduled_room_type = "computingLab" if is_computer_classroom else "genClassroom"
+            is_computer_classroom = (
+                room.resources.filter(name=computer_resource_name).count() == 1
+            )
+            scheduled_room_type = (
+                "computingLab" if is_computer_classroom else "genClassroom"
+            )
 
-            roomarray = ["room", {
-                "externalId": str(room.id),
-                "locationX": "0",
-                "locationY": "0",
-                "roomNumber": room.short_name,
-                "roomClassification": "classroom",
-                "capacity": str(int(room.capacity * enlarge_factor)),
-                "examCapacity": str(room.capacity / 2),
-                "instructional": "True",
-                "scheduledRoomType": scheduled_room_type,
-                "displayName": room.name,
-            },
-                         [
-                             "roomDepartments", {}, ["assigned", {"departmentNumber": "1", "percent": "100"}, []],
-                             "roomFeatures", {}, features,
-                         ]
-                         ]
+            roomarray = [
+                "room",
+                {
+                    "externalId": str(room.id),
+                    "locationX": "0",
+                    "locationY": "0",
+                    "roomNumber": room.short_name,
+                    "roomClassification": "classroom",
+                    "capacity": str(int(room.capacity * enlarge_factor)),
+                    "examCapacity": str((4 * room.capacity) // 9),
+                    "instructional": "True",
+                    "scheduledRoomType": scheduled_room_type,
+                    "displayName": room.name,
+                },
+                [
+                    "roomDepartments",
+                    {},
+                    ["assigned", {"departmentNumber": "1", "percent": "100"}, []],
+                    "roomFeatures",
+                    {},
+                    features,
+                ],
+            ]
             rooms += roomarray
-        entries += ["building", {
-            "externalId": str(location.id),
-            "abbreviation": location.name,
-            "locationX": "0",  # See above at location
-            "locationY": "0",
-            "name": location.name
-        },
-                    rooms]
-    buildings = ["buildingsRooms",
-                 {"campus": campus, "term": term, "year": year},
-                 entries]
+        entries += [
+            "building",
+            {
+                "externalId": str(location.id),
+                "abbreviation": location.name,
+                "locationX": "0",  # See above at location
+                "locationY": "0",
+                "name": location.name,
+            },
+            rooms,
+        ]
+    buildings = [
+        "buildingsRooms",
+        {"campus": campus, "term": term, "year": year},
+        entries,
+    ]
     return buildings
 
 
 if __name__ == "__main__":
     doc = create_xml(buildings_and_rooms())
-    print(doc.toprettyxml(indent="  ").encode('utf8'))
+    print(doc.toprettyxml(indent="  ").encode("utf8"))

@@ -13,9 +13,11 @@ def rooms_not_available_to_timetable(constraints, timetable, activity, clear=Fal
     if clear:
         Allocation.objects.filter(timetable=timetable).delete()
     for i in constraints:
-        roomname = i.find('Room').text
+        roomname = i.find("Room").text
         print(roomname)
-        classroom = Classroom.objects.get(short_name=roomname, classroomset=timetable.classroomset)
+        classroom = Classroom.objects.get(
+            short_name=roomname, classroomset=timetable.classroomset
+        )
         print(classroom.short_name)
         prev_hindex = None
         start_h = None
@@ -24,9 +26,9 @@ def rooms_not_available_to_timetable(constraints, timetable, activity, clear=Fal
         for d in WEEKDAYS:
             day_dict[d[1]] = d[0]
         duration = 0
-        for t in i.findall('Not_Available_Time'):
-            day = t.find('Day').text
-            hour = t.find('Hour').text
+        for t in i.findall("Not_Available_Time"):
+            day = t.find("Day").text
+            hour = t.find("Hour").text
             # print "  " + day + " at " + hour
             hindex = WORKHOURS.index((hour, hour))
             duration += 1
@@ -64,11 +66,11 @@ def allocations_from_activities_file(f, timetable, name_filter=".*"):
     for i in WEEKDAYS:
         day_dict[i[1]] = i[0]
     l = []
-    for xa in activities_timetable.findall('Activity'):
-        aid = xa.find('Id').text
-        aday = xa.find('Day').text
-        ahour = xa.find('Hour').text
-        aroom = xa.find('Room').text
+    for xa in activities_timetable.findall("Activity"):
+        aid = xa.find("Id").text
+        aday = xa.find("Day").text
+        ahour = xa.find("Hour").text
+        aroom = xa.find("Room").text
         try:
             realization = ActivityRealization.objects.get(id=int(aid))
             if re.match(name_filter, realization.activity.short_name):
@@ -76,7 +78,9 @@ def allocations_from_activities_file(f, timetable, name_filter=".*"):
                 a.activityRealization = realization
                 a.start = ahour
                 a.day = day_dict[aday]
-                a.classroom = Classroom.objects.get(short_name=aroom, classroomset=timetable.classroomset)
+                a.classroom = Classroom.objects.get(
+                    short_name=aroom, classroomset=timetable.classroomset
+                )
                 a.timetable = timetable
                 l.append(a)
         except Exception as e:
@@ -88,19 +92,23 @@ def allocations_from_activities_file(f, timetable, name_filter=".*"):
 def allocation_teachers_from_file(f, allocations):
     teachers_timetable = ET.parse(f).getroot()
     teacher_dict = defaultdict(list)
-    for xt in teachers_timetable.findall('Teacher'):
-        n = xt.attrib['name']
+    for xt in teachers_timetable.findall("Teacher"):
+        n = xt.attrib["name"]
         # TODO enolicne sifre!
-        t = Teacher.objects.filter(sifra=n[n.rindex('(') + 1:-1], veljavnost=1)[0]
-        for d in xt.findall('Day'):
-            for h in d.findall('Hour'):
-                for r in h.findall('Room'):
-                    print((d.attrib['name'], h.attrib['name'], r.attrib['name']))
-                    teacher_dict[(d.attrib['name'], h.attrib['name'], r.attrib['name'])].append(t)
+        t = Teacher.objects.filter(sifra=n[n.rindex("(") + 1 : -1], veljavnost=1)[0]
+        for d in xt.findall("Day"):
+            for h in d.findall("Hour"):
+                for r in h.findall("Room"):
+                    print((d.attrib["name"], h.attrib["name"], r.attrib["name"]))
+                    teacher_dict[
+                        (d.attrib["name"], h.attrib["name"], r.attrib["name"])
+                    ].append(t)
 
     for a in allocations:
         try:
-            teachers = teacher_dict[(a.get_day_display(), a.start, a.classroom.short_name)]
+            teachers = teacher_dict[
+                (a.get_day_display(), a.start, a.classroom.short_name)
+            ]
             a.save()
             a.teachers = teachers
         except KeyError as e:
@@ -111,7 +119,9 @@ def allocation_teachers_from_file(f, allocations):
 
 def rooms_not_available_from_file(f):
     fet = ET.parse(f).getroot()
-    constraints = fet.find('Space_Constraints_List').findall('ConstraintRoomNotAvailableTimes')
+    constraints = fet.find("Space_Constraints_List").findall(
+        "ConstraintRoomNotAvailableTimes"
+    )
     return constraints
 
 
@@ -119,9 +129,9 @@ def best_timetables(d, nbest, base_timetable, fet_timetable_name, name_filter=".
     l = []
     for i in os.listdir(d):
         try:
-            f = open(os.path.join(d, i, fet_timetable_name + '_soft_conflicts.txt'))
+            f = open(os.path.join(d, i, fet_timetable_name + "_soft_conflicts.txt"))
             for j in f.readlines():
-                r = re.match(r'Total soft conflicts: (.*)', j)
+                r = re.match(r"Total soft conflicts: (.*)", j)
                 if r:
                     l.append((float(r.group(1)), i))
         except Exception as e:
@@ -135,17 +145,26 @@ def best_timetables(d, nbest, base_timetable, fet_timetable_name, name_filter=".
     respected = base_timetable.respects.all()
     l.sort()
     for i, di in enumerate(l[:nbest]):
-        suffix = '-' + str(i + 1) + '-' + di[1]
-        slug = base_timetable.slug + suffix 
-        timetable = Timetable.objects.get_or_create(slug=slug,
-                                                    defaults={'activityset': activity_set, 'groupset': group_set,
-                                                              'preferenceset': preference_set,
-                                                              'name': base_timetable.name + suffix,
-                                                              'classroomset': classroom_set, 'start': start,
-                                                              'end': end})[0]
+        suffix = "-" + str(i + 1) + "-" + di[1]
+        slug = base_timetable.slug + suffix
+        timetable = Timetable.objects.get_or_create(
+            slug=slug,
+            defaults={
+                "activityset": activity_set,
+                "groupset": group_set,
+                "preferenceset": preference_set,
+                "name": base_timetable.name + suffix,
+                "classroomset": classroom_set,
+                "start": start,
+                "end": end,
+            },
+        )[0]
         fet_dir = os.path.join(d, di[1])
-        al = allocations_from_activities_file(open(os.path.join(fet_dir, (fet_timetable_name + '_activities.xml'))),
-                                              timetable, name_filter)
+        al = allocations_from_activities_file(
+            open(os.path.join(fet_dir, (fet_timetable_name + "_activities.xml"))),
+            timetable,
+            name_filter,
+        )
         #    allocationTeachersFromFile(open(fet_dir + fetTimetableName + '_teachers.xml'), al)
         timetable.respects.clear()
         for r in respected:
@@ -158,9 +177,11 @@ def best_timetables(d, nbest, base_timetable, fet_timetable_name, name_filter=".
 
 def single_timetable(d, timetable, fet_timetable_name, clear=True, name_filter=".*"):
     fet_dir = d
-    al = allocations_from_activities_file(open(os.path.join(fet_dir, (fet_timetable_name + '_activities.xml'))),
-                                          timetable,
-                                          name_filter)
+    al = allocations_from_activities_file(
+        open(os.path.join(fet_dir, (fet_timetable_name + "_activities.xml"))),
+        timetable,
+        name_filter,
+    )
     #    allocationTeachersFromFile(open(fet_dir + fetTimetableName + '_teachers.xml'), al)
     if clear:
         Allocation.objects.filter(timetable=timetable).delete()
@@ -172,6 +193,7 @@ class Command(BaseCommand):
     """
     Import the output of FET into a timetable
     """
+
     help = """Usage: fet2django fet_timetable_dir [django_timetable_slug] [n_best] [allocation_name_filter]
 For multiple timetables, the number of best timetables must be specified
 Each of the multiple timetables will have their rank appended to the name of the basic timetable
@@ -180,31 +202,29 @@ example1: ./django/urnik/fet2django.py urnik_fu_fmf_zelje-single "fri-2012-zimsk
 example2: ./django/urnik/fet2django.py urnik_fu_fmf_zelje-multi "fri-2012-zimski-osnova" 3 ".*_P"""
 
     def add_arguments(self, parser):
-        parser.add_argument('fet_timetable_dir', nargs=1)
-        parser.add_argument('django_timetable_slug', nargs='?')
-        parser.add_argument('n_best', nargs='?',
-                            type=int, default=1)
-        parser.add_argument('allocation_name_filter', nargs='?',
-                            default='.*')
+        parser.add_argument("fet_timetable_dir", nargs=1)
+        parser.add_argument("django_timetable_slug", nargs="?")
+        parser.add_argument("n_best", nargs="?", type=int, default=1)
+        parser.add_argument("allocation_name_filter", nargs="?", default=".*")
 
     def handle(self, *args, **options):
-        fet_timetable_dir = options['fet_timetable_dir'][0]
+        fet_timetable_dir = options["fet_timetable_dir"][0]
         if fet_timetable_dir.endswith(os.path.sep):
             fet_timetable_dir = fet_timetable_dir[:-1]
         fet_name = os.path.split(fet_timetable_dir)[1]
-        if re.match(r'.*-multi', fet_timetable_dir):
-            fet_name = fet_name[:-len('-multi')]
+        if re.match(r".*-multi", fet_timetable_dir):
+            fet_name = fet_name[: -len("-multi")]
             multi = True
-        elif re.match(r'.*-single', fet_timetable_dir):
-            fet_name = fet_name[:-len('-single')]
+        elif re.match(r".*-single", fet_timetable_dir):
+            fet_name = fet_name[: -len("-single")]
             multi = False
         else:
             print("Timetable dir name must end in -single or -multi")
             exit(1)
-        name_filter = options['allocation_name_filter']
-        dest_timetable_slug = options['dest_timetable_slug']
+        name_filter = options["allocation_name_filter"]
+        dest_timetable_slug = options["dest_timetable_slug"]
         if multi:
-            nbest = options['n_best']
+            nbest = options["n_best"]
             timetable = Timetable.objects.get(slug=dest_timetable_slug)
             print("base:", timetable)
             best_timetables(fet_timetable_dir, nbest, timetable, fet_name, name_filter)
