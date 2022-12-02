@@ -232,6 +232,13 @@ class Activity(timetable.models.Activity):
         "LectureType", related_name="activities", null=False, on_delete=models.CASCADE
     )
 
+    #: is the activity ready for scheduling
+    ready_to_schedule = models.BooleanField(
+        "ready to schedule",
+        default=False,
+        help_text="The activity is ready to be scheduled.",
+    )
+
     @classmethod
     def from_timetable_activity(cls, timetable_activity):
         """
