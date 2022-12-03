@@ -3,13 +3,14 @@ import logging
 from collections import defaultdict
 from operator import attrgetter, itemgetter
 
-import frinajave
-import friprosveta
-import timetable.models
 from django.conf import settings
 from django.core.cache import cache
 from django.db import models
 from django.db.models import Q
+
+import frinajave
+import friprosveta
+import timetable.models
 from friprosveta.studis import Studenti
 from timetable.models import Group
 
@@ -17,43 +18,46 @@ logger = logging.getLogger(__name__)
 
 # Create your models here.
 REALIZATIONSIZES = [
-    ('MAJHNE', "izvajanje v majhnih skupinah"),
-    ('ASISTENTA', "izvajanje v velikih skupinah z asistentoma"),
-    ('DEMONSTRATOR', "izvajanje v velikih skupinah z enim "
-                     " asistentom in demonstratorjema"),
-    ('DRUGO', "drugo"),
+    ("MAJHNE", "izvajanje v majhnih skupinah"),
+    ("ASISTENTA", "izvajanje v velikih skupinah z asistentoma"),
+    (
+        "DEMONSTRATOR",
+        "izvajanje v velikih skupinah z enim " " asistentom in demonstratorjema",
+    ),
+    ("DRUGO", "drugo"),
 ]
 
 """
 Enrolment types: #studis_id, #description
 """
 ENROLMENTTYPES = [
-    (4, 'Prvi vpis v letnik'),
-    (41, 'Vzporedni vpis'),
-    (42, 'Prvi vpis diplomanta'),
-    (43, 'Prepis'),
-    (44, 'Dodatno leto (absolvent)'),
-    (5, 'Ponavljanje letnika'),
-    (7, 'Podaljšanje statusa po končanem dodatnem letu'),
-    (21, 'Izjemno podaljšanje statusa'),
-    (1, 'Vpis po merilih za prehode'),
-    (45, 'Vpis v semester skupnega študijskega programa'),
-    (47, 'Vpis po merilih za prehode v isti letnik'),
-    (51, 'Prvi vpis v program - v višji letnik na podlagi priznanih obveznosti'),
-    (46, 'Vpis za zaključek'),
-    (3, 'Občan'),
-    (23, 'Pavzer'),
-    (25, 'Študentje drugih fakultet UL'),
-    (26, 'Študentje skupnega programa kjer fakulteta ni nosilec'),
-    (27, 'Študentje drugih univerz'),
-    (28, 'Polaganje izpitov izven študijskega programa'),
-    (48, 'Študentje drugih univerz brez poročanja EVŠ'),
-    (49, 'Pavzerji skupnih študijskih programov')]
+    (4, "Prvi vpis v letnik"),
+    (41, "Vzporedni vpis"),
+    (42, "Prvi vpis diplomanta"),
+    (43, "Prepis"),
+    (44, "Dodatno leto (absolvent)"),
+    (5, "Ponavljanje letnika"),
+    (7, "Podaljšanje statusa po končanem dodatnem letu"),
+    (21, "Izjemno podaljšanje statusa"),
+    (1, "Vpis po merilih za prehode"),
+    (45, "Vpis v semester skupnega študijskega programa"),
+    (47, "Vpis po merilih za prehode v isti letnik"),
+    (51, "Prvi vpis v program - v višji letnik na podlagi priznanih obveznosti"),
+    (46, "Vpis za zaključek"),
+    (3, "Občan"),
+    (23, "Pavzer"),
+    (25, "Študentje drugih fakultet UL"),
+    (26, "Študentje skupnega programa kjer fakulteta ni nosilec"),
+    (27, "Študentje drugih univerz"),
+    (28, "Polaganje izpitov izven študijskega programa"),
+    (48, "Študentje drugih univerz brez poročanja EVŠ"),
+    (49, "Pavzerji skupnih študijskih programov"),
+]
 
 ENROLMENTSOURCES = [
-    ('studis_preenrolment', 'Študis - predvpis'),
-    ('studis_unconfirmed', 'Študis - v postopku'),
-    ('studis_confirmed', 'Študis - potrjen'),
+    ("studis_preenrolment", "Študis - predvpis"),
+    ("studis_unconfirmed", "Študis - v postopku"),
+    ("studis_confirmed", "Študis - potrjen"),
 ]
 
 
@@ -61,7 +65,9 @@ class GroupSizeHint(models.Model):
     def __str__(self):
         return "{0}: {1} ({2})".format(self.method, self.group, self.size)
 
-    method = models.CharField(max_length=128, help_text="Method used to calculate the size")
+    method = models.CharField(
+        max_length=128, help_text="Method used to calculate the size"
+    )
     size = models.IntegerField(default=0, help_text="Calculated size of the group")
     group = models.ForeignKey(timetable.models.Group, on_delete=models.CASCADE)
 
@@ -79,6 +85,7 @@ class GroupSizeHint(models.Model):
 
         If strategy_name is none of the above it raises KeyError exception.
         """
+
         def non_zero(hints):
             return [h for h in hints if h.size != 0]
 
@@ -104,9 +111,11 @@ class GroupSizeHint(models.Model):
             "max-non-zero": max_non_zero,
             "max-group": max_group,
         }
-        hints = [GroupSizeHint.objects.get(group=group, method=method)
-                 for method in methods
-                 if GroupSizeHint.objects.filter(group=group, method=method).exists()]
+        hints = [
+            GroupSizeHint.objects.get(group=group, method=method)
+            for method in methods
+            if GroupSizeHint.objects.filter(group=group, method=method).exists()
+        ]
         strategy = strategies[strategy_name]
         try:
             return strategy(group, hints)
@@ -129,25 +138,29 @@ class GroupSizeHint(models.Model):
         logger.info("Calculating size hints from old groups")
         logger.debug("groupset: {0}".format(groupset))
         logger.debug("enrollment types: {0}".format(enrollment_types))
-        method = "group from {0} with enrollment types {1}".format(groupset, enrollment_types)
+        method = "group from {0} with enrollment types {1}".format(
+            groupset, enrollment_types
+        )
         old_group = groupset.groups.get(short_name=group.short_name)
         logger.debug("oldgroup: {0}".format(old_group))
         students = old_group.students.all()
         logger.debug("got students: {0}".format(students))
         matched_students = set()
-        for enrollment in StudentEnrollment.objects.filter(groupset=groupset, student__in=students):
+        for enrollment in StudentEnrollment.objects.filter(
+            groupset=groupset, student__in=students
+        ):
             matched_students.add(enrollment.student)
         logger.debug("matched students: {0}".format(students))
         size = len(matched_students)
         logger.debug("Matched students size: {0}".format(size))
         GroupSizeHint.objects.filter(group=group, method=method).delete()
-        GroupSizeHint(group=group,
-                      size=size,
-                      method=method).save()
+        GroupSizeHint(group=group, size=size, method=method).save()
         logger.info("Size hint calculated")
 
     @staticmethod
-    def size_from_enrollments(group, groupset, enrollment_types=[4, 26], excluded_students=[], method=None):
+    def size_from_enrollments(
+        group, groupset, enrollment_types=[4, 26], excluded_students=[], method=None
+    ):
         """
         Calculate size from enrollments. The subject and study and classyear are inferred from the group (on
         which actitivities it is, group short name). Then enrollments to the given groupset
@@ -166,7 +179,9 @@ class GroupSizeHint(models.Model):
         logger.debug("groupset: {0}".format(groupset))
         logger.debug("enrollment types: {0}".format(enrollment_types))
         if method is None:
-            method = "enrollments from {0} for types {1}".format(groupset, enrollment_types)
+            method = "enrollments from {0} for types {1}".format(
+                groupset, enrollment_types
+            )
         group_subjects = set()
         group_study_short_name = group.study
         try:
@@ -179,21 +194,23 @@ class GroupSizeHint(models.Model):
             group_subjects.add(a.activity.subject)
         logger.debug("group_subjects: {0}".format(group_subjects))
         base_enrollments = StudentEnrollment.objects.filter(
-                groupset=groupset,
-                subject__in=group_subjects,
+            groupset=groupset,
+            subject__in=group_subjects,
         )
         logger.debug(f"Base size: {base_enrollments.count}")
-        if group_study_short_name == 'PAD':
-            se = base_enrollments.exclude(
-                enrollment_type__in=[4, 26]
-            )
+        if group_study_short_name == "PAD":
+            se = base_enrollments.filter(study__short_name="PAD")
+            # se = base_enrollments.exclude(
+            #    enrollment_type__in=[4, 26]
+            # )
+            pass
         else:
             se = base_enrollments.filter(
                 study__short_name=group_study_short_name,
                 classyear=classyear,
-                enrollment_type__in=[4, 26]
+                enrollment_type__in=[4, 26],
             )
-        if enrollment_types is not None and group_study_short_name != 'PAD':
+        if enrollment_types is not None and group_study_short_name != "PAD":
             se = se.filter(enrollment_type__in=enrollment_types)
         students = set()
         for e in se:
@@ -203,15 +220,24 @@ class GroupSizeHint(models.Model):
         logger.debug("students: {0}".format(students))
         logger.debug("size: {0}".format(size))
         GroupSizeHint.objects.filter(group=group, method=method).delete()
-        GroupSizeHint(group=group,
-                      size=size,
-                      method=method).save()
+        GroupSizeHint(group=group, size=size, method=method).save()
         logger.info("Size hint calculated")
 
 
 class Activity(timetable.models.Activity):
-    subject = models.ForeignKey('Subject', related_name='activities', on_delete=models.CASCADE)
-    lecture_type = models.ForeignKey('LectureType', related_name='activities', null=False, on_delete=models.CASCADE)
+    subject = models.ForeignKey(
+        "Subject", related_name="activities", on_delete=models.CASCADE
+    )
+    lecture_type = models.ForeignKey(
+        "LectureType", related_name="activities", null=False, on_delete=models.CASCADE
+    )
+
+    #: is the activity ready for scheduling
+    ready_to_schedule = models.BooleanField(
+        "ready to schedule",
+        default=False,
+        help_text="The activity is ready to be scheduled.",
+    )
 
     @classmethod
     def from_timetable_activity(cls, timetable_activity):
@@ -242,7 +268,9 @@ class Activity(timetable.models.Activity):
         :return: queryset if TeacherSubjectCycle entries.
         """
         if timetable_set is None:
-            timetable_set = self.activityset.timetable_set.first().timetable_sets.first()
+            timetable_set = (
+                self.activityset.timetable_set.first().timetable_sets.first()
+            )
         return frinajave.models.TeacherSubjectCycles.objects.filter(
             timetable_set=timetable_set,
             subject_code=self.subject.code,
@@ -257,7 +285,9 @@ class Activity(timetable.models.Activity):
             teacher = Teacher.objects.get(code=e.teacher_code)
             subject = Subject.objects.get(code=e.subject_code)
             lecture_type = LectureType.objects.get(pk=e.lecture_type)
-            instruction_type = dict(frinajave.models.INSTRUCTION_STYLE)[e.instruction_type]
+            instruction_type = dict(frinajave.models.INSTRUCTION_STYLE)[
+                e.instruction_type
+            ]
             ret.append((teacher, subject, lecture_type, instruction_type, e.cycles))
         return ret
 
@@ -272,7 +302,7 @@ class Activity(timetable.models.Activity):
             timetable_set=timetable_set,
             subject_code=self.subject.code,
             lecture_type=lecture_type_id,
-            teacher_code=teacher_code
+            teacher_code=teacher_code,
         )
         cycles = 0
         for entry in entries:
@@ -310,12 +340,14 @@ class Activity(timetable.models.Activity):
             logger.debug("Removed old realizations")
 
         if timetable_set is None:
-            timetable_set = self.activityset.timetable_set.first().timetable_sets.first()
+            timetable_set = (
+                self.activityset.timetable_set.first().timetable_sets.first()
+            )
             logger.debug("Chaged timetable_set value to {0}".format(timetable_set))
 
-        cycles = frinajave.models.TeacherSubjectCycles.realizations(self.subject.code,
-                                                                    timetable_set,
-                                                                    [self.lecture_type])
+        cycles = frinajave.models.TeacherSubjectCycles.realizations(
+            self.subject.code, timetable_set, [self.lecture_type]
+        )
         logger.debug("Got cycles {0}".format(cycles))
         for key, value in cycles.items():
             logger.debug("Processing entry {0}, {1}".format(key, value))
@@ -327,15 +359,19 @@ class Activity(timetable.models.Activity):
             for teachers_on_realization in value:
                 teachers = []
                 for teacher_code in teachers_on_realization:
-                    for code in teacher_code.split(','):
+                    for code in teacher_code.split(","):
                         try:
                             teacher = Teacher.objects.get(code=code)
                             teachers.append(teacher)
                         except Teacher.DoesNotExist as e:
-                            logger.exception("Teacher with code {0} does not exists".format(code))
+                            logger.exception(
+                                "Teacher with code {0} does not exists".format(code)
+                            )
                             raise
                         except Teacher.MultipleObjectsReturned as e:
-                            logger.exception("Multiple teachers with code {0}".format(code))
+                            logger.exception(
+                                "Multiple teachers with code {0}".format(code)
+                            )
                             raise
 
                 ar = ActivityRealization(
@@ -360,54 +396,22 @@ class Study(models.Model):
     def enrolledStudents(self, timetable):
         return friprosveta.models.Student.objects.filter(
             enrolled_subjects__study=self,
-            enrolled_subjects__groupset=timetable.groupset).distinct()
+            enrolled_subjects__groupset=timetable.groupset,
+        ).distinct()
 
     def enrolledStudentsClassyear(self, timetable, classyear):
         return friprosveta.models.Student.objects.filter(
             enrolled_subjects__study=self,
             enrolled_subjects__groupset=timetable.groupset,
-            enrolled_subjects__classyear=classyear).distinct()
+            enrolled_subjects__classyear=classyear,
+        ).distinct()
 
     def subjects(self, timetable, classyear):
         return friprosveta.models.Subject.objects.filter(
             enrolled_students__study=self,
             enrolled_students__groupset=timetable.groupset,
-            enrolled_students__classyear=classyear).distinct()
-
-
-# class Group(timetable.models.Group):
-#     """
-#     Group extended for FRI usage. Students are grouped
-#     according to their enrollment type, year and study.
-#     """
-#     enrollment_types = models.CharField(
-#         validators=[validate_comma_separated_integer_list],
-#         default='',
-#         help_text=_('Valid enrollment types for this group'),
-#         verbose_name=_('valid enrolment types'),
-#         blank=True,
-#         max_length=65536,
-#     )
-#     class_years = models.CharField(
-#         validators=[validate_comma_separated_integer_list],
-#         verbose_name=_('group class year'),
-#         help_text=_('Class year of students in this group'),
-#         max_length=65536,
-#     )
-#     studies = models.ManyToManyField(
-#         Study,
-#         verbose_name=_('group studies'),
-#         help_text=_('Studies of students on the group')
-#     )
-#     visible_in_navigation = models.BooleanField(
-#         default=False,
-#         verbose_name=_('visible in navigation'),
-#         help_text=_('Visible in group list in navigation menu on '
-#                     'main urnik web page')
-#     )
-#     intended_type = models.CharField(
-#         max_length=4,
-#         choices=timetable.models.ACTIVITYTYPES)
+            enrolled_students__classyear=classyear,
+        ).distinct()
 
 
 class ActivityRealization(timetable.models.ActivityRealization):
@@ -430,12 +434,12 @@ class ActivityRealization(timetable.models.ActivityRealization):
         d = {i[0]: i for i in REALIZATIONSIZES}
         n_teachers = self.teachers.count()
         if n < 24 and n_teachers == 1:
-            return d['MAJHNE']
+            return d["MAJHNE"]
         elif n >= 24 and n_teachers == 2:
-            return d['ASISTENTA']
+            return d["ASISTENTA"]
         elif n >= 24:  # demonstratorjev ni nujno v bazi, ne bodo pisani
-            return d['DEMONSTRATOR']
-        return d['DRUGO']  # npr. 2 asistenta za majhno skupino.
+            return d["DEMONSTRATOR"]
+        return d["DRUGO"]  # npr. 2 asistenta za majhno skupino.
 
     def assign_groups(self, up_to_size=None, mix_studies=False, add_pad=True):
         """
@@ -455,24 +459,27 @@ class ActivityRealization(timetable.models.ActivityRealization):
         :param up_to_size: fill realization until this size is reached.
         :return: list of groups newly added to the realization.
         """
-        studies_sorting_weight = {"BUN-RI": 1,
-                                  "BVS-RI": 2,
-                                  "BMA-RI": 3,
-                                  "BDR-RI": 4,
-                                  "BUN-RM": 5,
-                                  "BUN-MM": 6,
-                                  "BUN-UI": 7,
-                                  "BMA-RM": 8,
-                                  "BMA-MM": 9,
-                                  "BMA-PRI": 10,
-                                  "BMA-KO": 11,
-                                  }
+        studies_sorting_weight = {
+            "BUN-RI": 1,
+            "BVS-RI": 2,
+            "BMA-RI": 3,
+            "BDR-RI": 4,
+            "BUN-RM": 5,
+            "BUN-MM": 6,
+            "BUN-UI": 7,
+            "BMA-RM": 8,
+            "BMA-MM": 9,
+            "BMA-PRI": 10,
+            "BMA-KO": 11,
+        }
         if up_to_size is None:
             up_to_size = self.intended_size
         unassigned_groups = self.activity.groups.all()
         logger.debug("UG: {}".format(unassigned_groups))
         other_activity_realizations = self.activity.realizations.exclude(pk=self.id)
-        unassigned_groups = list(unassigned_groups.exclude(realizations__in=other_activity_realizations))
+        unassigned_groups = list(
+            unassigned_groups.exclude(realizations__in=other_activity_realizations)
+        )
         logger.debug("UG: {}".format(unassigned_groups))
         if self.groups.exists():
             # Add only groups from studies already on realization
@@ -491,10 +498,14 @@ class ActivityRealization(timetable.models.ActivityRealization):
         # In s there are tuples ((#classyear, #study), #available_size))
         s_pos = 0
         d_pos = 0
-        s = sorted([(e, sum(g.size for g in d[e])) for e in d], key=itemgetter(1), reverse=True)
+        s = sorted(
+            [(e, sum(g.size for g in d[e])) for e in d], key=itemgetter(1), reverse=True
+        )
         # Now sort according to the study sorting weight...
-        s = sorted([(e, sum(g.size for g in d[e])) for e in d],
-                   key=lambda e: (studies_sorting_weight.get(e[0][1], 100), e[0][0]))
+        s = sorted(
+            [(e, sum(g.size for g in d[e])) for e in d],
+            key=lambda e: (studies_sorting_weight.get(e[0][1], 100), e[0][0]),
+        )
         logger.debug("Type: {}".format(self.activity.type))
         logger.debug("To add: {}".format(s))
         logger.debug("Size: {}".format(self.group_size))
@@ -536,18 +547,24 @@ class Teacher(timetable.models.Teacher):
 
     @property
     def subjects(self):
-        return Subject.objects.filter(id__in=self.activities.values_list('subject', flat=True).distinct())
+        return Subject.objects.filter(
+            id__in=self.activities.values_list("subject", flat=True).distinct()
+        )
 
     @property
     def owned_subjects(self):
-        return self.my_subjects.filter(Q(subjectheadteachers__end__isnull=True) |
-                                       Q(subjectheadteachers__end__lt=datetime.datetime.now()))
+        return self.my_subjects.filter(
+            Q(subjectheadteachers__end__isnull=True)
+            | Q(subjectheadteachers__end__lt=datetime.datetime.now())
+        )
 
     @property
     def others_subjects(self):
-        return self.subjects.exclude(Q(subject__heads__exact=self),
-                                     Q(subject__subjectheadteachers__end__isnull=True) | Q(
-                                         subject__subjectheadteachers__end__lt=datetime.datetime.now()))
+        return self.subjects.exclude(
+            Q(subject__heads__exact=self),
+            Q(subject__subjectheadteachers__end__isnull=True)
+            | Q(subject__subjectheadteachers__end__lt=datetime.datetime.now()),
+        )
 
     @property
     def activities(self):
@@ -555,23 +572,30 @@ class Teacher(timetable.models.Teacher):
 
     @property
     def owned_activities(self):
-        return Activity.objects.filter(Q(teachers__exact=self), Q(subject__heads__exact=self),
-                                       Q(subject__subjectheadteachers__end__isnull=True) | Q(
-                                           subject__subjectheadteachers__end__lt=datetime.datetime.now()))
+        return Activity.objects.filter(
+            Q(teachers__exact=self),
+            Q(subject__heads__exact=self),
+            Q(subject__subjectheadteachers__end__isnull=True)
+            | Q(subject__subjectheadteachers__end__lt=datetime.datetime.now()),
+        )
 
     @property
     def subordinate_activities(self):
-        return Activity.objects.filter(Q(subject__heads__exact=self),
-                                       Q(subject__subjectheadteachers__end__isnull=True) | Q(
-                                           subject__subjectheadteachers__end__lt=datetime.datetime.now()))
+        return Activity.objects.filter(
+            Q(subject__heads__exact=self),
+            Q(subject__subjectheadteachers__end__isnull=True)
+            | Q(subject__subjectheadteachers__end__lt=datetime.datetime.now()),
+        )
 
     @property
     def others_activities(self):
-        return self.activities.exclude(Q(subject__heads__exact=self),
-                                       Q(subject__subjectheadteachers__end__isnull=True) | Q(
-                                           subject__subjectheadteachers__end__lt=datetime.datetime.now()))
+        return self.activities.exclude(
+            Q(subject__heads__exact=self),
+            Q(subject__subjectheadteachers__end__isnull=True)
+            | Q(subject__subjectheadteachers__end__lt=datetime.datetime.now()),
+        )
 
-    def busy_hours(self, tt, levels=['CANT', 'HATE']):
+    def busy_hours(self, tt, levels=["CANT", "HATE"]):
         """
         When teacher is busy in a given timetable.
         Teacher is considered busy if:
@@ -586,25 +610,39 @@ class Teacher(timetable.models.Teacher):
 
         def add_busy_hours(busy_hours, start, duration, day, weight=1):
             start_index = timetable.models.WORKHOURS.index((start, start))
-            for hour in timetable.models.WORKHOURS[start_index: start_index + duration]:
+            for hour in timetable.models.WORKHOURS[
+                start_index : start_index + duration
+            ]:
                 busy_hours[day].add((hour[0], weight))
 
         preferences = timetable.models.TeacherTimePreference.objects.filter(
-            preferenceset=tt.preferenceset, level__in=levels, teacher=self)
+            preferenceset=tt.preferenceset, level__in=levels, teacher=self
+        )
         allocations = timetable.models.Allocation.objects.filter(
-            timetable=tt, activityRealization__teachers=self)
+            timetable=tt, activityRealization__teachers=self
+        )
 
         busy_hours = {day[0]: set() for day in timetable.models.WEEKDAYS}
         for allocation in allocations:
-            add_busy_hours(busy_hours, allocation.start, allocation.duration, allocation.day)
+            add_busy_hours(
+                busy_hours, allocation.start, allocation.duration, allocation.day
+            )
         for preference in preferences:
-            add_busy_hours(busy_hours, preference.start, preference.duration,
-                           preference.day, preference.adjustedWeight())
+            add_busy_hours(
+                busy_hours,
+                preference.start,
+                preference.duration,
+                preference.day,
+                preference.adjustedWeight(),
+            )
         return busy_hours
 
     def free_hours(self, tt, weight=0):
         busy = self.busy_hours(tt)
-        free = {day[0]: set(list(zip(*timetable.models.WORKHOURS))[0]) for day in timetable.models.WEEKDAYS}
+        free = {
+            day[0]: set(list(zip(*timetable.models.WORKHOURS))[0])
+            for day in timetable.models.WEEKDAYS
+        }
 
         for day in busy:
             for (hour, busy_weight) in busy[day]:
@@ -621,18 +659,19 @@ class Student(models.Model):
     name = models.CharField(max_length=128)
     surname = models.CharField(max_length=128)
     studentId = models.CharField(max_length=8, unique=True)
-    groups = models.ManyToManyField(timetable.models.Group,
-                                    related_name='students')
-    follows = models.ManyToManyField(timetable.models.ActivityRealization,
-                                     related_name='followers')
+    groups = models.ManyToManyField(timetable.models.Group, related_name="students")
+    follows = models.ManyToManyField(
+        timetable.models.ActivityRealization, related_name="followers"
+    )
 
     # Get study from student enrollments
     def study(self, timetable):
         studies = defaultdict(int)
         # for group in self.groups.all():
         #    studies[group.study] += 1
-        for e in StudentEnrollment.objects.filter(student=self,
-                                                  groupset=timetable.groupset):
+        for e in StudentEnrollment.objects.filter(
+            student=self, groupset=timetable.groupset
+        ):
             studies[e.study] += 1
         # Default study is "BUN-RI"
         (study, m) = ("BUN-RI", -1)
@@ -647,24 +686,20 @@ class Student(models.Model):
         """
         return friprosveta.models.Subject.objects.filter(
             enrolled_students__student=self,
-            enrolled_students__groupset=timetable.groupset
+            enrolled_students__groupset=timetable.groupset,
         ).distinct()
 
     def realizations(self, tt):
         """
         Return a list of the realizations the given student is attending.
         """
-        return tt.realizations.filter(
-            groups__students=self
-        )
+        return tt.realizations.filter(groups__students=self)
 
     def allocations(self, tt):
         """
         Return a list of the allocations the given student is attending.
         """
-        return tt.allocations.filter(
-            activityRealization__groups__students=self
-        )
+        return tt.allocations.filter(activityRealization__groups__students=self)
 
     def busy_hours(self, tt):
         """
@@ -679,7 +714,9 @@ class Student(models.Model):
     def is_available(self, tt, allocation, busy_hours=None):
         if busy_hours is None:
             busy_hours = self.busy_hours(tt)
-        return all((allocation.day, hour) not in busy_hours for hour in allocation.hours)
+        return all(
+            (allocation.day, hour) not in busy_hours for hour in allocation.hours
+        )
 
     def overlaps(self, tt, busy_hours=None):
         """
@@ -738,17 +775,27 @@ class Student(models.Model):
             mapping = cache.get("cached_user_student_map")
             if mapping is None:
                 s = Studenti()
-                data = s.get_confirmed_enrollments(datetime.datetime.utcnow().isoformat()[:10], unfinished=True)
+                data = s.get_confirmed_enrollments(
+                    datetime.datetime.utcnow().isoformat()[:10], unfinished=True
+                )
                 if not data:
                     raise IOError("Error getting api data.")
-                mapping = {a["upn"].strip(): a["vpisna_stevilka"].strip() for a in data if a["upn"] is not None}
+                mapping = {
+                    a["upn"].strip(): a["vpisna_stevilka"].strip()
+                    for a in data
+                    if a["upn"] is not None
+                }
                 cache.set("cached_user_student_map", mapping)
 
-            student_id = mapping.get(email, "this string is definitely not a student id")
+            student_id = mapping.get(
+                email, "this string is definitely not a student id"
+            )
 
             return Student.objects.get(studentId=student_id)
         else:
-            return Student.objects.get(name__iexact=user.first_name, surname__iexact=user.last_name)
+            return Student.objects.get(
+                name__iexact=user.first_name, surname__iexact=user.last_name
+            )
 
 
 class StudentEnrollment(models.Model):
@@ -757,26 +804,38 @@ class StudentEnrollment(models.Model):
     """
 
     def __str__(self):
-        return "{0}; {1} ({2}); {3} {4}".format(self.student, self.subject, self.subject.code, self.classyear,
-                                                self.study)
+        return "{0}; {1} ({2}); {3} {4}".format(
+            self.student, self.subject, self.subject.code, self.classyear, self.study
+        )
 
-    groupset = models.ForeignKey(timetable.models.GroupSet, related_name='enrolled_students', on_delete=models.CASCADE)
-    student = models.ForeignKey(Student, related_name='enrolled_subjects', on_delete=models.CASCADE)
-    subject = models.ForeignKey("Subject", related_name='enrolled_students', on_delete=models.CASCADE)
-    study = models.ForeignKey("Study", related_name='enrolled_students', blank=True, null=True,
-                              on_delete=models.CASCADE)
-    classyear = models.IntegerField(default=0)
-    enrollment_type = models.CharField(
-        max_length=4,
-        choices=ENROLMENTTYPES
+    groupset = models.ForeignKey(
+        timetable.models.GroupSet,
+        related_name="enrolled_students",
+        on_delete=models.CASCADE,
     )
+    student = models.ForeignKey(
+        Student, related_name="enrolled_subjects", on_delete=models.CASCADE
+    )
+    subject = models.ForeignKey(
+        "Subject", related_name="enrolled_students", on_delete=models.CASCADE
+    )
+    study = models.ForeignKey(
+        "Study",
+        related_name="enrolled_students",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
+    classyear = models.IntegerField(default=0)
+    enrollment_type = models.CharField(max_length=4, choices=ENROLMENTTYPES)
     regular_enrollment = models.BooleanField(default=True)
-    source = models.CharField(max_length=64, null=True,
-                              choices=ENROLMENTSOURCES)
+    source = models.CharField(max_length=64, null=True, choices=ENROLMENTSOURCES)
 
 
 class Kaprica(models.Model):
-    group = models.OneToOneField(timetable.models.Group, primary_key=True, on_delete=models.CASCADE)
+    group = models.OneToOneField(
+        timetable.models.Group, primary_key=True, on_delete=models.CASCADE
+    )
     regular = models.BooleanField(default=True)
 
 
@@ -790,26 +849,33 @@ class Timetable(timetable.models.Timetable):
 
     @property
     def teachers(self):
-        return Teacher.objects.filter(activity_realizations__activity__activityset__timetable=self).distinct()
+        return Teacher.objects.filter(
+            activity_realizations__activity__activityset__timetable=self
+        ).distinct()
 
     def teachers_type(self, type):
-        return Teacher.objects.filter(activities__activityset__timetable=self,
-                                      activities__type=type).distinct()
+        return Teacher.objects.filter(
+            activities__activityset__timetable=self, activities__type=type
+        ).distinct()
 
     @property
     def subjects(self):
-        return Subject.objects.filter(activities__activityset__timetable=self).distinct()
+        return Subject.objects.filter(
+            activities__activityset__timetable=self
+        ).distinct()
 
     @property
     def students(self):
         """
         Return all students enrolled (based on enrollments to subjects).
         """
-        return friprosveta.models.Student.objects.filter(enrolled_subjects__subject__in=self.subjects,
-                                                         enrolled_subjects__groupset=self.groupset).distinct()
+        return friprosveta.models.Student.objects.filter(
+            enrolled_subjects__subject__in=self.subjects,
+            enrolled_subjects__groupset=self.groupset,
+        ).distinct()
 
     def startendcodes(self):
-        return self.start, self.end, list(self.subjects.values_list('code', flat=True))
+        return self.start, self.end, list(self.subjects.values_list("code", flat=True))
 
 
 class LectureType(models.Model):
@@ -831,25 +897,53 @@ class Subject(models.Model):
 
     code = models.CharField(max_length=16, blank=True, unique=True)
     name = models.CharField(max_length=256)
-    heads = models.ManyToManyField(Teacher, through='SubjectHeadTeachers', symmetrical=False, related_name='subjects')
-    students = models.ManyToManyField(Student, through='StudentEnrollment', symmetrical=False, related_name='subjects')
-    managers = models.ManyToManyField(Teacher, related_name='managed_subjects')
+    heads = models.ManyToManyField(
+        Teacher,
+        through="SubjectHeadTeachers",
+        symmetrical=False,
+        related_name="subjects",
+    )
+    students = models.ManyToManyField(
+        Student, through="StudentEnrollment", symmetrical=False, related_name="subjects"
+    )
+    managers = models.ManyToManyField(Teacher, related_name="managed_subjects")
     short_name = models.CharField(max_length=32, blank=True, default="")
+
+    def get_studis_studies(self, year, najave, studij):
+        """Return the list of tuples (classyear, study) for this subject."""
+        studies = []
+        for izvajanje, predmetnik in self.get_studis_predmetnik(year, studij, najave):
+            studies.append(
+                (
+                    najave.get_classyear(predmetnik),
+                    najave.get_study_short_name(predmetnik),
+                )
+            )
+        return studies
 
     def make_short_name(self):
         """
         Create short_name from the long one.
         """
         if self.short_name == "":
-            ignore = ['IN', 'V', 'Z', 'S']
-            self.short_name = ''.join([s[0] for s in filter(lambda s: s not in ignore, self.name.upper().split())])
+            ignore = ["IN", "V", "Z", "S"]
+            self.short_name = "".join(
+                [
+                    s[0]
+                    for s in filter(
+                        lambda s: s not in ignore, self.name.upper().split()
+                    )
+                ]
+            )
             self.save()
         return self.short_name
 
     def studiesOnTimetables(self, timetables):
         # TODO: should I read this from Studij??
         studies = []
-        for activity in self.activities.filter(type='P', activityset__timetable__in=timetables):
+        for activity in self.activities.filter(
+            type="P", activityset__timetable__in=timetables
+        ):
             for study in activity.studies:
                 if study not in studies:
                     studies.append(study)
@@ -861,7 +955,8 @@ class Subject(models.Model):
         """
         return friprosveta.models.Student.objects.filter(
             enrolled_subjects__subject=self,
-            enrolled_subjects__groupset=timetable.groupset).distinct()
+            enrolled_subjects__groupset=timetable.groupset,
+        ).distinct()
 
     def enrolled_students_for_study(self, timetable, study):
         """
@@ -876,9 +971,13 @@ class Subject(models.Model):
         )
 
     def enrolled_students_study_classyear(self, timetable, study, classyear):
-        return self.enrolled_students_for_study(timetable, study).filter(
-            enrolled_subjects__classyear=classyear,
-        ).distinct()
+        return (
+            self.enrolled_students_for_study(timetable, study)
+            .filter(
+                enrolled_subjects__classyear=classyear,
+            )
+            .distinct()
+        )
 
     def unallocated_groups(self, type, timetable):
         """
@@ -889,10 +988,14 @@ class Subject(models.Model):
         to any realization or it is assgned to the realization without teachers.
         """
         group_set = set()
-        for activity in self.activities.filter(type=type, activityset=timetable.activityset):
+        for activity in self.activities.filter(
+            type=type, activityset=timetable.activityset
+        ):
             for group in activity.groups_without_realization(timetable.groupset):
                 group_set.add(group)
-            for group in activity.groups_on_realizations_without_teachers(timetable.groupset):
+            for group in activity.groups_on_realizations_without_teachers(
+                timetable.groupset
+            ):
                 group_set.add(group)
         return group_set
 
@@ -914,9 +1017,13 @@ class Subject(models.Model):
         """
         Return the number of hours of given type for a given teacher for a given timetable.
         """
-        return tt.realizations.filter(
-            activity__type=type, activity__activity__subject=self, teachers=teacher
-        ).distinct().count()
+        return (
+            tt.realizations.filter(
+                activity__type=type, activity__activity__subject=self, teachers=teacher
+            )
+            .distinct()
+            .count()
+        )
 
     def teachers(self, timetable):
         """
@@ -927,7 +1034,8 @@ class Subject(models.Model):
         """
         subject_activities = self.activities.filter(activityset=timetable.activityset)
         return friprosveta.models.Teacher.objects.filter(
-            id__in=subject_activities.values_list('teachers', flat=True).distinct())
+            id__in=subject_activities.values_list("teachers", flat=True).distinct()
+        )
 
     def allCycles(self, timetable, types):
         """
@@ -957,29 +1065,37 @@ class Subject(models.Model):
         """
         if najave is None:
             from friprosveta.studis import Najave
+
             najave = Najave(year)
-        return [e for e in najave.get_izvajanja() if e['sifra_predmeta'] == str(self.code)]
+        return [
+            e for e in najave.get_izvajanja() if e["sifra_predmeta"] == str(self.code)
+        ]
 
     def get_studis_predmetnik(self, year, studij=None, najave=None):
         """
-        Get a tuple izvajanje, predmetnik for every izvajanje of this subject in the given year.
+        Get a tuple (izvajanje, predmetnik) for every izvajanje of this subject in the given year.
         The data is read from Studis.
         :param year:
         :return: a list of tuples (izvajanje, predmetnik) for the given subject/year combination.
         """
         if najave is None:
             from friprosveta.studis import Najave
+
             najave = Najave(year)
         if studij is None:
             from friprosveta.studis import Studij
+
             studij = Studij(year)
         studijsko_drevo = studij.get_studijsko_drevo()
         izvajanja = self.get_studis_izvajanja(year, najave=najave)
-        return [(izvajanje, najave.get_predmetnik(izvajanje, studijsko_drevo))
-                for izvajanje in izvajanja]
+        return [
+            (izvajanje, najave.get_predmetnik(izvajanje, studijsko_drevo))
+            for izvajanje in izvajanja
+        ]
 
-    def update_or_create_subgroups_from_hints(self, activityset, methods, strategy_name,
-                                              empty_groups=False, groups=None):
+    def update_or_create_subgroups_from_hints(
+        self, activityset, methods, strategy_name, empty_groups=False, groups=None
+    ):
         """
         Create or update subgroups for lab work (LV and AV) from groups on lectures (considered top groups).
         :param activityset: fetch the activities from the given activity set.
@@ -1032,26 +1148,36 @@ class Subject(models.Model):
                     short_name=short_name,
                     parent=parent_group,
                     groupset=parent_group.groupset,
-                    defaults={'size': size, 'name': name}
+                    defaults={"size": size, "name": name},
                 )[0]
                 groups.append(g)
             return groups
 
         """Create necessary groups for subject from hints"""
-        top_groups = self.activities.filter(activityset=activityset, type='P').first().groups.all()
+        top_groups = (
+            self.activities.filter(activityset=activityset, type="P")
+            .first()
+            .groups.all()
+        )
         if groups is None:
             groups = top_groups
         else:
             top_groups = [g for g in top_groups if g in groups]
-        types = set(self.activities.filter(activityset=activityset).exclude(type='P').values_list('type', flat=True))
-        sizes = {'LV': [15, 3, 2, 1], 'AV': [30, 5, 3, 2, 1]}
+        types = set(
+            self.activities.filter(activityset=activityset)
+            .exclude(type="P")
+            .values_list("type", flat=True)
+        )
+        sizes = {"LV": [15, 3, 2, 1], "AV": [30, 5, 3, 2, 1]}
         for group in top_groups:
             for type in types:
                 # set all sizes to 0, so that additional (not needed) groups will have size set to 0
                 # Others will be set by the create_groups method
                 activities = self.activities.filter(activityset=activityset, type=type)
                 for activity in activities:
-                    for tmp in activity.groups.filter(short_name__startswith=group.short_name):
+                    for tmp in activity.groups.filter(
+                        short_name__startswith=group.short_name
+                    ):
                         tmp.size = 0
                         tmp.save()
                 gsh_size = GroupSizeHint.strategy(group, methods, strategy_name)
@@ -1068,22 +1194,24 @@ class Subject(models.Model):
                 for activity in activities:
                     activity.groups.add(*groups)
 
-    def create_obligatory_top_level_groups_from_studis_predmetnik(self, year, tt, studij=None, najave=None):
+    def create_obligatory_top_level_groups_from_studis_predmetnik(
+        self, year, tt, studij=None, najave=None
+    ):
         def group_name(predmetnik):
             """Return tuple (name, short_name)."""
             assert len(predmetnik) == 5, "Predmetnik not complete " + str(predmetnik)
             short_name = "{0}_{1}-{2}".format(
-                predmetnik[5]['short_title'],
-                predmetnik[1]['short_title'],
-                predmetnik[2]['short_title'],
+                predmetnik[5]["short_title"],
+                predmetnik[1]["short_title"],
+                predmetnik[2]["short_title"],
             )
             name = "{0}, {1}, {2}".format(
-                predmetnik[5]['title']['sl'],
-                predmetnik[2]['title']['sl'],
-                predmetnik[1]['title']['sl'],
+                predmetnik[5]["title"]["sl"],
+                predmetnik[2]["title"]["sl"],
+                predmetnik[1]["title"]["sl"],
             )
             # Smer
-            if predmetnik[3]['short_title'] is not None:
+            if predmetnik[3]["short_title"] is not None:
                 short_name += f"-{predmetnik[3]['short_title']}"
                 name += f", smer {predmetnik[3]['title']['sl']}"
             return (short_name, name)
@@ -1097,8 +1225,8 @@ class Subject(models.Model):
             """
             logger.debug("Entering get_study")
             study_short_name = "{0}-{1}".format(
-                predmetnik[1]['short_title'],
-                predmetnik[2]['short_title'],
+                predmetnik[1]["short_title"],
+                predmetnik[2]["short_title"],
             )
             logger.debug("Study short name: {}".format(study_short_name))
             logger.debug("Exiting get_study")
@@ -1107,24 +1235,32 @@ class Subject(models.Model):
         #            return Study.objects.get(short_name=study_short_name)
 
         predmetnik = self.get_studis_predmetnik(year, studij=studij, najave=najave)
-        obligatory_predmetnik = [e for e in predmetnik if e[0]['obvezen']]
+        obligatory_predmetnik = [e for e in predmetnik if e[0]["obvezen"]]
         for izvajanje, predmetnik in obligatory_predmetnik:
             sname, name = group_name(predmetnik)
             study = get_study(predmetnik)
             group_size = self.enrolled_students_for_study(tt, study).count()
-            logger.debug("Obligatory group sname, name, study: {} ; {} ; {}".format(sname, name, study))
+            logger.debug(
+                "Obligatory group sname, name, study: {} ; {} ; {}".format(
+                    sname, name, study
+                )
+            )
             g, created = Group.objects.update_or_create(
                 name=name,
                 short_name=sname,
                 parent=None,
                 groupset=tt.groupset,
-                defaults={"size": group_size}
+                defaults={"size": group_size},
             )
-            for activity in tt.activities.filter(type='P', subject=self):
+            for activity in tt.activities.filter(type="P", subject=self):
                 activity.groups.add(g)
 
-    def create_non_obligatory_top_level_groups_from_studis_predmetnik(self, year, tt, studij=None, najave=None):
-        logger.info("Entering create_non_obligatory_top_level_groups_from_studis_predmetnik")
+    def create_non_obligatory_top_level_groups_from_studis_predmetnik(
+        self, year, tt, studij=None, najave=None
+    ):
+        logger.info(
+            "Entering create_non_obligatory_top_level_groups_from_studis_predmetnik"
+        )
 
         def group_name(predmetnik):
             """Return tuple (name, short_name)."""
@@ -1134,17 +1270,17 @@ class Subject(models.Model):
             logger.debug(predmetnik)
             assert len(predmetnik) == 5, "Predmetnik not complete " + str(predmetnik)
             short_name = "{0}_{1}-{2}".format(
-                predmetnik[5]['short_title'],
-                predmetnik[1]['short_title'],
-                predmetnik[2]['short_title'],
+                predmetnik[5]["short_title"],
+                predmetnik[1]["short_title"],
+                predmetnik[2]["short_title"],
             )
             name = "{0}, {1}, {2}".format(
-                predmetnik[5]['title']['sl'],
-                predmetnik[2]['title']['sl'],
-                predmetnik[1]['title']['sl'],
+                predmetnik[5]["title"]["sl"],
+                predmetnik[2]["title"]["sl"],
+                predmetnik[1]["title"]["sl"],
             )
             # Smer
-            if predmetnik[3]['short_title'] is not None:
+            if predmetnik[3]["short_title"] is not None:
                 short_name += f"-{predmetnik[3]['short_title']}"
                 name += f", smer {predmetnik[3]['title']['sl']}"
 
@@ -1153,8 +1289,8 @@ class Subject(models.Model):
         groupset = tt.groupset
         predmetnik = self.get_studis_predmetnik(year, studij=studij, najave=najave)
         logger.debug("Got predmetnik: {}".format(predmetnik))
-        lecture_activities = tt.activities.filter(type='P', subject=self)
-        for e, predmetnik in [e for e in predmetnik if not e[0]['obvezen']]:
+        lecture_activities = tt.activities.filter(type="P", subject=self)
+        for e, predmetnik in [e for e in predmetnik if not e[0]["obvezen"]]:
             logger.debug("Processing {}".format(e))
             try:
                 sname, name = group_name(predmetnik)
@@ -1167,52 +1303,66 @@ class Subject(models.Model):
                 short_name=sname,
                 parent=None,
                 groupset=groupset,
-                defaults={"size": 0})
+                defaults={"size": 0},
+            )
             logger.debug("{} {}".format(parent_group, created))
             append = self.short_name
-            if append.find('(') > -1:
-                append = append[:append.find('(')]
-            sname += '_{0}({1})'.format(append, self.code)
-            name = '{0}, {1}'.format(name, self.name)
+            if append.find("(") > -1:
+                append = append[: append.find("(")]
+            sname += "_{0}({1})".format(append, self.code)
+            name = "{0}, {1}".format(name, self.name)
             logger.debug("GSN: {}, GN: {}".format(sname, name))
             g, created = Group.objects.get_or_create(
                 name=name,
                 short_name=sname,
                 parent=parent_group,
                 groupset=groupset,
-                defaults={"size": 0})
+                defaults={"size": 0},
+            )
             logger.debug("{}, {}".format(g, created))
             for activity in lecture_activities:
                 logger.debug("Adding to activity {}".format(activity))
                 activity.groups.add(g)
         padalci_top_level, created = Group.objects.get_or_create(
-            name='Vsi padalci',
-            short_name='VSI_PADALCI',
+            name="Vsi padalci",
+            short_name="VSI_PADALCI",
             parent=None,
             groupset=groupset,
-            defaults={"size": 0}
+            defaults={"size": 0},
         )
         padalci, created = Group.objects.get_or_create(
-            name='{} padalci'.format(self.code),
-            short_name='{}_PAD'.format(self.code),
+            name="{} padalci".format(self.code),
+            short_name="{}_PAD".format(self.code),
             parent=padalci_top_level,
             groupset=groupset,
-            defaults={"size": 0}
+            defaults={"size": 0},
         )
 
-        logger.debug("Got top level padalci group: {}, created: {}".format(padalci_top_level, created))
+        logger.debug(
+            "Got top level padalci group: {}, created: {}".format(
+                padalci_top_level, created
+            )
+        )
         for activity in lecture_activities:
             activity.groups.add(padalci)
-        logger.info("Exiting create_non_obligatory_top_level_groups_from_studis_predmetnik")
+        logger.info(
+            "Exiting create_non_obligatory_top_level_groups_from_studis_predmetnik"
+        )
 
-    def create_top_level_groups_from_studis_predmetnik(self, year, tt, studij=None, najave=None):
-        self.create_obligatory_top_level_groups_from_studis_predmetnik(year, tt, studij=studij, najave=najave)
-        self.create_non_obligatory_top_level_groups_from_studis_predmetnik(year, tt, studij=studij, najave=najave)
+    def create_top_level_groups_from_studis_predmetnik(
+        self, year, tt, studij=None, najave=None
+    ):
+        self.create_obligatory_top_level_groups_from_studis_predmetnik(
+            year, tt, studij=studij, najave=najave
+        )
+        self.create_non_obligatory_top_level_groups_from_studis_predmetnik(
+            year, tt, studij=studij, najave=najave
+        )
 
     def is_obligatory(self, year, studij=None, najave=None):
         """Is thi subject obligatory on some study for the given year?"""
         predmetnik = self.get_studis_predmetnik(year, studij=studij, najave=najave)
-        return len([e for e in predmetnik if e[0]['obvezen']]) > 0
+        return len([e for e in predmetnik if e[0]["obvezen"]]) > 0
 
 
 class SubjectHeadTeachers(models.Model):
@@ -1227,8 +1377,8 @@ class SubjectHeadTeachers(models.Model):
 
     start = models.DateTimeField(blank=False, null=False)
     end = models.DateTimeField(blank=True, null=True)
-    subject = models.ForeignKey('Subject', on_delete=models.CASCADE)
-    teacher = models.ForeignKey('Teacher', on_delete=models.CASCADE)
+    subject = models.ForeignKey("Subject", on_delete=models.CASCADE)
+    teacher = models.ForeignKey("Teacher", on_delete=models.CASCADE)
 
 
 class Cathedra(models.Model):
@@ -1236,6 +1386,12 @@ class Cathedra(models.Model):
         return "{0}".format(self.name)
 
     name = models.CharField(max_length=256)
-    heads = models.ManyToManyField(timetable.models.Teacher, related_name='head_of_cathedras')
-    najave_deputies = models.ManyToManyField(timetable.models.Teacher, related_name='cathedras_handled', blank=True)
-    members = models.ManyToManyField(timetable.models.Teacher, related_name='cathedras', blank=True)
+    heads = models.ManyToManyField(
+        timetable.models.Teacher, related_name="head_of_cathedras"
+    )
+    najave_deputies = models.ManyToManyField(
+        timetable.models.Teacher, related_name="cathedras_handled", blank=True
+    )
+    members = models.ManyToManyField(
+        timetable.models.Teacher, related_name="cathedras", blank=True
+    )

@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('timetable', '0003_auto_20180930_2347'),
+        ("timetable", "0003_auto_20180930_2347"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='group',
-            name='visible_in_navigation',
+            model_name="group",
+            name="visible_in_navigation",
             field=models.BooleanField(default=False),
         ),
     ]

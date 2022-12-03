@@ -7,22 +7,15 @@ def last_like_course_demands(tt, tt_old, campus, term, year):
             if subject.code in current_subject_codes:
                 demands += [
                     "studentCourse",
-                    {
-                        "subject": subject.code,
-                        "courseNumber": "101"
-                    },
+                    {"subject": subject.code, "courseNumber": "101"},
                     [],
                 ]
-        entry = [
-            "student",
-            {"externalId": str(student.id)},
-            demands
-        ]
+        entry = ["student", {"externalId": str(student.id)}, demands]
         entries += entry
 
     offerings = [
         "lastLikeCourseDemand",
         {"campus": campus, "term": term, "year": year},
-        entries
+        entries,
     ]
     return offerings

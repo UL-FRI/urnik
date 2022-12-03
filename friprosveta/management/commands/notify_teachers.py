@@ -11,10 +11,10 @@ import friprosveta.models
 def send_email(fr, to, subject, message):
     smtp = smtplib.SMTP()
     smtp.connect("fri-postar10.fri1.uni-lj.si", 2025)
-    body = MIMEText(message.encode('utf-8'), 'plain', 'utf-8')
-    body['From'] = fr
-    body['To'] = to
-    body['Subject'] = Header(subject, 'utf-8')
+    body = MIMEText(message.encode("utf-8"), "plain", "utf-8")
+    body["From"] = fr
+    body["To"] = to
+    body["Subject"] = Header(subject, "utf-8")
     # TODO: read password and username from the config file
     smtp.login("urnik", "SECRET_PASSWORD")
     return smtp.sendmail(fr, to, body.as_string())
@@ -24,24 +24,28 @@ class Command(BaseCommand):
     """
     Notify teachers about new timetable.
     """
-    args = 'notify_teachers timetable_slug'
-    help = 'Send emails to teachers assigned to activities in new timetable.'
+
+    args = "notify_teachers timetable_slug"
+    help = "Send emails to teachers assigned to activities in new timetable."
 
     def handle(self, *args, **options):
         assert len(args) == 1, "{0}".format(args)
         timetable = friprosveta.models.Timetable.objects.get(slug=args[0])
         aset = timetable.activityset
         for teacher in timetable.teachers:
-            self.notify_teacher(teacher,
-                                timetable)
+            self.notify_teacher(teacher, timetable)
 
     def notify_teacher(self, teacher, tt):
         aset = tt.activityset
         teacher_activities = teacher.activities.filter(activityset=aset)
         subjects = "\n".join(["{0}".format(a) for a in teacher_activities])
-        kwargs = {"timetable_set_slug": tt.timetable_sets.first().slug,
-                  "preference_set_slug": tt.preferenceset.slug}
-        preferences_url = "https://urnik.fri.uni-lj.si" + reverse('my_preferences', kwargs=kwargs)
+        kwargs = {
+            "timetable_set_slug": tt.timetable_sets.first().slug,
+            "preference_set_slug": tt.preferenceset.slug,
+        }
+        preferences_url = "https://urnik.fri.uni-lj.si" + reverse(
+            "my_preferences", kwargs=kwargs
+        )
         email = """Spoštovani!
 
 V prihajajočem urniku "{0}" učite spodaj navedene predmete.
@@ -58,11 +62,15 @@ V kolikor so zgornji podatki netočni, nama prosim to čimprej sporočite preko 
 
 Lep pozdrav in vse dobro v novem letu 2016 Vam želiva
 Vaša FRI Urničarja
-""".format(tt.name, subjects, preferences_url)
+""".format(
+            tt.name, subjects, preferences_url
+        )
         try:
-            send_email("urnik@fri.uni-lj.si",
-                       teacher.user.email,
-                      "Novi urnik: {0}".format(tt.name),
-                       email)
+            send_email(
+                "urnik@fri.uni-lj.si",
+                teacher.user.email,
+                "Novi urnik: {0}".format(tt.name),
+                email,
+            )
         except Exception as e:
             print(e)

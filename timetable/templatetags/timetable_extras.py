@@ -14,20 +14,27 @@ def add_class(value, css_class):
     string = str(value)  # value.decode('latin-1')
     match = class_re.search(string)
     if match:
-        m = re.search(r'^%s$|^%s\s|\s%s\s|\s%s$' % (css_class, css_class,
-                                                    css_class, css_class), match.group(1))
+        m = re.search(
+            r"^%s$|^%s\s|\s%s\s|\s%s$" % (css_class, css_class, css_class, css_class),
+            match.group(1),
+        )
         if not m:
-            return mark_safe(class_re.sub(match.group(1) + " " + css_class,
-                                          string))
+            return mark_safe(class_re.sub(match.group(1) + " " + css_class, string))
     else:
-        p = string.find('>')
+        p = string.find(">")
         if p > -1:
-            if string[(p - 1):] == '/>':
-                string = string[:(p - 1)] + ' class="{0}"/>'.format(css_class) + string[p + 1:]
+            if string[(p - 1) :] == "/>":
+                string = (
+                    string[: (p - 1)]
+                    + ' class="{0}"/>'.format(css_class)
+                    + string[p + 1 :]
+                )
             else:
-                string = string[:p] + ' class="{0}">'.format(css_class) + string[p + 1:]
+                string = (
+                    string[:p] + ' class="{0}">'.format(css_class) + string[p + 1 :]
+                )
         return mark_safe(string)
-    return value.encode('latin-1')
+    return value.encode("latin-1")
 
 
 @register.tag
@@ -36,7 +43,9 @@ def value_from_settings(parser, token):
         # split_contents() knows not to split quoted strings.
         tag_name, var = token.split_contents()
     except ValueError:
-        raise template.TemplateSyntaxError("%r tag requires a single argument" % token.contents.split()[0])
+        raise template.TemplateSyntaxError(
+            "%r tag requires a single argument" % token.contents.split()[0]
+        )
     return ValueFromSettings(var)
 
 

@@ -1,52 +1,63 @@
 import MySQLdb
 from django.conf import settings
 
+from timetable.models import WORKHOURS
+
 
 # Convert day and duration in start index
 def to_start_index(day, start):
-    day_start = (24 * 2) * index_days[day]
-    hour_start = int(start[:2]) * 2
+    day_start = (24 * 12) * index_days[day]  # 12 5 minut slots per hour
+    hour_start = int(start[:2]) * 12  # 12 slots per hour
     return day_start + hour_start
 
 
 class PreferenceLevel:
-    (Required,
-     StronglyPreferred,
-     Preferred,
-     Neutral,
-     Discouraged,
-     StronglyDiscouraged,
-     Prohibited) = ('R', '0', '1', '2', '3', '4', 'P')
+    (
+        Required,
+        StronglyPreferred,
+        Preferred,
+        Neutral,
+        Discouraged,
+        StronglyDiscouraged,
+        Prohibited,
+    ) = ("R", "0", "1", "2", "3", "4", "P")
 
 
-index_days = {'MON': 0, 'TUE': 1, 'WED': 2, 'THU': 3, 'FRI': 4}
-allocation_days = {'MON': 64, 'TUE': 32, 'WED': 16, 'THU': 8, 'FRI': 4,
-                   "SAT": 2, "SUN": 1}
+index_days = {"MON": 0, "TUE": 1, "WED": 2, "THU": 3, "FRI": 4}
+allocation_days = {
+    "MON": 64,
+    "TUE": 32,
+    "WED": 16,
+    "THU": 8,
+    "FRI": 4,
+    "SAT": 2,
+    "SUN": 1,
+}
 day_mapping = {k: v for v, k in allocation_days.items()}
 
-itype_type_mapping = {10: 'P', 30: 'LV', 20: 'AV'}
+itype_type_mapping = {10: "P", 30: "LV", 20: "AV"}
 type_itype_mapping = {v: k for k, v in itype_type_mapping.items()}
 
 level_to_type = {
-    'WANT': (PreferenceLevel.StronglyPreferred, PreferenceLevel.Preferred),
-    'HATE': (PreferenceLevel.StronglyDiscouraged, PreferenceLevel.Discouraged),
-    'CANT': (PreferenceLevel.Prohibited, PreferenceLevel.Prohibited)
+    "WANT": (PreferenceLevel.StronglyPreferred, PreferenceLevel.Preferred),
+    "HATE": (PreferenceLevel.StronglyDiscouraged, PreferenceLevel.Discouraged),
+    "CANT": (PreferenceLevel.Prohibited, PreferenceLevel.Prohibited),
 }
 
 campus = "UL FRI"
 term = "Zimski semester"
-year = "2015"
+year = "2021"
 
 
 class Database:
     options = {
-        'user': settings.UNITIME_DB_USER,
-        'passwd': settings.UNITIME_DB_PASSWORD,
-        'db': "timetable",
-        'charset': "utf8",
-        'use_unicode': True,
-        'port': 3306,
-        'host': settings.UNITIME_DB_HOST,
+        "user": settings.UNITIME_DB_USER,
+        "passwd": settings.UNITIME_DB_PASSWORD,
+        "db": settings.UNITIME_DB_NAME,
+        "charset": "utf8",
+        "use_unicode": True,
+        "port": 3306,
+        "host": settings.UNITIME_DB_HOST,
     }
 
     def __init__(self):
@@ -85,7 +96,9 @@ class Database:
         c = db.cursor()
         high_query = "SELECT next_hi FROM hibernate_unique_key"
         c.execute(high_query)
-        assert c.rowcount == 1, "There must be exactly one \
+        assert (
+            c.rowcount == 1
+        ), "There must be exactly one \
 high value in the database"
         high = c.fetchone()[0]
         lo = 32767
@@ -103,9 +116,11 @@ high value in the database"
         return self.current_id - 1
 
     def get_session_id(self, start_date):
-        session_id_query = ("SELECT uniqueid FROM sessions "
-                            "where session_begin_date_time ='{0}'"
-                            ).format(start_date)
+        session_id_query = (
+            "SELECT uniqueid FROM sessions " "where session_begin_date_time ='{0}'"
+        ).format(start_date)
         self.cursor.execute(session_id_query)
-        assert self.rowcount == 1, "There must be exactly one session with the given start in the database"
+        assert (
+            self.rowcount == 1
+        ), "There must be exactly one session with the given start in the database"
         return self.fetch_next_row()[0]

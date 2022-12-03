@@ -14,15 +14,18 @@ def staff(tt, campus, term, year):
     entries = []
 
     for teacher in tt.teachers.all():
-        entries += ["staffMember", {
-            "externalId": str(teacher.id),
-            "firstName": teacher.user.first_name,
-            "middleName": "",
-            "lastName": teacher.user.last_name,
-            "positionType": "PROF",  # TODO: add profesor
-            "department": "1"
-        }, []
-                    ]
+        entries += [
+            "staffMember",
+            {
+                "externalId": str(teacher.id),
+                "firstName": teacher.user.first_name,
+                "middleName": "",
+                "lastName": teacher.user.last_name,
+                "positionType": "PROF",  # TODO: add profesor
+                "department": "1",
+            },
+            [],
+        ]
 
     staff = ["staff", {"campus": campus, "term": term, "year": year}, entries]
     return staff
@@ -30,4 +33,4 @@ def staff(tt, campus, term, year):
 
 if __name__ == "__main__":
     doc = create_xml(staff())
-    print(doc.toprettyxml(indent="  ").encode('utf8'))
+    print(doc.toprettyxml(indent="  ").encode("utf8"))

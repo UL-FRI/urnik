@@ -5,23 +5,31 @@ import time
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django_auth_ldap.backend import LDAPBackend
-from ldap3 import Server, Connection, ALL
+from ldap3 import ALL, Connection, Server
 
 from friprosveta.models import Teacher
 from timetable.models import User
 
 
-def create_single_user(first_name=None, last_name=None,
-                       uid=None, code=None, teacher_code=None,
-                       write_to_db=False, out_stream=sys.stdout):
+def create_single_user(
+    first_name=None,
+    last_name=None,
+    uid=None,
+    code=None,
+    teacher_code=None,
+    write_to_db=False,
+    out_stream=sys.stdout,
+):
     """
     Add a new user, create a Teacher object.
     """
     logger = logging.getLogger(__name__)
     logger.info("Creating single user")
-    logger.debug("FN: {0}, LN: {1}, UID: {2}, code: {3}, tc: {4}, wdb: {5}, os: {6}".format(
-        first_name, last_name, uid, code, teacher_code, write_to_db, out_stream
-    ))
+    logger.debug(
+        "FN: {0}, LN: {1}, UID: {2}, code: {3}, tc: {4}, wdb: {5}, os: {6}".format(
+            first_name, last_name, uid, code, teacher_code, write_to_db, out_stream
+        )
+    )
     try:
         logger.debug("Creating LDAP backend")
         ldap_backend = LDAPBackend()
@@ -30,18 +38,23 @@ def create_single_user(first_name=None, last_name=None,
         ldap_backend = None
 
     logger.debug("LDAP connecting to {0}".format(settings.AUTH_LDAP_SERVER_URI))
-    attributes = ['userprincipalname', 'givenname', 'sn', 'objectclass']
+    attributes = ["userprincipalname", "givenname", "sn", "objectclass"]
     server = Server(settings.AUTH_LDAP_SERVER_URI, get_info=ALL)
-    conn = Connection(server, settings.AUTH_LDAP_BIND_DN,
-                      settings.AUTH_LDAP_BIND_PASSWORD, auto_bind=True)
+    conn = Connection(
+        server,
+        settings.AUTH_LDAP_BIND_DN,
+        settings.AUTH_LDAP_BIND_PASSWORD,
+        auto_bind=True,
+    )
     logger.debug("LDAP BIND with username {0}".format(settings.AUTH_LDAP_BIND_DN))
     time.sleep(1)
     s = settings.AUTH_LDAP_USER_SEARCH
     if uid is None and (first_name is not None and last_name is not None):
         logger.debug("UID is none, trying name based search")
         k = (first_name, last_name)
-        filterstr = '(&(givenName={0})(sn={1}))'.format(first_name.encode('cp1250'),
-                                                        last_name.encode('cp1250'))
+        filterstr = "(&(givenName={0})(sn={1}))".format(
+            first_name.encode("cp1250"), last_name.encode("cp1250")
+        )
         logger.debug("Filterstring: {0}".format(filterstr))
         try:
             conn.search(s.base_dn, filterstr, attributes=attributes)
@@ -86,8 +99,7 @@ def create_single_user(first_name=None, last_name=None,
             last_name = k[1].upper()
             logger.debug("Set last name to {0}".format(first_name))
 
-    logger.debug("Found {} {}: {}".format(
-        first_name, last_name, v))
+    logger.debug("Found {} {}: {}".format(first_name, last_name, v))
 
     if ldap_backend is not None:
         try:
@@ -101,7 +113,9 @@ def create_single_user(first_name=None, last_name=None,
             u = User.objects.get(username__iexact=v)
             u.first_name = first_name
             u.last_name = last_name
-            logger.debug("Setting first nad last name: {}; {}".format(first_name, last_name))
+            logger.debug(
+                "Setting first nad last name: {}; {}".format(first_name, last_name)
+            )
             if write_to_db:
                 logger.debug("Saving user to DB")
                 u.save()
@@ -137,15 +151,20 @@ class Command(BaseCommand):
     help = """Populate user from uni-lj.si LDAP"""
 
     def add_arguments(self, parser):
-        parser.add_argument('--username', nargs=1, help="import user by username")
-        parser.add_argument('--name', nargs=2, help="import user by first_name, last_name")
+        parser.add_argument("--username", nargs=1, help="import user by username")
+        parser.add_argument(
+            "--name", nargs=2, help="import user by first_name, last_name"
+        )
 
     def handle(self, *args, **options):
-        username = options['username']
-        name = options['name']
+        username = options["username"]
+        name = options["name"]
         if username:
             create_single_user(uid=username[0], write_to_db=self.WRITE_TO_DB)
         elif name:
-            create_single_user(first_name=name[0].upper(),
-                               last_name=name[1].upper(),
-                               write_to_db=self.WRITE_TO_DB, out_stream=self.stdout)
+            create_single_user(
+                first_name=name[0].upper(),
+                last_name=name[1].upper(),
+                write_to_db=self.WRITE_TO_DB,
+                out_stream=self.stdout,
+            )

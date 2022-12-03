@@ -15,6 +15,7 @@ framework.
 """
 import os
 import sys
+
 # import site
 
 # We defer to a DJANGO_SETTINGS_MODULE already in the environment. This breaks
@@ -24,8 +25,8 @@ import sys
 # Add the site-packages of the chosen virtualenv to work with
 # site.addsitedir('/home/urnik/.virtualenvs/urnik/local/lib/python2.7/site-packages')
 
-#Add the app's directory to the PYTHONPATH
-sys.path.append('/app/path')
+# Add the app's directory to the PYTHONPATH
+sys.path.append("/app/path")
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app/settings")
 
@@ -39,5 +40,5 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app/settings")
 # file. This includes Django's development server, if the WSGI_APPLICATION
 # setting points here.
 from django.core.wsgi import get_wsgi_application
-application = get_wsgi_application()
 
+application = get_wsgi_application()

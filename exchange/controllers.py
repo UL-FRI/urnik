@@ -1,16 +1,23 @@
 import logging
-from typing import Optional, Dict, List, Union
-from datetime import datetime
 from collections import Counter
+from datetime import datetime
+from typing import Dict, List, Optional, Union
 
 import pytz
 from django.contrib.auth.models import User
 from django.db import transaction
-from django.db.models import F, Q, Model
+from django.db.models import F, Model, Q
 
-from friprosveta.models import Student, Timetable, Subject, Teacher, Activity
+from friprosveta.models import Activity, Student, Subject, Teacher, Timetable
 from timetable.models import Allocation, Group
-from .models import Exchange, SubjectPreference, FormProcessingError, TIMETABLE_EXCHANGE_GROUP_PREFIX, ExchangeType
+
+from .models import (
+    TIMETABLE_EXCHANGE_GROUP_PREFIX,
+    Exchange,
+    ExchangeType,
+    FormProcessingError,
+    SubjectPreference,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -31,10 +38,16 @@ def get_available_exchanges(timetable, student):
     for subject in subjects:
         # the double __activity__activity link is because we first access timetable.models.Activity,
         # and then friprosveta.models.Activity, which is a subclass
-        ex = Exchange.objects.filter(Q(date_finalized__isnull=True, date_cancelled__isnull=True) &
-                                     Q(allocation_from__activityRealization__activity__activity__subject=subject))\
-                             .exclude(initiator_student=student)\
-                             .distinct()
+        ex = (
+            Exchange.objects.filter(
+                Q(date_finalized__isnull=True, date_cancelled__isnull=True)
+                & Q(
+                    allocation_from__activityRealization__activity__activity__subject=subject
+                )
+            )
+            .exclude(initiator_student=student)
+            .distinct()
+        )
         result.extend(ex)
     return result
 
@@ -57,9 +70,12 @@ def get_student_exchanges(timetable, student):
     if student is None:
         raise ValueError("Cannot get exchanges for an undefined student.")
     # any exchange object that a student has a relation to, but only the ones related to the given timetable
-    return Exchange.objects.filter((Q(initiator_student=student) | Q(requested_finalizer_student=student)) &
-                                   Q(allocation_to__activityRealization__activity__activityset__timetable=timetable))\
-                           .distinct()
+    return Exchange.objects.filter(
+        (Q(initiator_student=student) | Q(requested_finalizer_student=student))
+        & Q(
+            allocation_to__activityRealization__activity__activityset__timetable=timetable
+        )
+    ).distinct()
 
 
 def get_subject_exchanges(timetable, subject):
@@ -79,8 +95,10 @@ def get_subject_exchanges(timetable, subject):
         raise ValueError("Cannot get exchanges for an undefined timetable.")
     if subject is None:
         raise ValueError("Cannot get exchanges for an undefined subject.")
-    return Exchange.objects.filter(allocation_from__activityRealization__activity__activity__subject=subject,
-                                   allocation_from__activityRealization__activity__activityset__timetable=timetable)
+    return Exchange.objects.filter(
+        allocation_from__activityRealization__activity__activity__subject=subject,
+        allocation_from__activityRealization__activity__activityset__timetable=timetable,
+    )
 
 
 def get_teacher_subject_list(timetable, teacher):
@@ -100,8 +118,12 @@ def get_teacher_subject_list(timetable, teacher):
         raise ValueError("Cannot get subjects for an undefined timetable.")
     if teacher is None:
         raise ValueError("Cannot get subjects for an undefined teacher.")
-    activities = Activity.objects.filter(teachers__exact=teacher, activityset__timetable__exact=timetable)
-    return Subject.objects.filter(id__in=activities.values_list('subject', flat=True).distinct())
+    activities = Activity.objects.filter(
+        teachers__exact=teacher, activityset__timetable__exact=timetable
+    )
+    return Subject.objects.filter(
+        id__in=activities.values_list("subject", flat=True).distinct()
+    )
 
 
 def get_student_subject_list(timetable, student):
@@ -152,9 +174,13 @@ def get_allocations_for_subject(timetable, subject, activity_types=None):
         raise ValueError("Cannot get allocations for a non-existent timetable.")
     if subject is None:
         raise ValueError("Cannot get allocations for an undefined subject.")
-    allocations = Allocation.objects.filter(timetable=timetable, activityRealization__activity__activity__subject=subject)
+    allocations = Allocation.objects.filter(
+        timetable=timetable, activityRealization__activity__activity__subject=subject
+    )
     if activity_types is not None:
-        allocations = allocations.filter(activityRealization__activity__type__in=activity_types)
+        allocations = allocations.filter(
+            activityRealization__activity__type__in=activity_types
+        )
     return allocations
 
 
@@ -181,8 +207,11 @@ def parse_student_from_ambiguous_identifier(student_string):
             user = User.objects.get(email=student_string)
             student = Student.from_user(user)
         except User.DoesNotExist:
-            raise FormProcessingError("Student not found.", "'{}' is not a valid e-mail or "
-                                                            "enrollment number.".format(student_string))
+            raise FormProcessingError(
+                "Student not found.",
+                "'{}' is not a valid e-mail or "
+                "enrollment number.".format(student_string),
+            )
     if student is None:
         raise FormProcessingError("Student not found.", "No matching student found.")
     return student
@@ -207,7 +236,9 @@ def get_current_student_subject_allocation(timetable, student, subject, activity
     """
     if student is None:
         raise ValueError("Cannot get allocations for an unspecified student.")
-    subject_allocations = get_allocations_for_subject(timetable, subject, activity_types=activity_types)
+    subject_allocations = get_allocations_for_subject(
+        timetable, subject, activity_types=activity_types
+    )
     return subject_allocations.get(activityRealization__groups__students=student)
 
 
@@ -223,8 +254,12 @@ def get_student_subject_other_allocations(timetable, student, subject, activity_
     Returns:
         QuerySet[Allocation]: An allocation different from the student's current allocation.
     """
-    available_allocations = get_allocations_for_subject(timetable, subject, activity_types=activity_types)
-    student_allocation = get_current_student_subject_allocation(timetable, student, subject, activity_types)
+    available_allocations = get_allocations_for_subject(
+        timetable, subject, activity_types=activity_types
+    )
+    student_allocation = get_current_student_subject_allocation(
+        timetable, student, subject, activity_types
+    )
     return available_allocations.exclude(id=student_allocation.id)
 
 
@@ -241,7 +276,9 @@ def number_of_students_in_allocation(allocation):
         (ValueError): If `allocation` is None.
     """
     if allocation is None:
-        raise ValueError("Cannot count the number of students in a non-existent allocation.")
+        raise ValueError(
+            "Cannot count the number of students in a non-existent allocation."
+        )
     return Student.objects.filter(groups__in=list(allocation.groups.all())).count()
 
 
@@ -259,17 +296,27 @@ def is_exchange_acceptable(exchange, student):
         (ValueError): If `exchange` or `student` are None.
     """
     if exchange is None:
-        raise ValueError("Cannot determine whether an exchange is acceptable for an undefined exchange.")
+        raise ValueError(
+            "Cannot determine whether an exchange is acceptable for an undefined exchange."
+        )
     if student is None:
-        raise ValueError("Cannot determine whether an exchange is acceptable for an undefined student.")
+        raise ValueError(
+            "Cannot determine whether an exchange is acceptable for an undefined student."
+        )
 
-    subject = Activity.from_timetable_activity(exchange.allocation_from.activityRealization.activity).subject
+    subject = Activity.from_timetable_activity(
+        exchange.allocation_from.activityRealization.activity
+    ).subject
     timetable = exchange.allocation_from.timetable
 
-    allocation_from = get_current_student_subject_allocation(timetable, student, subject, ["LAB", "LV", "AV"])
+    allocation_from = get_current_student_subject_allocation(
+        timetable, student, subject, ["LAB", "LV", "AV"]
+    )
     allocation_to = exchange.allocation_from
     initiator_student = student
-    requested_finalizer_student = exchange.initiator_student if exchange.requested_finalizer_student else None
+    requested_finalizer_student = (
+        exchange.initiator_student if exchange.requested_finalizer_student else None
+    )
 
     # creating this enables us to use consolidated matching logic
     dummy_exchange = Exchange(
@@ -277,7 +324,7 @@ def is_exchange_acceptable(exchange, student):
         allocation_to=allocation_to,
         initiator_student=initiator_student,
         requested_finalizer_student=requested_finalizer_student,
-        date_created=datetime.utcnow()
+        date_created=datetime.utcnow(),
     )
     return dummy_exchange.matches(exchange)
 
@@ -296,11 +343,19 @@ def is_exchange_cancellable(exchange, student):
         (ValueError): If `exchange` or `student` are None.
     """
     if exchange is None:
-        raise ValueError("Cannot determine whether an exchange is cancellable for an undefined exchange.")
+        raise ValueError(
+            "Cannot determine whether an exchange is cancellable for an undefined exchange."
+        )
     if student is None:
-        raise ValueError("Cannot determine whether an exchange is cancellable for an undefined student.")
+        raise ValueError(
+            "Cannot determine whether an exchange is cancellable for an undefined student."
+        )
 
-    return not exchange.is_cancelled() and not exchange.is_finalized() and exchange.initiator_student == student
+    return (
+        not exchange.is_cancelled()
+        and not exchange.is_finalized()
+        and exchange.initiator_student == student
+    )
 
 
 @transaction.atomic
@@ -332,18 +387,36 @@ def process_exchange_request_matches(exchange_left, exchange_right):
         # here this is either ExchangeType.REQUEST_OFFER or ExchangeType.SPECIFIC_STUDENT
         # in both cases, we have two students and all allocations set
         tt = exchange_left.allocation_from.timetable
-        group_source_left = get_allocation_student_group(exchange_left.allocation_from, exchange_left.initiator_student)
-        move_student_to_exchange_groups(exchange_left.initiator_student, group_source_left, tt)
-        group_source_left = get_allocation_student_group(exchange_left.allocation_from, exchange_left.initiator_student)
-        group_source_right = get_allocation_student_group(exchange_right.allocation_from, exchange_right.initiator_student)
-        move_student_to_exchange_groups(exchange_right.initiator_student, group_source_right, tt)
-        group_source_right = get_allocation_student_group(exchange_right.allocation_from, exchange_right.initiator_student)
-        group_exchange_left = get_allocation_exchange_group(exchange_left.allocation_from) or \
-                              create_allocation_exchange_group(exchange_left.allocation_from)
-        group_exchange_right = get_allocation_exchange_group(exchange_left.allocation_to) or \
-                               create_allocation_exchange_group(exchange_left.allocation_to)
-        move_student(exchange_left.initiator_student, group_source_left, group_exchange_right)
-        move_student(exchange_right.initiator_student, group_source_right, group_exchange_left)
+        group_source_left = get_allocation_student_group(
+            exchange_left.allocation_from, exchange_left.initiator_student
+        )
+        move_student_to_exchange_groups(
+            exchange_left.initiator_student, group_source_left, tt
+        )
+        group_source_left = get_allocation_student_group(
+            exchange_left.allocation_from, exchange_left.initiator_student
+        )
+        group_source_right = get_allocation_student_group(
+            exchange_right.allocation_from, exchange_right.initiator_student
+        )
+        move_student_to_exchange_groups(
+            exchange_right.initiator_student, group_source_right, tt
+        )
+        group_source_right = get_allocation_student_group(
+            exchange_right.allocation_from, exchange_right.initiator_student
+        )
+        group_exchange_left = get_allocation_exchange_group(
+            exchange_left.allocation_from
+        ) or create_allocation_exchange_group(exchange_left.allocation_from)
+        group_exchange_right = get_allocation_exchange_group(
+            exchange_left.allocation_to
+        ) or create_allocation_exchange_group(exchange_left.allocation_to)
+        move_student(
+            exchange_left.initiator_student, group_source_left, group_exchange_right
+        )
+        move_student(
+            exchange_right.initiator_student, group_source_right, group_exchange_left
+        )
     else:
         # this is one of
         # ExchangeType.TEACHER_OFFER: has both allocations, but no initiator_student
@@ -358,11 +431,18 @@ def process_exchange_request_matches(exchange_left, exchange_right):
 
         # the finalizer exchange (the one made by the student) has all the information we need
         tt = finalizer_exchange.allocation_from.timetable
-        group_from = get_allocation_student_group(finalizer_exchange.allocation_from, finalizer_exchange.initiator_student)
-        move_student_to_exchange_groups(finalizer_exchange.initiator_student, group_from, tt)
-        group_from = get_allocation_student_group(finalizer_exchange.allocation_from, finalizer_exchange.initiator_student)
-        group_to = get_allocation_exchange_group(finalizer_exchange.allocation_to) or \
-                   create_allocation_exchange_group(finalizer_exchange.allocation_to)
+        group_from = get_allocation_student_group(
+            finalizer_exchange.allocation_from, finalizer_exchange.initiator_student
+        )
+        move_student_to_exchange_groups(
+            finalizer_exchange.initiator_student, group_from, tt
+        )
+        group_from = get_allocation_student_group(
+            finalizer_exchange.allocation_from, finalizer_exchange.initiator_student
+        )
+        group_to = get_allocation_exchange_group(
+            finalizer_exchange.allocation_to
+        ) or create_allocation_exchange_group(finalizer_exchange.allocation_to)
 
         # because there is no student on the other end, we only move once
         move_student(finalizer_exchange.initiator_student, group_from, group_to)
@@ -379,7 +459,13 @@ def process_exchange_request_matches(exchange_left, exchange_right):
 
 
 @transaction.atomic
-def process_new_exchange_request(timetable, source_person, requested_student, subject_transfer_to_map, force_allocation_from=None):
+def process_new_exchange_request(
+    timetable,
+    source_person,
+    requested_student,
+    subject_transfer_to_map,
+    force_allocation_from=None,
+):
     """
     Args:
         timetable (Timetable): The requested timetable scope.
@@ -401,33 +487,54 @@ def process_new_exchange_request(timetable, source_person, requested_student, su
         try:
             subject = Subject.objects.get(id=subject)
         except Subject.DoesNotExist:
-            raise FormProcessingError("Invalid subject.", "An error occurred when processing subjects.")
+            raise FormProcessingError(
+                "Invalid subject.", "An error occurred when processing subjects."
+            )
 
         # this is the only place where we create preferences
-        preference, preference_created = SubjectPreference.objects.get_or_create(subject=subject)
+        preference, preference_created = SubjectPreference.objects.get_or_create(
+            subject=subject
+        )
         current_date = datetime.utcnow().date()
         if not preference.exchange_allowed:
-            raise FormProcessingError("Exchange not allowed.", "Exchanges for this subject have been disabled.")
-        elif preference.exchange_deadline and current_date > preference.exchange_deadline:
-            local_tz = pytz.timezone('Europe/Ljubljana')
+            raise FormProcessingError(
+                "Exchange not allowed.",
+                "Exchanges for this subject have been disabled.",
+            )
+        elif (
+            preference.exchange_deadline and current_date > preference.exchange_deadline
+        ):
+            local_tz = pytz.timezone("Europe/Ljubljana")
             dt = datetime.combine(preference.exchange_deadline, datetime.min.time())
             deadline_display = pytz.utc.localize(dt, is_dst=None).astimezone(local_tz)
             # deadline_display = preference.exchange_deadline.replace(tzinfo=pytz.utc).astimezone(local_tz)
-            raise FormProcessingError("Exchange not allowed.", "The exchange deadline has passed ({})".format(
-                                      deadline_display.strftime("%Y-%m-%d %H:%M")))
+            raise FormProcessingError(
+                "Exchange not allowed.",
+                "The exchange deadline has passed ({})".format(
+                    deadline_display.strftime("%Y-%m-%d %H:%M")
+                ),
+            )
 
         if force_allocation_from:
             allocation_from = force_allocation_from
         else:
             if source_person is None:
-                raise FormProcessingError("Invalid exchange creation parameters.",
-                                          "Free changes must force source allocations.")
+                raise FormProcessingError(
+                    "Invalid exchange creation parameters.",
+                    "Free changes must force source allocations.",
+                )
             elif isinstance(source_person, Teacher):
-                raise FormProcessingError("Invalid exchange creation parameters.",
-                                          "Teachers must always manually provide a from value.")
+                raise FormProcessingError(
+                    "Invalid exchange creation parameters.",
+                    "Teachers must always manually provide a from value.",
+                )
             else:
-                allocation_from = get_current_student_subject_allocation(timetable, source_person, subject,
-                                                                         activity_types=["LAB", "LV", "AV"])
+                allocation_from = get_current_student_subject_allocation(
+                    timetable,
+                    source_person,
+                    subject,
+                    activity_types=["LAB", "LV", "AV"],
+                )
 
         if source_person is None or isinstance(source_person, Teacher):
             initiator_student = None
@@ -437,32 +544,44 @@ def process_new_exchange_request(timetable, source_person, requested_student, su
         # now that the parameters are processed, do some final security checks
         # check that the student actually attends allocation_from (and with that, the subject)
         if initiator_student:
-            a = get_current_student_subject_allocation(timetable, initiator_student, subject, ["LAB", "LV", "AV"])
+            a = get_current_student_subject_allocation(
+                timetable, initiator_student, subject, ["LAB", "LV", "AV"]
+            )
             if a != allocation_from:
-                raise FormProcessingError("Operation not permitted",
-                                          "You do not satisfy attendance prerequisites.")
+                raise FormProcessingError(
+                    "Operation not permitted",
+                    "You do not satisfy attendance prerequisites.",
+                )
 
         # check that from and to are the same subject
         # also that from and to are not the same (sanity)
         if transfer_to:
-            subject_from = Activity.from_timetable_activity(allocation_from.activityRealization.activity).subject
-            subject_to = Activity.from_timetable_activity(transfer_to.activityRealization.activity).subject
+            subject_from = Activity.from_timetable_activity(
+                allocation_from.activityRealization.activity
+            ).subject
+            subject_to = Activity.from_timetable_activity(
+                transfer_to.activityRealization.activity
+            ).subject
             if subject_from != subject_to:
-                raise FormProcessingError("Operation not permitted",
-                                          "Subjects do not match.")
+                raise FormProcessingError(
+                    "Operation not permitted", "Subjects do not match."
+                )
 
             if allocation_from == transfer_to:
-                raise FormProcessingError("Operation not permitted",
-                                          "Allocations are the same.")
+                raise FormProcessingError(
+                    "Operation not permitted", "Allocations are the same."
+                )
 
         created = Exchange.objects.create(
             allocation_from=allocation_from,
             allocation_to=transfer_to,
             initiator_student=initiator_student,
             requested_finalizer_student=requested_student,
-            date_created=datetime.utcnow()
+            date_created=datetime.utcnow(),
         )
-        logger.info("Created a new exchange of type {}: {}".format(created.get_type(), created))
+        logger.info(
+            "Created a new exchange of type {}: {}".format(created.get_type(), created)
+        )
         created_exchanges.append(created)
 
     # now that we have the new exchange objects, try to match them to existing ones
@@ -475,29 +594,45 @@ def process_new_exchange_request(timetable, source_person, requested_student, su
 
             # create exchanges if we processed an ExchangeType.FREE_CHANGE, but only if the other slot has space
             # then process those
-            if exchange.get_type() == ExchangeType.FREE_CHANGE or match.get_type() == ExchangeType.FREE_CHANGE:
+            if (
+                exchange.get_type() == ExchangeType.FREE_CHANGE
+                or match.get_type() == ExchangeType.FREE_CHANGE
+            ):
                 if exchange.get_type() == ExchangeType.FREE_CHANGE:
                     freed_up_allocation = match.allocation_from
                 else:
                     freed_up_allocation = exchange.allocation_from
 
-                attendance_ratio = number_of_students_in_allocation(freed_up_allocation) / freed_up_allocation.classroom.capacity
+                attendance_ratio = (
+                    number_of_students_in_allocation(freed_up_allocation)
+                    / freed_up_allocation.classroom.capacity
+                )
                 if attendance_ratio < 1:
-                    logger.info("Exchange request was of type ExchangeType.FREE_CHANGE and the inverse direction has"
-                                "space available, creating a new free change request.")
-                    friprosveta_activity = Activity.objects.get(activity_ptr=freed_up_allocation.activityRealization.activity)
+                    logger.info(
+                        "Exchange request was of type ExchangeType.FREE_CHANGE and the inverse direction has"
+                        "space available, creating a new free change request."
+                    )
+                    friprosveta_activity = Activity.objects.get(
+                        activity_ptr=freed_up_allocation.activityRealization.activity
+                    )
                     any_matches |= process_new_exchange_request(
                         timetable,
                         None,
                         None,
                         {friprosveta_activity.subject_id: None},
-                        force_allocation_from=freed_up_allocation
+                        force_allocation_from=freed_up_allocation,
                     )
                 else:
-                    logger.info("Exchange request was of type ExchangeType.FREE_CHANGE but the inverse direction does "
-                                "not have space available, thus a new free change request will not be created.")
+                    logger.info(
+                        "Exchange request was of type ExchangeType.FREE_CHANGE but the inverse direction does "
+                        "not have space available, thus a new free change request will not be created."
+                    )
             any_matches = True
-    logger.debug("Exchange request processed {} matches.".format("with" if any_matches else "without"))
+    logger.debug(
+        "Exchange request processed {} matches.".format(
+            "with" if any_matches else "without"
+        )
+    )
     return any_matches
 
 
@@ -523,7 +658,9 @@ def get_allocation_exchange_group(allocation):
     Returns:
         (Optional[Group]): The matching timetable group or None if no such group exists.
     """
-    groups = allocation.activityRealization.groups.filter(short_name__startswith=TIMETABLE_EXCHANGE_GROUP_PREFIX)
+    groups = allocation.activityRealization.groups.filter(
+        short_name__startswith=TIMETABLE_EXCHANGE_GROUP_PREFIX
+    )
     return groups.first()
 
 
@@ -539,14 +676,22 @@ def create_allocation_exchange_group(allocation):
         (Group): The created group.
     """
     # ctivity = Activity.objects.get(activity=Subject.objects.get(allocation.activityRealization.activity))
-    activity = Activity.objects.get(activity_ptr=allocation.activityRealization.activity)
+    activity = Activity.objects.get(
+        activity_ptr=allocation.activityRealization.activity
+    )
     subject = activity.subject
 
     # place this in the common groupset
-    groupset_ids = allocation.activityRealization.groups.values_list("groupset_id", flat=True)
-    common_groupset_id, count = Counter(gid for gid in groupset_ids if gid is not None).most_common(1)[0]
+    groupset_ids = allocation.activityRealization.groups.values_list(
+        "groupset_id", flat=True
+    )
+    common_groupset_id, count = Counter(
+        gid for gid in groupset_ids if gid is not None
+    ).most_common(1)[0]
 
-    descriptor = "{}_{}_{}_{}".format(subject.short_name, activity.type, allocation.day, allocation.start)
+    descriptor = "{}_{}_{}_{}".format(
+        subject.short_name, activity.type, allocation.day, allocation.start
+    )
     new_group = Group.objects.create(
         name="99 - Skupina za menjave - {}".format(descriptor),
         short_name="{}_{}".format(TIMETABLE_EXCHANGE_GROUP_PREFIX, descriptor),

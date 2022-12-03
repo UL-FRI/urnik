@@ -1,3 +1,4 @@
+import logging
 from collections import defaultdict
 from itertools import combinations
 
@@ -5,12 +6,11 @@ from django.db import models
 
 from friprosveta.models import LectureType
 from timetable.models import TimetableSet
-import logging
 
 INSTRUCTION_STYLE = (
-    (1, 'Enojni'),
-    (2, 'Dva asistenta'),
-    (3, 'Z demonstratorjem'),
+    (1, "Enojni"),
+    (2, "Dva asistenta"),
+    (3, "Z demonstratorjem"),
 )
 
 # When no instruction style is given use the default one
@@ -19,11 +19,12 @@ DEFAULT_INSTRUCTION_STYLE = 1
 # How many teachers and students per activity type / instruction style.
 # The number 0 stands for infinite.
 ACTIVITY_TEACHERS_SIZE = {
-    ('AV', 'Enojni'): (1, 30),
-    ('LV', 'Enojni'): (1, 18),
-    ('LV', 'Dva asistenta'): (2, 30),
-    ('LV', 'Z demonstratorjem'): (1, 30),
-    ('P', 'Enojni'): (0, 0)}
+    ("AV", "Enojni"): (1, 30),
+    ("LV", "Enojni"): (1, 18),
+    ("LV", "Dva asistenta"): (2, 30),
+    ("LV", "Z demonstratorjem"): (1, 30),
+    ("P", "Enojni"): (0, 0),
+}
 
 
 class TeacherSubjectCycles(models.Model):
@@ -33,23 +34,25 @@ class TeacherSubjectCycles(models.Model):
     """
 
     def __str__(self):
-        return ("Id: {5}, teacher: {0}, subject: {1}, lecture type: {2}, instruction type: {6}"
-                "cycles {4}, timetable_set: {3}".format(
-                 self.teacher_code,
-                 self.subject_code,
-                 self.lecture_type,
-                 self.timetable_set,
-                 self.cycles, self.id, self.instruction_type))
+        return (
+            "Id: {5}, teacher: {0}, subject: {1}, lecture type: {2}, instruction type: {6}"
+            "cycles {4}, timetable_set: {3}".format(
+                self.teacher_code,
+                self.subject_code,
+                self.lecture_type,
+                self.timetable_set,
+                self.cycles,
+                self.id,
+                self.instruction_type,
+            )
+        )
 
     teacher_code = models.CharField(max_length=16, blank=False)
     subject_code = models.CharField(max_length=16, blank=False)
     timetable_set = models.ForeignKey(TimetableSet, on_delete=models.CASCADE)
-    instruction_type = models.IntegerField(choices=INSTRUCTION_STYLE,
-                                           null=True)
+    instruction_type = models.IntegerField(choices=INSTRUCTION_STYLE, null=True)
     lecture_type = models.IntegerField()
-    cycles = models.DecimalField(max_digits=18,
-                                 decimal_places=3,
-                                 default=0.000)
+    cycles = models.DecimalField(max_digits=18, decimal_places=3, default=0.000)
     comment = models.TextField(blank=True)
 
     @property
@@ -116,16 +119,17 @@ class TeacherSubjectCycles(models.Model):
     @staticmethod
     def projected_class_size(subject_code, timetable_set):
         instruction_styles_dict = dict(INSTRUCTION_STYLE)
-        lab_type_short_names = ['AV', 'LV']
+        lab_type_short_names = ["AV", "LV"]
         lab_types = LectureType.objects.filter(short_name__in=lab_type_short_names)
         lab_type_ids = [lab_type.id for lab_type in lab_types]
 
         ret = defaultdict(int)
         for cycle in TeacherSubjectCycles.objects.filter(
-                timetable_set=timetable_set,
-                subject_code=subject_code,
-                cycles__gt=0,
-                lecture_type__in=lab_type_ids):
+            timetable_set=timetable_set,
+            subject_code=subject_code,
+            cycles__gt=0,
+            lecture_type__in=lab_type_ids,
+        ):
             lt = LectureType.objects.get(id=cycle.lecture_type)
             i_style = instruction_styles_dict[cycle.instruction_type]
             class_size = ACTIVITY_TEACHERS_SIZE[(lt.short_name, i_style)][1]
@@ -151,7 +155,9 @@ class TeacherSubjectCycles(models.Model):
                 non_integer_teacher_cycles.append([tc[0], decimal])
             else:
                 integer_teacher_cycles.append(tc)
-        assert sum([c for t, c in non_integer_teacher_cycles]) % 1 == 0, "Non-integer parts should sum into integer"
+        assert (
+            sum([c for t, c in non_integer_teacher_cycles]) % 1 == 0
+        ), "Non-integer parts should sum into integer"
         while non_integer_teacher_cycles:
             for length in range(2, len(non_integer_teacher_cycles) + 1):
                 for comb in combinations(non_integer_teacher_cycles, length):
@@ -177,19 +183,25 @@ class TeacherSubjectCycles(models.Model):
         realization. Teachers are given as a string of comma separated teacher codes.
         """
         najave = TeacherSubjectCycles.objects.filter(
-            timetable_set=timetable_set,
-            subject_code=subject_code,
-            cycles__gt=0)
+            timetable_set=timetable_set, subject_code=subject_code, cycles__gt=0
+        )
         if lecture_types is not None:
             lecture_types_ids = [e.id for e in lecture_types]
             najave = najave.filter(lecture_type__in=lecture_types_ids)
         ret = dict()
         for lecture_type in LectureType.objects.all():
             for instruction_style in INSTRUCTION_STYLE:
-                if (lecture_type.short_name, instruction_style[1]) not in ACTIVITY_TEACHERS_SIZE:
+                if (
+                    lecture_type.short_name,
+                    instruction_style[1],
+                ) not in ACTIVITY_TEACHERS_SIZE:
                     continue
-                teachers_per_group_num, _ = ACTIVITY_TEACHERS_SIZE[(lecture_type.short_name, instruction_style[1])]
-                rs = najave.filter(lecture_type=lecture_type.id, instruction_type=instruction_style[0])
+                teachers_per_group_num, _ = ACTIVITY_TEACHERS_SIZE[
+                    (lecture_type.short_name, instruction_style[1])
+                ]
+                rs = najave.filter(
+                    lecture_type=lecture_type.id, instruction_type=instruction_style[0]
+                )
                 # Do nothing if queryset is empty
                 if not rs:
                     continue
@@ -199,14 +211,19 @@ class TeacherSubjectCycles(models.Model):
                         r.cycles = int(r.cycles)
                 if teachers_per_group_num == 0:
                     # Infinite teachers, one cycle
-                    assert sum([r.cycles for r in rs]) == 1, ("Percentages should sum into one for subject {0}, "
-                                                              "lecture_type {1}, instruction style {2}".format(
-                                                                  subject_code, lecture_type, instruction_style))
+                    assert sum([r.cycles for r in rs]) == 1, (
+                        "Percentages should sum into one for subject {0}, "
+                        "lecture_type {1}, instruction style {2}".format(
+                            subject_code, lecture_type, instruction_style
+                        )
+                    )
                     # All teachers will be grouped into one big entry, since cycles are summed into 1
                     teachers_per_group_num = 1
                 entries = [[r.teacher_code, r.cycles] for r in rs]
                 grouped_entries = TeacherSubjectCycles.group_to_integer_cycles(entries)
 
-                groups = TeacherSubjectCycles.group_teachers(grouped_entries, teachers_per_group_num)
+                groups = TeacherSubjectCycles.group_teachers(
+                    grouped_entries, teachers_per_group_num
+                )
                 ret[(lecture_type.short_name, instruction_style)] = groups
         return ret

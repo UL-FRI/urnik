@@ -1,20 +1,23 @@
 import datetime
 
-from .common import PreferenceLevel, Database, allocation_days
-from .common import WORKHOURS
+from timetable.models import WORKHOURS, ActivityRealization, Classroom, Teacher
 
-from timetable.models import ActivityRealization, Classroom, Teacher
+from .common import Database, PreferenceLevel, allocation_days
 
 # 7 8 9 10 11 12 13 14 15 16 17 18 19 20
-default_lecture_time_pattern = ((PreferenceLevel.StronglyDiscouraged * 1) +
-                                (PreferenceLevel.StronglyPreferred * 7) +
-                                PreferenceLevel.Discouraged * 2 +
-                                PreferenceLevel.StronglyDiscouraged * 3)
+default_lecture_time_pattern = (
+    (PreferenceLevel.StronglyDiscouraged * 1)
+    + (PreferenceLevel.StronglyPreferred * 7)
+    + PreferenceLevel.Discouraged * 2
+    + PreferenceLevel.StronglyDiscouraged * 3
+)
 
-default_exercise_time_pattern = ((PreferenceLevel.Discouraged * 1) +
-                                 (PreferenceLevel.StronglyPreferred * 8) +
-                                 PreferenceLevel.Discouraged * 2 +
-                                 PreferenceLevel.StronglyDiscouraged * 2)
+default_exercise_time_pattern = (
+    (PreferenceLevel.Discouraged * 1)
+    + (PreferenceLevel.StronglyPreferred * 8)
+    + PreferenceLevel.Discouraged * 2
+    + PreferenceLevel.StronglyDiscouraged * 2
+)
 
 
 def create_time_patterns(tt):
@@ -35,8 +38,16 @@ def create_time_patterns(tt):
     Although this is probably not optimal.
     """
 
-    patterns = [(1, 240), (1, 180), (1, 120), (1, 60), (2, 60),
-                (2, 120), (3, 60), (4, 60)]
+    patterns = [
+        (1, 240),
+        (1, 180),
+        (1, 120),
+        (1, 60),
+        (2, 60),
+        (2, 120),
+        (3, 60),
+        (4, 60),
+    ]
     db = Database()
     session_id = db.get_session_id(tt.start)
     db.execute("DELETE FROM time_pattern_time")
@@ -51,15 +62,18 @@ def create_time_patterns(tt):
                     (uniqueid, name, mins_pmt, slots_pmt, nr_mtgs, visible,
                     break_time, session_id, type)
                     VALUES ({5}, '{0}', {1}, {2}, {3}, 1, 0, {4}, 0)
-                    """.format(name, duration, duration / 5,
-                               meetings, session_id, unique_id)
+                    """.format(
+            name, duration, duration / 5, meetings, session_id, unique_id
+        )
         db.execute(query)
         for day in allocation_days:
             day_code = allocation_days[day]
             query = """INSERT INTO time_pattern_days
                         (uniqueid, day_code, time_pattern_id)
                         VALUES ({0}, {1}, {2})
-                        """.format(db.get_next_id(), day_code, unique_id)
+                        """.format(
+                db.get_next_id(), day_code, unique_id
+            )
             db.execute(query)
 
         for start, _ in WORKHOURS:
@@ -70,7 +84,9 @@ def create_time_patterns(tt):
             query = """INSERT INTO time_pattern_time
                         (uniqueid, start_slot, time_pattern_id)
                         VALUES ({0}, {1}, {2})
-                        """.format(db.get_next_id(), start_slot, unique_id)
+                        """.format(
+                db.get_next_id(), start_slot, unique_id
+            )
             db.execute(query)
     db.close()
 
@@ -94,59 +110,68 @@ def time_patterns(tt):
         4: "SELECT uniqueid FROM time_pattern WHERE name='1x240'",
         3: "SELECT uniqueid FROM time_pattern WHERE name='1x180'",
         2: "SELECT uniqueid FROM time_pattern WHERE name='1x120'",
-        1: "SELECT uniqueid FROM time_pattern WHERE name='1x60'"
+        1: "SELECT uniqueid FROM time_pattern WHERE name='1x60'",
     }
     for (key, val) in durationids.items():
         db.execute(val)
-        assert db.rowcount == 1, "Only one time pattern shoud exist for \
-duration {0}".format(key)
+        assert (
+            db.rowcount == 1
+        ), "Only one time pattern shoud exist for \
+duration {0}".format(
+            key
+        )
         durationids[key] = db.fetch_next_row()[0]
     for subject in tt.subjects.all():
-        lecture = subject.activities.filter(type='P',
-                                            activityset=tt.activityset)
+        lecture = subject.activities.filter(type="P", activityset=tt.activityset)
         if len(lecture) == 0:
             continue
 
         lecture = lecture[0]
-        for activity in subject.activities.filter(activityset=tt.activityset):
+        for activity in subject.activities.filter(activityset=tt.activityset).exclude(
+            duration=0
+        ):
             subpart_id = None
             for activityRealization in activity.realizations.all():
-                class_id_query = ("SELECT uniqueid FROM class_ WHERE "
-                                  "external_uid={0}"
-                                  ).format(activityRealization.id)
+                class_id_query = (
+                    "SELECT uniqueid FROM class_ WHERE " "external_uid={0}"
+                ).format(activityRealization.id)
                 db.execute(class_id_query)
                 if db.rowcount == 0:
                     continue
 
                 class_id = db.fetch_next_row()[0]
-                subpart_id_query = ("SELECT subpart_id FROM class_ "
-                                    "WHERE external_uid={0}"
-                                    ).format(activityRealization.id)
+                subpart_id_query = (
+                    "SELECT subpart_id FROM class_ " "WHERE external_uid={0}"
+                ).format(activityRealization.id)
                 db.execute(subpart_id_query)
                 if db.rowcount == 0:
                     continue
                 subpart_id = db.fetch_next_row()[0]
                 delete_preference_queries = (
-                    ("DELETE FROM timetable.time_pref "
-                     "WHERE owner_id={0}").format(class_id),
-                    ("DELETE FROM timetable.time_pref "
-                     "WHERE owner_id={0}").format(subpart_id)
+                    ("DELETE FROM timetable.time_pref " "WHERE owner_id={0}").format(
+                        class_id
+                    ),
+                    ("DELETE FROM timetable.time_pref " "WHERE owner_id={0}").format(
+                        subpart_id
+                    ),
                 )
                 for delete_preference_query in delete_preference_queries:
                     db.execute(delete_preference_query)
             if subpart_id is not None:
                 pattern = default_exercise_time_pattern
-                if activity.type == 'P':
+                if activity.type == "P":
                     pattern = default_lecture_time_pattern
                 add_preference_query = (
                     "INSERT INTO timetable.time_pref "
                     "(owner_id, pref_level_id, preference, "
                     "time_pattern_id, uniqueid) "
                     "VALUES ({0}, 1, '{1}', {2}, {3})"
-                ).format(subpart_id,
-                         pattern[:14 - activity.duration] * 5,
-                         durationids[activity.duration],
-                         next_id)
+                ).format(
+                    subpart_id,
+                    pattern[: 14 - activity.duration] * 5,
+                    durationids[activity.duration],
+                    next_id,
+                )
                 db.execute(add_preference_query)
                 next_id += 1
     db.close()
@@ -161,15 +186,17 @@ def import_allocations_from_fet(timetable):
     data = Database()
     start_range = data.get_id_range()[0]  # What about end_range?
     next_id = start_range
-    index_days = {'MON': 0, 'TUE': 1, 'WED': 2, 'THU': 3, 'FRI': 4}
+    index_days = {"MON": 0, "TUE": 1, "WED": 2, "THU": 3, "FRI": 4}
     durationids = {
         3: "SELECT uniqueid FROM time_pattern WHERE name='1 x 180'",
         2: "SELECT uniqueid FROM time_pattern WHERE name='1 x 120'",
-        1: "SELECT uniqueid FROM time_pattern WHERE name='1 x 60'"
+        1: "SELECT uniqueid FROM time_pattern WHERE name='1 x 60'",
     }
     for (key, val) in durationids.items():
         data.execute(val)
-        assert data.rowcount == 1, "Only one time pattern shoud exist for duration {0}".format(key)
+        assert (
+            data.rowcount == 1
+        ), "Only one time pattern shoud exist for duration {0}".format(key)
         durationids[key] = data.fetch_next_row()[0]
     for subject in tt.subjects.all():
         for activity in subject.activities.filter(activityset=tt.activityset):
@@ -179,19 +206,22 @@ def import_allocations_from_fet(timetable):
                 )
                 if len(allocations) == 0:
                     continue
-                assert len(allocations) == 1, "There are more allocations for the realization {0}: {1}".format(
-                    activityRealization, allocations)
-                class_id_query = ("SELECT uniqueid FROM class_ "
-                                  "WHERE external_uid={0}"
-                                  ).format(activityRealization.id)
+                assert (
+                    len(allocations) == 1
+                ), "There are more allocations for the realization {0}: {1}".format(
+                    activityRealization, allocations
+                )
+                class_id_query = (
+                    "SELECT uniqueid FROM class_ " "WHERE external_uid={0}"
+                ).format(activityRealization.id)
                 data.execute(class_id_query)
                 if data.rowcount == 0:
                     continue
                 class_id = data.fetch_next_row()[0]
 
-                delete_preference_query = ("DELETE FROM timetable.time_pref "
-                                           "WHERE owner_id={0}"
-                                           ).format(class_id)
+                delete_preference_query = (
+                    "DELETE FROM timetable.time_pref " "WHERE owner_id={0}"
+                ).format(class_id)
                 data.execute(delete_preference_query)
                 preference_day_length = 14 - activity.duration
                 preference = "2" * preference_day_length * 7
@@ -200,17 +230,22 @@ def import_allocations_from_fet(timetable):
                     hour_index = int(allocation.start[:2]) - 7
                     day_index = index_days[allocation.day]
                     start_index = preference_day_length * day_index + hour_index
-                    preference = (preference[:start_index] +
-                                  PreferenceLevel.Required +
-                                  preference[start_index + 1:])
+                    preference = (
+                        preference[:start_index]
+                        + PreferenceLevel.Required
+                        + preference[start_index + 1 :]
+                    )
                 add_preference_query = (
                     "INSERT INTO timetable.time_pref "
                     "(owner_id, pref_level_id, preference, "
                     "time_pattern_id, uniqueid) "
                     "VALUES ({0}, 1, '{1}', {2}, {3})"
-                ).format(class_id, preference,
-                         durationids[activityRealization.activity.duration],
-                         next_id)
+                ).format(
+                    class_id,
+                    preference,
+                    durationids[activityRealization.activity.duration],
+                    next_id,
+                )
 
                 data.execute(delete_preference_query)
                 data.execute(add_preference_query)
@@ -239,25 +274,27 @@ def import_allocations_as_new_timetable(timetable):
     durationids = {
         3: "SELECT uniqueid FROM time_pattern WHERE name='1 x 180'",
         2: "SELECT uniqueid FROM time_pattern WHERE name='1 x 120'",
-        1: "SELECT uniqueid FROM time_pattern WHERE name='1 x 60'"
+        1: "SELECT uniqueid FROM time_pattern WHERE name='1 x 60'",
     }
 
     for (key, val) in durationids.items():
         data.execute(val)
-        assert data.rowcount == 1, "Only one time pattern shoud exist for duration {0}".format(key)
+        assert (
+            data.rowcount == 1
+        ), "Only one time pattern shoud exist for duration {0}".format(key)
         durationids[key] = data.fetch_next_row()[0]
 
     # date_pattern_id in unitime database
-    date_pattern_id_query = ("SELECT uniqueid FROM date_pattern "
-                             "WHERE name='{0}'"
-                             ).format("Standard")
+    date_pattern_id_query = (
+        "SELECT uniqueid FROM date_pattern " "WHERE name='{0}'"
+    ).format("Standard")
     data.execute(date_pattern_id_query)
     if data.rowcount == 0:
         return
     date_pattern_id = data.fetch_next_row()[0]
-    type_convert = {'P': 'Lec', 'LV': 'Lab', 'AV': 'Rec'}
+    type_convert = {"P": "Lec", "LV": "Lab", "AV": "Rec"}
     # create a sollution
-    created = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    created = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # TODO: it should be unique id from solver_group table
     owner_id = 2555904
     solution_query = (
@@ -270,9 +307,7 @@ def import_allocations_as_new_timetable(timetable):
     data.commit()
     next_id += 1
     for subject in timetable.subjects:
-        for activity in subject.activities.filter(
-                activityset=timetable.activityset
-        ):
+        for activity in subject.activities.filter(activityset=timetable.activityset):
             arcount = 0
             for activityRealization in activity.realizations.all():
                 arcount += 1
@@ -281,12 +316,15 @@ def import_allocations_as_new_timetable(timetable):
                 )
                 if len(allocations) == 0:
                     continue
-                assert len(allocations) == 1, "There are more allocations for the realization {0}: {1}".format(
-                    activityRealization, allocations)
+                assert (
+                    len(allocations) == 1
+                ), "There are more allocations for the realization {0}: {1}".format(
+                    activityRealization, allocations
+                )
                 # class_id in unitime database
-                class_id_query = ("SELECT uniqueid FROM class_ "
-                                  "WHERE external_uid={0}"
-                                  ).format(activityRealization.id)
+                class_id_query = (
+                    "SELECT uniqueid FROM class_ " "WHERE external_uid={0}"
+                ).format(activityRealization.id)
                 data.execute(class_id_query)
                 if data.rowcount == 0:
                     continue
@@ -311,16 +349,23 @@ def import_allocations_as_new_timetable(timetable):
                         subject.short_name,
                         activity.id,
                         type_convert[activity.type],
-                        arcount
+                        arcount,
                     )
                     add_allocation_query = (
                         "INSERT INTO timetable.assignment "
                         "(uniqueid, days, slot,  time_pattern_id, "
                         "solution_id, class_id, class_name, date_pattern_id) "
                         "VALUES ({0}, {1}, {2}, {3}, {4}, {5}, '{6}', {7})"
-                    ).format(next_id, day_index, slot,
-                             time_pattern, solution_id,
-                             class_id, class_name, date_pattern_id)
+                    ).format(
+                        next_id,
+                        day_index,
+                        slot,
+                        time_pattern,
+                        solution_id,
+                        class_id,
+                        class_name,
+                        date_pattern_id,
+                    )
                     print(add_allocation_query)
                     data.execute(add_allocation_query)
                     data.commit()
@@ -330,7 +375,8 @@ def import_allocations_as_new_timetable(timetable):
                     for teacher in allocation.teachers.all():
                         teacher_id_query = (
                             "SELECT uniqueid FROM departmental_instructor "
-                            "WHERE external_uid={0}").format(teacher.id)
+                            "WHERE external_uid={0}"
+                        ).format(teacher.id)
                         data.execute(teacher_id_query)
                         if data.rowcount == 0:
                             continue
@@ -342,16 +388,17 @@ def import_allocations_as_new_timetable(timetable):
                         ).format(assignment_id, teacher_id)
                         data.execute(assign_teacher_query)
                     # TODO: assigned rooms
-                    room_id_query = ("SELECT uniqueid FROM room "
-                                     "WHERE external_uid={0}"
-                                     ).format(allocation.classroom.id)
+                    room_id_query = (
+                        "SELECT uniqueid FROM room " "WHERE external_uid={0}"
+                    ).format(allocation.classroom.id)
                     data.execute(room_id_query)
                     if data.rowcount == 0:
                         continue
                     room_id = data.fetch_next_row()[0]
                     assign_room_query = (
                         "INSERT INTO assigned_rooms (assignment_id, room_id) "
-                        "VAlUES ({0}, {1})").format(assignment_id, room_id)
+                        "VAlUES ({0}, {1})"
+                    ).format(assignment_id, room_id)
                     data.execute(assign_room_query)
     data.commit()
     data.close()
@@ -372,8 +419,15 @@ def export_allocations_as_new_timetable(solution, timetable):
     minut slot, starting from midnight.
     Data is inserted in table named 'assignment' in unitime database.
     """
-    day_converter = {64: "MON", 32: "TUE", 16: "WED", 8: "THU",
-                    4: "FRI", 2: "SAT", 1: "SUN"}
+    day_converter = {
+        64: "MON",
+        32: "TUE",
+        16: "WED",
+        8: "THU",
+        4: "FRI",
+        2: "SAT",
+        1: "SUN",
+    }
     data = Database()
 
     # query = ("SELECT uniqueid, class_id, slot, days FROM "
@@ -389,7 +443,8 @@ def export_allocations_as_new_timetable(solution, timetable):
         "(di.uniqueid = ai.instructor_id) "
         "JOIN class_ AS c ON (c.uniqueid = a.class_id) "
         "JOIN room AS r ON (r.uniqueid = ar.room_id) "
-        "WHERE solution_id={0}").format(solution)
+        "WHERE solution_id={0}"
+    ).format(solution)
     data.execute(query)
     rows = data.fetch_all_rows()
     for realization_id, slot, day, room_id, teacher_id in rows:

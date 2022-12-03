@@ -1,12 +1,11 @@
-from enum import Enum
 import logging
+from enum import Enum
 
 from django.db import models
 from django.db.models import Model, Q
 
-from friprosveta.models import Subject, Student
+from friprosveta.models import Student, Subject
 from timetable.models import Allocation
-
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +25,7 @@ class ExchangeType(Enum):
          ExchangeType.FREE_CHANGE: This exchange was free because there were available spaces in another activity cycle.
          ExchangeType.TEACHER_OFFER: A teacher created this offer to allow a student to change cycles without a match.
     """
+
     REQUEST_OFFER = 0
     SPECIFIC_STUDENT = 1
     FREE_CHANGE = 2
@@ -34,11 +34,13 @@ class ExchangeType(Enum):
 
 class InvalidExchangeTypeError(Exception):
     """Raised when an exchange is determined to be of an impossible type."""
+
     pass
 
 
 class FormProcessingError(Exception):
     """Raised when a form encounters an error."""
+
     def __init__(self, header, message):
         super().__init__(message)
         self.header = header
@@ -47,14 +49,21 @@ class FormProcessingError(Exception):
 
 
 class SubjectPreference(models.Model):
-    subject = models.OneToOneField(Subject, related_name="exchange_preference", unique=True, on_delete=models.CASCADE)
+    subject = models.OneToOneField(
+        Subject,
+        related_name="exchange_preference",
+        unique=True,
+        on_delete=models.CASCADE,
+    )
 
     exchange_allowed = models.BooleanField(default=True)
     exchange_deadline = models.DateField(blank=True, null=True)
 
 
 class Exchange(models.Model):
-    allocation_from = models.ForeignKey(Allocation, related_name="from_exchanges", on_delete=models.CASCADE)
+    allocation_from = models.ForeignKey(
+        Allocation, related_name="from_exchanges", on_delete=models.CASCADE
+    )
     """The `Allocation` that this `Exchange` object changes from.
 
     Notes:
@@ -63,7 +72,13 @@ class Exchange(models.Model):
             and, with that, the same subject.
     """
 
-    allocation_to = models.ForeignKey(Allocation, related_name="to_exchanges", blank=True, null=True, on_delete=models.CASCADE)
+    allocation_to = models.ForeignKey(
+        Allocation,
+        related_name="to_exchanges",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
     """The `Allocation` that this `Exchange` object changes to. 
 
     Notes:
@@ -75,7 +90,13 @@ class Exchange(models.Model):
             and, with that, the same subject.
     """
 
-    initiator_student = models.ForeignKey(Student, related_name="initiated_exchanges", blank=True, null=True, on_delete=models.CASCADE)
+    initiator_student = models.ForeignKey(
+        Student,
+        related_name="initiated_exchanges",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
     """The `Student` that created this exchange. 
     
     For initiating exchange objects, this is the initiated/requested this exchange. For finalizing exchange objects,
@@ -87,7 +108,13 @@ class Exchange(models.Model):
           - `ExchangeType.TEACHER_OFFER` (these offers are created by teachers)
     """
 
-    finalizer_exchange = models.OneToOneField('self', related_name="finalized_exchange", blank=True, null=True, on_delete=models.CASCADE)
+    finalizer_exchange = models.OneToOneField(
+        "self",
+        related_name="finalized_exchange",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
     """The `Exchange` that finalized this one.
     
     Currently, `finalizer_exchange` and `finalized_exchange` have the same meaning. If, in the future, we decide to
@@ -98,8 +125,13 @@ class Exchange(models.Model):
           - this exchange has not been finalized yet.
     """
 
-    requested_finalizer_student = models.ForeignKey(Student, related_name="requested_exchange_finalizations",
-                                                    blank=True, null=True, on_delete=models.CASCADE)
+    requested_finalizer_student = models.ForeignKey(
+        Student,
+        related_name="requested_exchange_finalizations",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+    )
     """An exchange can have a request for a specific `Student` to finalize it.
     
     Notes:
@@ -132,10 +164,17 @@ class Exchange(models.Model):
     def __str__(self):
         return "Exchange ({}, {}) from {} to {}, initiated by {}".format(
             self.get_type().name,
-            "cancelled" if self.is_cancelled() else "finalised" if self.is_finalized() else "not finalised",
+            "cancelled"
+            if self.is_cancelled()
+            else "finalised"
+            if self.is_finalized()
+            else "not finalised",
             str(self.allocation_from),
             str(self.allocation_to) if self.allocation_to is not None else "N/A",
-            str(self.initiator_student) if self.initiator_student is not None else "N/A")
+            str(self.initiator_student)
+            if self.initiator_student is not None
+            else "N/A",
+        )
 
     def __repr__(self):
         return str(self)
@@ -170,13 +209,29 @@ class Exchange(models.Model):
         has_initiator_student = self.initiator_student is not None
         has_requested_finalizer_student = self.requested_finalizer_student is not None
 
-        if has_allocation_to and not has_initiator_student and has_requested_finalizer_student:
+        if (
+            has_allocation_to
+            and not has_initiator_student
+            and has_requested_finalizer_student
+        ):
             return ExchangeType.TEACHER_OFFER
-        elif has_allocation_to and has_initiator_student and has_requested_finalizer_student:
+        elif (
+            has_allocation_to
+            and has_initiator_student
+            and has_requested_finalizer_student
+        ):
             return ExchangeType.SPECIFIC_STUDENT
-        elif not has_allocation_to and not has_initiator_student and not has_requested_finalizer_student:
+        elif (
+            not has_allocation_to
+            and not has_initiator_student
+            and not has_requested_finalizer_student
+        ):
             return ExchangeType.FREE_CHANGE
-        elif has_allocation_to and has_initiator_student and not has_requested_finalizer_student:
+        elif (
+            has_allocation_to
+            and has_initiator_student
+            and not has_requested_finalizer_student
+        ):
             return ExchangeType.REQUEST_OFFER
         else:
             raise InvalidExchangeTypeError()
@@ -195,45 +250,69 @@ class Exchange(models.Model):
             return Exchange.objects.none()
 
         t = self.get_type()
-        initial = Exchange.objects.filter(Q(date_finalized__isnull=True) & Q(date_cancelled__isnull=True))
+        initial = Exchange.objects.filter(
+            Q(date_finalized__isnull=True) & Q(date_cancelled__isnull=True)
+        )
         if t == ExchangeType.REQUEST_OFFER:
             # matching these is the most complex
             # we can match this with anything but a SPECIFIC_STUDENT type
             matches = initial.filter(
                 # these candidates are TEACHER_OFFERs, which match completely
-                (Q(requested_finalizer_student__isnull=False, initiator_student__isnull=True) &
-                 Q(requested_finalizer_student=self.initiator_student) &
-                 Q(allocation_from=self.allocation_to) &
-                 Q(allocation_to=self.allocation_from)) |
+                (
+                    Q(
+                        requested_finalizer_student__isnull=False,
+                        initiator_student__isnull=True,
+                    )
+                    & Q(requested_finalizer_student=self.initiator_student)
+                    & Q(allocation_from=self.allocation_to)
+                    & Q(allocation_to=self.allocation_from)
+                )
+                |
                 # these can be REQUEST_OFFER or FREE_CHANGE
-                (Q(requested_finalizer_student__isnull=True) &
-                 # REQUEST_OFFER, matches both from and to
-                 ((Q(allocation_to__isnull=False) &
-                   Q(allocation_from=self.allocation_to) &
-                   Q(allocation_to=self.allocation_from)) |
-                  # FREE_CHANGE, the candidate's from matches our to
-                  (Q(allocation_to__isnull=True) &
-                   Q(allocation_from=self.allocation_to))))
+                (
+                    Q(requested_finalizer_student__isnull=True)
+                    &
+                    # REQUEST_OFFER, matches both from and to
+                    (
+                        (
+                            Q(allocation_to__isnull=False)
+                            & Q(allocation_from=self.allocation_to)
+                            & Q(allocation_to=self.allocation_from)
+                        )
+                        |
+                        # FREE_CHANGE, the candidate's from matches our to
+                        (
+                            Q(allocation_to__isnull=True)
+                            & Q(allocation_from=self.allocation_to)
+                        )
+                    )
+                )
             )
         elif t == ExchangeType.TEACHER_OFFER:
             # these can only be matched with an offer initiated by the student
             # also, both allocations must be set to their proper values
-            matches = initial.filter(Q(initiator_student=self.requested_finalizer_student),
-                                     Q(allocation_from=self.allocation_to) &
-                                     Q(allocation_to=self.allocation_from))
+            matches = initial.filter(
+                Q(initiator_student=self.requested_finalizer_student),
+                Q(allocation_from=self.allocation_to)
+                & Q(allocation_to=self.allocation_from),
+            )
         elif t == ExchangeType.SPECIFIC_STUDENT:
             # these can only match other SPECIFIC_STUDENT offers
-            matches = initial.filter(Q(allocation_from=self.allocation_to) &
-                                     Q(allocation_to=self.allocation_from) &
-                                     Q(initiator_student=self.requested_finalizer_student) &
-                                     Q(requested_finalizer_student=self.initiator_student))
+            matches = initial.filter(
+                Q(allocation_from=self.allocation_to)
+                & Q(allocation_to=self.allocation_from)
+                & Q(initiator_student=self.requested_finalizer_student)
+                & Q(requested_finalizer_student=self.initiator_student)
+            )
         elif t == ExchangeType.FREE_CHANGE:
             # free changes must not match specific students, teacher offers, or other free changes
             # only matches request-offers
-            matches = initial.filter(Q(initiator_student__isnull=False) &
-                                     Q(requested_finalizer_student__isnull=True) &
-                                     Q(allocation_to__isnull=False) &
-                                     Q(allocation_to=self.allocation_from))
+            matches = initial.filter(
+                Q(initiator_student__isnull=False)
+                & Q(requested_finalizer_student__isnull=True)
+                & Q(allocation_to__isnull=False)
+                & Q(allocation_to=self.allocation_from)
+            )
             pass
         else:
             # this should have been handled upstream, fail hard

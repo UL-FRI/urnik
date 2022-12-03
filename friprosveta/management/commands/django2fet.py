@@ -50,39 +50,50 @@ def add_number_of(l, s):
 
 def buildings_fet():
     logger.info("Entering buildingsFet")
-    e = ET.Element('Buildings_List')
+    e = ET.Element("Buildings_List")
     for i in timetable.models.Location.objects.all():
         logger.debug("Adding building {}".format(i))
-        e.append(l2El(['Building', None, [['Name', i.name]]]))
+        e.append(l2El(["Building", None, [["Name", i.name]]]))
     logger.info("Exiting buildingsFet")
     return e
 
 
 def room_fet(tt):
     logger.info("Entering roomFet")
-    rooms_list = ET.Element('Rooms_List')
+    rooms_list = ET.Element("Rooms_List")
     for classroom in tt.classrooms.all():
         logger.debug("Processing classroom {}".format(classroom))
         location = classroom.location.name
-        resource_workplace = timetable.models.Resource.objects.get(name='Delovno mesto')
-        workplaces_n = timetable.models.ClassroomNResources.objects.filter(resource=resource_workplace,
-                                                                           classroom=classroom)
+        resource_workplace = timetable.models.Resource.objects.get(name="Delovno mesto")
+        workplaces_n = timetable.models.ClassroomNResources.objects.filter(
+            resource=resource_workplace, classroom=classroom
+        )
         if len(workplaces_n) == 0:
             workplaces = 0
         else:
             workplaces = workplaces_n[0].n
+        workplaces = int(1.2 * workplaces)
         logger.debug("Workplaces: {}".format(workplaces))
-        rooms_list.append(l2El(['Room', None, [
-            ['Name', classroom.short_name],
-            ['Building', location],
-            ['Capacity', str(workplaces)]]]))
+        rooms_list.append(
+            l2El(
+                [
+                    "Room",
+                    None,
+                    [
+                        ["Name", classroom.short_name],
+                        ["Building", location],
+                        ["Capacity", str(workplaces)],
+                    ],
+                ]
+            )
+        )
     logger.info("Exiting roomFet")
     return rooms_list
 
 
 def student_year_fet(timetable):
     logger.info("Entering studentYearFet")
-    lsl = ['Students_List', None]
+    lsl = ["Students_List", None]
     years = {}
     for i in timetable.groups.all():
         logger.debug("Processing group {}".format(i))
@@ -122,10 +133,35 @@ def student_year_fet(timetable):
             lsg = []
             for subgroup in subgroups:
                 logger.debug("Adding {}".format(subgroup))
-                lsg.append(['Subgroup', None, [
-                    ['Name', subgroup.id_string()], ['Number_of_Students', str(subgroup.size)]]])
-            lg.append(['Group', None, [['Name', group.id_string()], ['Number_of_Students', str(group.size)]] + lsg])
-        ly.append(['Year', None, [['Name', year.id_string()], ['Number_of_Students', str(year.size)]] + lg])
+                lsg.append(
+                    [
+                        "Subgroup",
+                        None,
+                        [
+                            ["Name", subgroup.id_string()],
+                            ["Number_of_Students", str(subgroup.size)],
+                        ],
+                    ]
+                )
+            lg.append(
+                [
+                    "Group",
+                    None,
+                    [
+                        ["Name", group.id_string()],
+                        ["Number_of_Students", str(group.size)],
+                    ]
+                    + lsg,
+                ]
+            )
+        ly.append(
+            [
+                "Year",
+                None,
+                [["Name", year.id_string()], ["Number_of_Students", str(year.size)]]
+                + lg,
+            ]
+        )
     lsl.append(ly)
     logger.info("Exiting studentYearFet")
     return l2El(lsl)
@@ -133,22 +169,20 @@ def student_year_fet(timetable):
 
 def teachers_fet(timetable):
     logger.info("Entering teachersFet")
-    te = ET.Element('Teachers_List')
+    te = ET.Element("Teachers_List")
     for t in timetable.teachers.all():
         logger.debug("Processing teacher {}; {}".format(t, t.id_string()))
-        te.append(l2El(['Teacher', None,
-                        [['Name', t.id_string()]]]))
+        te.append(l2El(["Teacher", None, [["Name", t.id_string()]]]))
     logger.info("Exiting teachersFet")
     return te
 
 
 def subjects_fet(timetable):
     logger.info("Entering subjectsFet")
-    se = ET.Element('Subjects_List')
+    se = ET.Element("Subjects_List")
     for i in timetable.subjects.all():
         logger.debug("Adding subject {}".format(i))
-        se.append(l2El(['Subject', None,
-                        [['Name', i.id_string()]]]))
+        se.append(l2El(["Subject", None, [["Name", i.id_string()]]]))
     logger.info("Exiting subjectsFet")
     return se
 
@@ -161,7 +195,9 @@ def _shrunken_students(timetable, realization):
     for tag in realization.tags.all():
         tagset.add(tag)
     for tag in tagset:
-        for p in tag.value_preferences.filter(preferenceset__timetable=timetable, name='SHRINKGROUPS'):
+        for p in tag.value_preferences.filter(
+            preferenceset__timetable=timetable, name="SHRINKGROUPS"
+        ):
             shrink_ammount = max(shrink_ammount, p.value)
     return realization.size - shrink_ammount
 
@@ -179,44 +215,55 @@ def activities_fet(timetable, disabled_types=[]):
             al = []
 
             for t in ar.teachers.all():
-                tl.append(['Teacher', t.id_string()])
+                tl.append(["Teacher", t.id_string()])
             for g in ar.groups.all():
                 # sl.append(['Students', g.name+"-"+str(g.id)])
-                sl.append(['Students', g.id_string()])
+                sl.append(["Students", g.id_string()])
             if len(tl) > 0:
                 al += tl
-            al.append(['Subject', ar.activity.activity.subject.id_string()])
+            al.append(["Subject", ar.activity.activity.subject.id_string()])
             tagset = set()
             for tag in ar.activity.tags.all():
                 tagset.add(tag)
             for tag in ar.tags.all():
                 tagset.add(tag)
             for tag in tagset:
-                al.append(['Activity_Tag', tag.name])
+                al.append(["Activity_Tag", tag.name])
             if ar.duration is not None:
-                al.append(['Duration', str(ar.duration)])
-                al.append(['Total_Duration', str(ar.duration)])
-            al.append(['Id', str(ar.id)])
-            al.append(['Activity_Group_Id', str(0)])
+                al.append(["Duration", str(ar.duration)])
+                al.append(["Total_Duration", str(ar.duration)])
+            al.append(["Id", str(ar.id)])
+            al.append(["Activity_Group_Id", str(0)])
             if i.type in disabled_types:
-                al.append(['Active', 'false'])
+                al.append(["Active", "false"])
             else:
-                al.append(['Active', 'true'])
+                al.append(["Active", "true"])
             if len(sl) > 0:
                 al += sl
-            al.append(['Number_Of_Students', str(int(_shrunken_students(timetable, ar)))])
-            l.append(['Activity', None, al])
-    return l2El(['Activities_List', None, l])
+            al.append(
+                ["Number_Of_Students", str(int(_shrunken_students(timetable, ar)))]
+            )
+            l.append(["Activity", None, al])
+    return l2El(["Activities_List", None, l])
 
 
 def activity_tags(tt):
     tagset = set()
-    for tag in timetable.models.Tag.objects.filter(activities__activityset__timetable=tt).distinct():
+    for tag in timetable.models.Tag.objects.filter(
+        activities__activityset__timetable=tt
+    ).distinct():
         tagset.add(tag.name)
     for tag in timetable.models.Tag.objects.filter(
-            activity_realizations__activity__activityset__timetable=tt).distinct():
+        activity_realizations__activity__activityset__timetable=tt
+    ).distinct():
         tagset.add(tag.name)
-    return l2El(['Activity_Tags_List', None, [['Activity_Tag', None, [['Name', i]]] for i in tagset]])
+    return l2El(
+        [
+            "Activity_Tags_List",
+            None,
+            [["Activity_Tag", None, [["Name", i]]] for i in tagset],
+        ]
+    )
 
 
 # def activitiesNotOverlapping(timetable):
@@ -260,25 +307,51 @@ def activities_not_overlapping(tt):
         for j in i.mustNotOverlap.all().filter(id__gt=i.id):
             for iar in i.realizations.all():
                 for jar in j.realizations.all():
-                    nl = [['Activity_Id', str(iar.id)], ['Activity_Id', str(jar.id)]]
-                    l.append(['ConstraintActivitiesNotOverlapping', None, [
-                        ['Weight_Percentage', '100']] + add_number_of(nl, 'Number_of_Activities')])
-    for pref in timetable.models.TagDescriptivePreference.objects.filter(typename='NOOVERLAP',
-                                                                         preferenceset__timetable=tt).distinct():
+                    nl = [["Activity_Id", str(iar.id)], ["Activity_Id", str(jar.id)]]
+                    l.append(
+                        [
+                            "ConstraintActivitiesNotOverlapping",
+                            None,
+                            [["Weight_Percentage", "100"]]
+                            + add_number_of(nl, "Number_of_Activities"),
+                        ]
+                    )
+    for pref in timetable.models.TagDescriptivePreference.objects.filter(
+        typename="NOOVERLAP", preferenceset__timetable=tt
+    ).distinct():
         nl = []
         for i in pref.tag.activities.filter(
-                activityset__timetable=tt):  # tole je narobe, saj vse realizacije vseh aktivnosti vrze v eno vreco
+            activityset__timetable=tt
+        ):  # tole je narobe, saj vse realizacije vseh aktivnosti vrze v eno vreco
             for iar in i.realizations.all():
-                nl.append(['Activity_Id', str(iar.id)])  # PAZI NA VELIKI I pri Id, sicer se FET sesuje!!!
+                nl.append(
+                    ["Activity_Id", str(iar.id)]
+                )  # PAZI NA VELIKI I pri Id, sicer se FET sesuje!!!
         if len(nl) > 1:
-            l.append(['ConstraintActivitiesNotOverlapping', None, [
-                ['Weight_Percentage', str(int(100 * pref.weight))]] + add_number_of(nl, 'Number_of_Activities')])
+            l.append(
+                [
+                    "ConstraintActivitiesNotOverlapping",
+                    None,
+                    [["Weight_Percentage", str(int(100 * pref.weight))]]
+                    + add_number_of(nl, "Number_of_Activities"),
+                ]
+            )
         nl = []
-        for iar in pref.tag.activity_realizations.filter(activity__activityset__timetable=tt):
-            nl.append(['Activity_Id', str(iar.id)])  # PAZI NA VELIKI I pri Id, sicer se FET sesuje!!!
+        for iar in pref.tag.activity_realizations.filter(
+            activity__activityset__timetable=tt
+        ):
+            nl.append(
+                ["Activity_Id", str(iar.id)]
+            )  # PAZI NA VELIKI I pri Id, sicer se FET sesuje!!!
         if len(nl) > 1:
-            l.append(['ConstraintActivitiesNotOverlapping', None, [
-                ['Weight_Percentage', str(int(100 * pref.weight))]] + add_number_of(nl, 'Number_of_Activities')])
+            l.append(
+                [
+                    "ConstraintActivitiesNotOverlapping",
+                    None,
+                    [["Weight_Percentage", str(int(100 * pref.weight))]]
+                    + add_number_of(nl, "Number_of_Activities"),
+                ]
+            )
     # Non-overlapping zaradi izbirnosti
     return l
 
@@ -286,10 +359,12 @@ def activities_not_overlapping(tt):
 def activities_crossections_not_overlapping_file_hack(tt, razor, enrollment_files):
     l = crossections.read_files(enrollment_files)
     # l = read_files(["/home/gregor/Dokumenti/Raziskovanje/urnik/git/urnik/estudent/FRI_obv_pr_LJ_LET_30_1_2012.txt"])
-    lf = filter(lambda x: x.vpisan[0] == 'T', l)
+    lf = filter(lambda x: x.vpisan[0] == "T", l)
     (groupname_group, subject_group, realizations) = crossections.parse_groups(tt)
     crossections.enrol_students(lf, subject_group)
-    return crossections.realizations_must_not_overlap_new(tt, groupname_group, realizations, razor)
+    return crossections.realizations_must_not_overlap_new(
+        tt, groupname_group, realizations, razor
+    )
 
 
 def activities_ordered(timetable):
@@ -305,46 +380,69 @@ def activities_ordered(timetable):
         for j in i.before.all():
             for iar in i.realizations.all():
                 for jar in j.realizations.all():
-                    l.append(['ConstraintTwoActivitiesOrdered', None, [
-                        ['Weight_Percentage', '100'],
-                        ['First_Activity_Id', str(iar.id)],
-                        ['Second_Activity_Id', str(jar.id)],
-                    ]])
+                    l.append(
+                        [
+                            "ConstraintTwoActivitiesOrdered",
+                            None,
+                            [
+                                ["Weight_Percentage", "100"],
+                                ["First_Activity_Id", str(iar.id)],
+                                ["Second_Activity_Id", str(jar.id)],
+                            ],
+                        ]
+                    )
     return l
 
 
 def activities_grouped(tt):
     """<ConstraintTwoActivitiesGrouped>
-        <Weight_Percentage>100</Weight_Percentage>
-        <First_Activity_Id>797</First_Activity_Id>
-        <Second_Activity_Id>796</Second_Activity_Id>
-       </ConstraintTwoActivitiesGrouped>"""
+     <Weight_Percentage>100</Weight_Percentage>
+     <First_Activity_Id>797</First_Activity_Id>
+     <Second_Activity_Id>796</Second_Activity_Id>
+    </ConstraintTwoActivitiesGrouped>"""
 
     l = []
     groups = set()
-    for pref in timetable.models.TagDescriptivePreference.objects.filter(typename='GROUPED',
-                                                                         preferenceset__timetable=tt).distinct():
+    for pref in timetable.models.TagDescriptivePreference.objects.filter(
+        typename="GROUPED", preferenceset__timetable=tt
+    ).distinct():
         al = set()
         for i in pref.tag.activities.filter(activityset__timetable=tt):
             for iar in i.realizations.all():
                 al.add(str(iar.id))
         groups.add((pref.weight, tuple(al)))
         al = set()
-        for i in pref.tag.activity_realizations.filter(activity__activityset__timetable=tt):
+        for i in pref.tag.activity_realizations.filter(
+            activity__activityset__timetable=tt
+        ):
             al.add(str(i.id))
         groups.add((pref.weight, tuple(al)))
     for (w, g) in groups:
         if len(g) == 2:
-            l.append(['ConstraintTwoActivitiesGrouped', None, [
-                ['Weight_Percentage', str(int(100 * w))],
-                ['First_Activity_Id', g[0]],
-                ['Second_Activity_Id', g[1]]]])
+            l.append(
+                [
+                    "ConstraintTwoActivitiesGrouped",
+                    None,
+                    [
+                        ["Weight_Percentage", str(int(100 * w))],
+                        ["First_Activity_Id", g[0]],
+                        ["Second_Activity_Id", g[1]],
+                    ],
+                ]
+            )
         elif len(g) == 3:
-            l.append(['ConstraintThreeActivitiesGrouped', None, [
-                ['Weight_Percentage', str(int(100 * w))],
-                ['First_Activity_Id', g[0]],
-                ['Second_Activity_Id', g[1]],
-                ['Third_Activity_Id', g[2]]]])
+            l.append(
+                [
+                    "ConstraintThreeActivitiesGrouped",
+                    None,
+                    [
+                        ["Weight_Percentage", str(int(100 * w))],
+                        ["First_Activity_Id", g[0]],
+                        ["Second_Activity_Id", g[1]],
+                        ["Third_Activity_Id", g[2]],
+                    ],
+                ]
+            )
         else:
             # FET is braindead, cannot group more than 3 activities.
             pass
@@ -353,31 +451,41 @@ def activities_grouped(tt):
 
 def activities_consecutive(tt):
     """<ConstraintTwoActivitiesConsecutive>
-        <Weight_Percentage>100</Weight_Percentage>
-        <First_Activity_Id>2464</First_Activity_Id>
-        <Second_Activity_Id>2465</Second_Activity_Id>
-        <Active>true</Active>
-        <Comments></Comments>
-       </ConstraintTwoActivitiesConsecutive>"""
+     <Weight_Percentage>100</Weight_Percentage>
+     <First_Activity_Id>2464</First_Activity_Id>
+     <Second_Activity_Id>2465</Second_Activity_Id>
+     <Active>true</Active>
+     <Comments></Comments>
+    </ConstraintTwoActivitiesConsecutive>"""
     l = []
     groups = set()
-    for pref in timetable.models.TagDescriptivePreference.objects.filter(typename='CONSECUTIVE',
-                                                                         preferenceset__timetable=tt).distinct():
+    for pref in timetable.models.TagDescriptivePreference.objects.filter(
+        typename="CONSECUTIVE", preferenceset__timetable=tt
+    ).distinct():
         al = set()
-        for i in pref.tag.activities.filter(activityset__timetable=tt).order_by('id'):
+        for i in pref.tag.activities.filter(activityset__timetable=tt).order_by("id"):
             for iar in i.realizations.all():
                 al.add(str(iar.id))
         groups.add((pref.weight, tuple(al)))
         al = set()
-        for i in pref.tag.activity_realizations.filter(activity__activityset__timetable=tt).order_by('id'):
+        for i in pref.tag.activity_realizations.filter(
+            activity__activityset__timetable=tt
+        ).order_by("id"):
             al.add(str(i.id))
         groups.add((pref.weight, tuple(al)))
     for (w, g) in groups:
         if len(g) == 2:
-            l.append(['ConstraintTwoActivitiesConsecutive', None, [
-                ['Weight_Percentage', str(int(100 * w))],
-                ['First_Activity_Id', g[0]],
-                ['Second_Activity_Id', g[1]]]])
+            l.append(
+                [
+                    "ConstraintTwoActivitiesConsecutive",
+                    None,
+                    [
+                        ["Weight_Percentage", str(int(100 * w))],
+                        ["First_Activity_Id", g[0]],
+                        ["Second_Activity_Id", g[1]],
+                    ],
+                ]
+            )
         else:
             # FET is braindead, cannot "consecutive" more than 2 activities.
             pass
@@ -386,23 +494,31 @@ def activities_consecutive(tt):
 
 def activities_same_day(tt):
     """<ConstraintActivitiesSameStartingDay>
-        <Weight_Percentage>100</Weight_Percentage>
-        <Number_of_Activities>2</Number_of_Activities>
-        <Activity_Id>2672</Activity_Id>
-        <Activity_Id>2673</Activity_Id>
-        <Active>true</Active>
-        <Comments></Comments>
-       </ConstraintActivitiesSameStartingDay>"""
+     <Weight_Percentage>100</Weight_Percentage>
+     <Number_of_Activities>2</Number_of_Activities>
+     <Activity_Id>2672</Activity_Id>
+     <Activity_Id>2673</Activity_Id>
+     <Active>true</Active>
+     <Comments></Comments>
+    </ConstraintActivitiesSameStartingDay>"""
 
     l = []
-    for p in timetable.models.TagDescriptivePreference.objects.filter(typename='SAMEDAY', level="WANT",
-                                                                      preferenceset__timetable=tt).distinct():
-        realizations = tt.realizations.filter(Q(activity__tags__exact=p.tag) | Q(tags__exact=p.tag)).distinct()
+    for p in timetable.models.TagDescriptivePreference.objects.filter(
+        typename="SAMEDAY", level="WANT", preferenceset__timetable=tt
+    ).distinct():
+        realizations = tt.realizations.filter(
+            Q(activity__tags__exact=p.tag) | Q(tags__exact=p.tag)
+        ).distinct()
         if len(realizations) > 0:
-            actList = [['Activity_Id', str(r.id)] for r in realizations]
-            l.append(['ConstraintActivitiesSameStartingDay', None, [
-                ['Weight_Percentage', str(100 * p.weight)]] +
-                      add_number_of(actList, 'Number_of_Activities')])
+            actList = [["Activity_Id", str(r.id)] for r in realizations]
+            l.append(
+                [
+                    "ConstraintActivitiesSameStartingDay",
+                    None,
+                    [["Weight_Percentage", str(100 * p.weight)]]
+                    + add_number_of(actList, "Number_of_Activities"),
+                ]
+            )
     return l
 
 
@@ -416,14 +532,22 @@ def activities_same_time(tt):
     <Comments></Comments>
     </ConstraintActivitiesSameStartingTime>"""
     l = []
-    for p in timetable.models.TagDescriptivePreference.objects.filter(typename='SAMESTARTINGTIME', level="WANT",
-                                                                      preferenceset__timetable=tt).distinct():
-        realizations = tt.realizations.filter(Q(activity__tags__exact=p.tag) | Q(tags__exact=p.tag)).distinct()
+    for p in timetable.models.TagDescriptivePreference.objects.filter(
+        typename="SAMESTARTINGTIME", level="WANT", preferenceset__timetable=tt
+    ).distinct():
+        realizations = tt.realizations.filter(
+            Q(activity__tags__exact=p.tag) | Q(tags__exact=p.tag)
+        ).distinct()
         if len(realizations) > 0:
-            actList = [['Activity_Id', str(r.id)] for r in realizations]
-            l.append(['ConstraintActivitiesSameStartingTime', None, [
-                ['Weight_Percentage', str(100 * p.weight)]] +
-                      add_number_of(actList, 'Number_of_Activities')])
+            actList = [["Activity_Id", str(r.id)] for r in realizations]
+            l.append(
+                [
+                    "ConstraintActivitiesSameStartingTime",
+                    None,
+                    [["Weight_Percentage", str(100 * p.weight)]]
+                    + add_number_of(actList, "Number_of_Activities"),
+                ]
+            )
     return l
 
 
@@ -437,39 +561,54 @@ def activities_tag_max_hour_daily(tt):
     <Comments></Comments>
     </ConstraintStudentsSetActivityTagMaxHoursDaily>"""
     ret = []
-    for p in timetable.models.TagValuePreference.objects.filter(name='TAGMAXHOURSDAILY', level="WANT",
-                                                                preferenceset__timetable=tt).distinct():
+    for p in timetable.models.TagValuePreference.objects.filter(
+        name="TAGMAXHOURSDAILY", level="WANT", preferenceset__timetable=tt
+    ).distinct():
         tag = p.tag
         for group in tag.groups.all():
-            ret.append(['ConstraintStudentsSetActivityTagMaxHoursDaily', None, [
-                ['Weight_Percentage', str(100 * p.weight)],
-                ['Maximum_Hours_Daily', str(p.value)],
-                ['Students', group.short_name],
-                ['Activity_Tag', tag.name],
-            ]])
+            ret.append(
+                [
+                    "ConstraintStudentsSetActivityTagMaxHoursDaily",
+                    None,
+                    [
+                        ["Weight_Percentage", str(100 * p.weight)],
+                        ["Maximum_Hours_Daily", str(p.value)],
+                        ["Students", group.short_name],
+                        ["Activity_Tag", tag.name],
+                    ],
+                ]
+            )
     return ret
 
 
 def activitiesMaxNumberOfRooms(tt):
     """<ConstraintActivitiesOccupyMaxDifferentRooms>
-        <Weight_Percentage>100</Weight_Percentage>
-        <Number_of_Activities>2</Number_of_Activities>
-        <Activity_Id>2464</Activity_Id>
-        <Activity_Id>2465</Activity_Id>
-        <Max_Number_of_Different_Rooms>1</Max_Number_of_Different_Rooms>
-        <Active>true</Active>
-        <Comments></Comments>
-       </ConstraintActivitiesOccupyMaxDifferentRooms>"""
+     <Weight_Percentage>100</Weight_Percentage>
+     <Number_of_Activities>2</Number_of_Activities>
+     <Activity_Id>2464</Activity_Id>
+     <Activity_Id>2465</Activity_Id>
+     <Max_Number_of_Different_Rooms>1</Max_Number_of_Different_Rooms>
+     <Active>true</Active>
+     <Comments></Comments>
+    </ConstraintActivitiesOccupyMaxDifferentRooms>"""
     l = []
-    for p in timetable.models.TagValuePreference.objects.filter(name='MAXROOMSREALIZATIONS', level="WANT",
-                                                                preferenceset__timetable=tt).distinct():
-        realizations = tt.realizations.filter(Q(activity__tags__exact=p.tag) | Q(tags__exact=p.tag)).distinct()
+    for p in timetable.models.TagValuePreference.objects.filter(
+        name="MAXROOMSREALIZATIONS", level="WANT", preferenceset__timetable=tt
+    ).distinct():
+        realizations = tt.realizations.filter(
+            Q(activity__tags__exact=p.tag) | Q(tags__exact=p.tag)
+        ).distinct()
         if len(realizations) > 1:
-            act_list = [['Activity_Id', str(r.id)] for r in realizations]
-            l.append(['ConstraintActivitiesOccupyMaxDifferentRooms', None, [
-                ['Weight_Percentage', str(100 * p.adjustedWeight())]] +
-                      add_number_of(act_list, 'Number_of_Activities') +
-                      [['Max_Number_of_Different_Rooms', str(p.value)]]])
+            act_list = [["Activity_Id", str(r.id)] for r in realizations]
+            l.append(
+                [
+                    "ConstraintActivitiesOccupyMaxDifferentRooms",
+                    None,
+                    [["Weight_Percentage", str(100 * p.adjustedWeight())]]
+                    + add_number_of(act_list, "Number_of_Activities")
+                    + [["Max_Number_of_Different_Rooms", str(p.value)]],
+                ]
+            )
     return l
 
 
@@ -483,23 +622,36 @@ def allocations_to_preferred_times(timetable, allocation_weights):
     for f, (t_weight, s_weight) in allocation_weights.items():  # @UnusedVariable
         logger.debug("Processing {}; {}".format(f, (t_weight, s_weight)))
         logger.debug("Matching allocations")
-        logger.debug("{}".format(timetable.own_allocations.filter(**dict(f)).distinct()))
+        logger.debug(
+            "{}".format(timetable.own_allocations.filter(**dict(f)).distinct())
+        )
         for a in timetable.own_allocations.filter(**dict(f)).distinct():
             w = max(t_weight, aw.get(a, t_weight))
             aw[a] = t_weight
     for (a, w) in aw.items():
         if w > 0:
-            logger.debug("Adding w {}; a_id {}; pd {}; ph {}; pl {}".format(
-                str(100 * w), a.activityRealization.id,
-                a.get_day_display(), a.start, 'false'
-            ))
-            l.append(['ConstraintActivityPreferredStartingTime', None, [
-                ['Weight_Percentage', str(100 * w)],
-                ['Activity_Id', str(a.activityRealization.id)],
-                ['Preferred_Day', a.get_day_display()],
-                ['Preferred_Hour', a.start],
-                ['Permanently_Locked', 'false']
-            ]])
+            logger.debug(
+                "Adding w {}; a_id {}; pd {}; ph {}; pl {}".format(
+                    str(100 * w),
+                    a.activityRealization.id,
+                    a.get_day_display(),
+                    a.start,
+                    "false",
+                )
+            )
+            l.append(
+                [
+                    "ConstraintActivityPreferredStartingTime",
+                    None,
+                    [
+                        ["Weight_Percentage", str(100 * w)],
+                        ["Activity_Id", str(a.activityRealization.id)],
+                        ["Preferred_Day", a.get_day_display()],
+                        ["Preferred_Hour", a.start],
+                        ["Permanently_Locked", "false"],
+                    ],
+                ]
+            )
     logger.info("Exiting allocationsToPreferredTimes")
     return l
 
@@ -508,7 +660,9 @@ def generic_not_available_preferences(tt, objs, constraint_string, entity_string
     l = []
     for i in objs:
         ad = {}
-        for a in i.time_preferences.filter(preferenceset=tt.preferenceset, level__in=['HATE', 'CANT']):
+        for a in i.time_preferences.filter(
+            preferenceset=tt.preferenceset, level__in=["HATE", "CANT"]
+        ):
             weight = a.adjustedWeight() * 100
             # Ignore yellow fields
             # if weight < 100:
@@ -518,12 +672,21 @@ def generic_not_available_preferences(tt, objs, constraint_string, entity_string
             if p not in ad:
                 ad[p] = []
             for h in a.hours():
-                ad[p].append(['Not_Available_Time', None, [
-                    # ['Day', a.get_day_display()],
-                    ['Day', a.get_day_display()],
-                    ['Hour', h]]])
+                ad[p].append(
+                    [
+                        "Not_Available_Time",
+                        None,
+                        [
+                            # ['Day', a.get_day_display()],
+                            ["Day", a.get_day_display()],
+                            ["Hour", h],
+                        ],
+                    ]
+                )
         for tag in i.tags.all():
-            for tp in timetable.models.TagTimePreference.objects.filter(tag=tag, level__in=['HATE', 'CANT']):
+            for tp in timetable.models.TagTimePreference.objects.filter(
+                tag=tag, level__in=["HATE", "CANT"]
+            ):
                 weight = tp.adjustedWeight() * 100
                 # Ignore yellow fields
                 # if weight < 100:
@@ -533,27 +696,40 @@ def generic_not_available_preferences(tt, objs, constraint_string, entity_string
                 if p not in ad:
                     ad[p] = []
                 for h in tp.hours():
-                    ad[p].append(['Not_Available_Time', None, [
-                        ['Day', tp.get_day_display()],
-                        ['Hour', h]]])
+                    ad[p].append(
+                        [
+                            "Not_Available_Time",
+                            None,
+                            [["Day", tp.get_day_display()], ["Hour", h]],
+                        ]
+                    )
         for (p, al) in ad.items():
-            l.append([constraint_string, None, [
-                ['Weight_Percentage', p],
-                [entity_string, i.id_string()]] + add_number_of(al, 'Number_of_Not_Available_Times')])
+            l.append(
+                [
+                    constraint_string,
+                    None,
+                    [["Weight_Percentage", p], [entity_string, i.id_string()]]
+                    + add_number_of(al, "Number_of_Not_Available_Times"),
+                ]
+            )
     return l
 
 
 def teacher_not_available_preferences(tt):
     logger.info("Entering teacherNotAvailablePreferences")
     logger.debug("TT: {}".format(tt))
-    r = generic_not_available_preferences(tt, tt.teachers.all(), 'ConstraintTeacherNotAvailableTimes', 'Teacher')
+    r = generic_not_available_preferences(
+        tt, tt.teachers.all(), "ConstraintTeacherNotAvailableTimes", "Teacher"
+    )
     logger.info("Exiting teacherNotAvailablePreferences")
     return r
 
 
 def students_not_available_preferences(tt):
     logger.info("Entering studentsNotAvailablePreferences")
-    r = generic_not_available_preferences(tt, tt.groups.all(), 'ConstraintStudentsSetNotAvailableTimes', 'Students')
+    r = generic_not_available_preferences(
+        tt, tt.groups.all(), "ConstraintStudentsSetNotAvailableTimes", "Students"
+    )
     logger.info("Exiting studentsNotAvailablePreferences")
     return r
 
@@ -565,52 +741,76 @@ def generic_value_preferences(preferenceset, objects, fet_constraint_names, fet_
         for p in o.value_preferences.filter(preferenceset=preferenceset):
             all_prefs.append(p)
         for tag in o.tags.all():
-            for p in timetable.models.TagValuePreference.objects.filter(tag=tag, preferenceset=preferenceset).all():
+            for p in timetable.models.TagValuePreference.objects.filter(
+                tag=tag, preferenceset=preferenceset
+            ).all():
                 all_prefs.append(p)
         for p in all_prefs:
             fet_name, fet_val = fet_constraint_names.get(p.name, (None, None))
             if fet_name is not None:
-                l.append([fet_name, None, [
-                    ['Weight_Percentage', str(int(p.adjustedWeight() * 100))],
-                    [fet_object, o.id_string()],
-                    [fet_val, str(p.value)]]])
+                l.append(
+                    [
+                        fet_name,
+                        None,
+                        [
+                            ["Weight_Percentage", str(int(p.adjustedWeight() * 100))],
+                            [fet_object, o.id_string()],
+                            [fet_val, str(p.value)],
+                        ],
+                    ]
+                )
     return l
 
 
 def teacher_value_time_preferences(timetable):
     logger.info("Entering teacherValueTimePreferences")
     fet_constraint_names = {
-        'MAXDAYSWEEK': ('ConstraintTeacherMaxDaysPerWeek', 'Max_Days_Per_Week'),
-        'MINDAYSWEEK': ('ConstraintTeacherMinDaysPerWeek', 'Min_Days_Per_Week'),
-        'MAXHOURSDAY': ('ConstraintTeacherMaxHoursDaily', 'Maximum_Hours_Daily'),
-        'MAXSPANDAY': ('ConstraintTeacherMaxSpanPerDay', 'Max_Span'),
-        'MAXHOURSCONT': ('ConstraintTeacherMaxHoursContinuously', 'Maximum_Hours_Continuously'),
+        "MAXDAYSWEEK": ("ConstraintTeacherMaxDaysPerWeek", "Max_Days_Per_Week"),
+        "MINDAYSWEEK": ("ConstraintTeacherMinDaysPerWeek", "Min_Days_Per_Week"),
+        "MAXHOURSDAY": ("ConstraintTeacherMaxHoursDaily", "Maximum_Hours_Daily"),
+        "MAXSPANDAY": ("ConstraintTeacherMaxSpanPerDay", "Max_Span"),
+        "MAXHOURSCONT": (
+            "ConstraintTeacherMaxHoursContinuously",
+            "Maximum_Hours_Continuously",
+        ),
         # 'MAXHOURSDAY': 'Max hours per day for a tag'),
         # 'MINHOURSDAY': 'Min hours per day for a tag'),
-        'MAXGAPSDAY': ('ConstraintTeacherMaxGapsPerDay', 'Max_Gaps'),
-        'MAXGAPSWEEK': ('ConstraintTeacherMaxGapsPerWeek', 'Max_Gaps'),
+        "MAXGAPSDAY": ("ConstraintTeacherMaxGapsPerDay", "Max_Gaps"),
+        "MAXGAPSWEEK": ("ConstraintTeacherMaxGapsPerWeek", "Max_Gaps"),
         # 'MAXCHANGESWEEK': 'Max building changes per week'),
         # 'MAXCHANGESDAY': 'Max building changes per day'),
     }
-    r = generic_value_preferences(timetable.preferenceset, timetable.teachers.all(), fet_constraint_names,
-                                  'Teacher_Name')
+    r = generic_value_preferences(
+        timetable.preferenceset,
+        timetable.teachers.all(),
+        fet_constraint_names,
+        "Teacher_Name",
+    )
     logger.info("Exiting teacherValueTimePreferences")
     return r
 
 
 def students_value_time_preferences(timetable):
     fet_constraint_names = {
-        'MAXDAYSWEEK': ('ConstraintStudentsSetMaxDaysPerWeek', 'Max_Days_Per_Week'),
-        'MINDAYSWEEK': ('ConstraintStudentsSetMinDaysPerWeek', 'Min_Days_Per_Week'),
-        'MAXHOURSDAY': ('ConstraintStudentsSetMaxHoursDaily', 'Maximum_Hours_Daily'),
-        'MAXHOURSCONT': ('ConstraintStudentsSetMaxHoursContinuously', 'Maximum_Hours_Continuously'),
+        "MAXDAYSWEEK": ("ConstraintStudentsSetMaxDaysPerWeek", "Max_Days_Per_Week"),
+        "MINDAYSWEEK": ("ConstraintStudentsSetMinDaysPerWeek", "Min_Days_Per_Week"),
+        "MAXHOURSDAY": ("ConstraintStudentsSetMaxHoursDaily", "Maximum_Hours_Daily"),
+        "MAXHOURSCONT": (
+            "ConstraintStudentsSetMaxHoursContinuously",
+            "Maximum_Hours_Continuously",
+        ),
         # 'MINHOURSDAY': 'Min hours per day for a tag'),
-        'MAXGAPSDAY': ('ConstraintStudentsSetMaxGapsPerDay', 'Max_Gaps'),
-        'MAXGAPSWEEK': ('ConstraintStudentsSetMaxGapsPerWeek', 'Max_Gaps'),
+        "MAXGAPSDAY": ("ConstraintStudentsSetMaxGapsPerDay", "Max_Gaps"),
+        "MAXGAPSWEEK": ("ConstraintStudentsSetMaxGapsPerWeek", "Max_Gaps"),
         # 'MAXCHANGESWEEK': 'Max building changes per week'),
         # 'MAXCHANGESDAY': 'Max building changes per day'),
     }
-    return generic_value_preferences(timetable.preferenceset, timetable.groups.all(), fet_constraint_names, 'Students')
+    return generic_value_preferences(
+        timetable.preferenceset,
+        timetable.groups.all(),
+        fet_constraint_names,
+        "Students",
+    )
 
 
 def teacher_time_preferences_to_preferred_times(tt):
@@ -620,7 +820,9 @@ def teacher_time_preferences_to_preferred_times(tt):
     for t in tt.teachers.all():
         logger.debug("Processing {}".format(t))
         id_string = t.id_string()
-        for p in t.time_preferences.filter(preferenceset=tt.preferenceset, level='WANT'):
+        for p in t.time_preferences.filter(
+            preferenceset=tt.preferenceset, level="WANT"
+        ):
             logger.debug("Processing preference: {}".format(p))
             if id_string not in prefs:
                 prefs[id_string] = dict()
@@ -632,8 +834,9 @@ def teacher_time_preferences_to_preferred_times(tt):
                 prefs[id_string][w][day] = set()
             for h in p.hours():
                 prefs[id_string][w][day].add(h)
-        for p in timetable.models.TagTimePreference.objects.filter(preferenceset__timetable=tt, level='WANT',
-                                                                   tag__teachers=t).distinct():
+        for p in timetable.models.TagTimePreference.objects.filter(
+            preferenceset__timetable=tt, level="WANT", tag__teachers=t
+        ).distinct():
             if id_string not in prefs:
                 prefs[id_string] = dict()
             w = p.adjustedWeight()
@@ -650,26 +853,40 @@ def teacher_time_preferences_to_preferred_times(tt):
             time_slots = []
             for day, hours in j.items():
                 for h in hours:
-                    time_slots.append(['Preferred_Time_Slot', None, [
-                        ['Preferred_Day', day],
-                        ['Preferred_Hour', h]]])
-            l.append(['ConstraintActivitiesPreferredTimeSlots', None, [
-                ['Weight_Percentage', str(100 * w)],
-                ['Teacher_Name', teacher],
-                ['Students_Name', None],
-                ['Activity_Tag_Name', None],
-            ] + add_number_of(time_slots, 'Number_of_Preferred_Time_Slots')])
+                    time_slots.append(
+                        [
+                            "Preferred_Time_Slot",
+                            None,
+                            [["Preferred_Day", day], ["Preferred_Hour", h]],
+                        ]
+                    )
+            l.append(
+                [
+                    "ConstraintActivitiesPreferredTimeSlots",
+                    None,
+                    [
+                        ["Weight_Percentage", str(100 * w)],
+                        ["Teacher_Name", teacher],
+                        ["Students_Name", None],
+                        ["Activity_Tag_Name", None],
+                    ]
+                    + add_number_of(time_slots, "Number_of_Preferred_Time_Slots"),
+                ]
+            )
     logger.info("Exiting teacherTimePreferencesToPreferredTimes")
     return l
 
 
 def tag_time_preferences_to_preferred_times(tt):
     prefs = dict()
-    for p in timetable.models.TagTimePreference.objects.filter(Q(preferenceset__timetable=tt) &
-                                                               Q(level='WANT') & (
-                                                                       Q(tag__activities__activityset__timetable=tt) |
-                                                                       Q(
-                                                                           tag__activity_realizations__activity__activityset__timetable=tt))).distinct():
+    for p in timetable.models.TagTimePreference.objects.filter(
+        Q(preferenceset__timetable=tt)
+        & Q(level="WANT")
+        & (
+            Q(tag__activities__activityset__timetable=tt)
+            | Q(tag__activity_realizations__activity__activityset__timetable=tt)
+        )
+    ).distinct():
         if p.tag.name not in prefs:
             prefs[p.tag.name] = dict()
         w = p.adjustedWeight()
@@ -686,81 +903,116 @@ def tag_time_preferences_to_preferred_times(tt):
             time_slots = []
             for day, hours in j.items():
                 for h in hours:
-                    time_slots.append(['Preferred_Time_Slot', None, [
-                        ['Preferred_Day', day],
-                        ['Preferred_Hour', h]]])
-            l.append(['ConstraintActivitiesPreferredTimeSlots', None, [
-                ['Weight_Percentage', str(100 * w)],
-                ['Teacher_Name', None],
-                ['Students_Name', None],
-                ['Activity_Tag_Name', tag],
-            ] + add_number_of(time_slots, 'Number_of_Preferred_Time_Slots')])
+                    time_slots.append(
+                        [
+                            "Preferred_Time_Slot",
+                            None,
+                            [["Preferred_Day", day], ["Preferred_Hour", h]],
+                        ]
+                    )
+            l.append(
+                [
+                    "ConstraintActivitiesPreferredTimeSlots",
+                    None,
+                    [
+                        ["Weight_Percentage", str(100 * w)],
+                        ["Teacher_Name", None],
+                        ["Students_Name", None],
+                        ["Activity_Tag_Name", tag],
+                    ]
+                    + add_number_of(time_slots, "Number_of_Preferred_Time_Slots"),
+                ]
+            )
     return l
 
 
 def min_gaps_between_activities(tt):
     l = []
-    for p in timetable.models.TagValuePreference.objects.filter(Q(preferenceset__timetable=tt) &
-                                                                # Q(level='WANT', name='MINACTIVITYGAP') & (Q(tag__activities__activityset__timetable = tt) |
-                                                                # Q(tag__activity_realizations__activity__activityset__timetable = tt))).distinct():
-                                                                Q(level='WANT', name='MINACTIVITYGAP')).distinct():
-        realizations = tt.realizations.filter(Q(activity__tags__exact=p.tag) |
-                                              Q(tags__exact=p.tag)).distinct()
+    for p in timetable.models.TagValuePreference.objects.filter(
+        Q(preferenceset__timetable=tt)
+        &
+        # Q(level='WANT', name='MINACTIVITYGAP') & (Q(tag__activities__activityset__timetable = tt) |
+        # Q(tag__activity_realizations__activity__activityset__timetable = tt))).distinct():
+        Q(level="WANT", name="MINACTIVITYGAP")
+    ).distinct():
+        realizations = tt.realizations.filter(
+            Q(activity__tags__exact=p.tag) | Q(tags__exact=p.tag)
+        ).distinct()
         if len(realizations) > 0:
-            act_list = [['Activity_Id', str(r.id)] for r in realizations]
-            l.append(['ConstraintMinGapsBetweenActivities', None, [
-                ['Weight_Percentage', str(100 * p.adjustedWeight())]] +
-                      add_number_of(act_list, 'Number_of_Activities') +
-                      [['MinGaps', str(p.value)]]])
+            act_list = [["Activity_Id", str(r.id)] for r in realizations]
+            l.append(
+                [
+                    "ConstraintMinGapsBetweenActivities",
+                    None,
+                    [["Weight_Percentage", str(100 * p.adjustedWeight())]]
+                    + add_number_of(act_list, "Number_of_Activities")
+                    + [["MinGaps", str(p.value)]],
+                ]
+            )
     return l
 
 
 def activity_ends_students_day(tt):
     l = []
-    for p in timetable.models.TagDescriptivePreference.objects.filter(Q(preferenceset__timetable=tt) &
-                                                                      # Q(level='WANT', name='MINACTIVITYGAP') & (Q(tag__activities__activityset__timetable = tt) |
-                                                                      # Q(tag__activity_realizations__activity__activityset__timetable = tt))).distinct():
-                                                                      Q(level='WANT',
-                                                                        typename='ENDSSTUDENTSDAY')).distinct():
-        realizations = tt.realizations.filter(Q(activity__tags__exact=p.tag) |
-                                              Q(tags__exact=p.tag)).distinct()
+    for p in timetable.models.TagDescriptivePreference.objects.filter(
+        Q(preferenceset__timetable=tt)
+        &
+        # Q(level='WANT', name='MINACTIVITYGAP') & (Q(tag__activities__activityset__timetable = tt) |
+        # Q(tag__activity_realizations__activity__activityset__timetable = tt))).distinct():
+        Q(level="WANT", typename="ENDSSTUDENTSDAY")
+    ).distinct():
+        realizations = tt.realizations.filter(
+            Q(activity__tags__exact=p.tag) | Q(tags__exact=p.tag)
+        ).distinct()
         if len(realizations) > 0:
             for r in realizations:
-                l.append(['ConstraintActivityEndsStudentsDay', None, [
-                    ['Weight_Percentage', str(100 * p.weight)],
-                    ['Activity_Id', str(r.id)],
-                    ['Active', 'true'],
-                    ['Comments', ''], ]
-                          ])
+                l.append(
+                    [
+                        "ConstraintActivityEndsStudentsDay",
+                        None,
+                        [
+                            ["Weight_Percentage", str(100 * p.weight)],
+                            ["Activity_Id", str(r.id)],
+                            ["Active", "true"],
+                            ["Comments", ""],
+                        ],
+                    ]
+                )
     return l
 
 
-def time_constraints_fet(timetable, groupset, razor, razor_dict, allocation_weights, skip_pairs):
+def time_constraints_fet(
+    timetable, groupset, razor, razor_dict, allocation_weights, skip_pairs
+):
     l = [
-        'Time_Constraints_List', None,
-        [['ConstraintBasicCompulsoryTime', None,
-          [['Weight_Percentage', '100']]]] +
-        teacher_not_available_preferences(timetable) +
-        respected_to_teachers_not_available(timetable) +
-        allocations_to_preferred_times(timetable, allocation_weights) +
-        tag_time_preferences_to_preferred_times(timetable) +
-        teacher_time_preferences_to_preferred_times(timetable) +
-        activities_ordered(timetable) +
-        activities_not_overlapping(timetable) +
-        crossections.realizations_must_not_overlap_database(
-            timetable, razor=razor, razor_dict=razor_dict,
-            groupset=groupset, skip_pairs=skip_pairs) +
-        students_not_available_preferences(timetable) +
-        respected_to_students_not_available(timetable) +
-        teacher_value_time_preferences(timetable) +
-        students_value_time_preferences(timetable) +
-        min_gaps_between_activities(timetable) +
-        activity_ends_students_day(timetable) +
-        activities_consecutive(timetable) +
-        activities_grouped(timetable) +
-        activities_same_day(timetable) +
-        activities_same_time(timetable) +
-        activities_tag_max_hour_daily(timetable)
+        "Time_Constraints_List",
+        None,
+        [["ConstraintBasicCompulsoryTime", None, [["Weight_Percentage", "100"]]]]
+        + teacher_not_available_preferences(timetable)
+        + respected_to_teachers_not_available(timetable)
+        + allocations_to_preferred_times(timetable, allocation_weights)
+        + tag_time_preferences_to_preferred_times(timetable)
+        + teacher_time_preferences_to_preferred_times(timetable)
+        + activities_ordered(timetable)
+        + activities_not_overlapping(timetable)
+        + crossections.realizations_must_not_overlap_database(
+            timetable,
+            razor=razor,
+            razor_dict=razor_dict,
+            groupset=groupset,
+            skip_pairs=skip_pairs,
+        )
+        + students_not_available_preferences(timetable)
+        + respected_to_students_not_available(timetable)
+        + teacher_value_time_preferences(timetable)
+        + students_value_time_preferences(timetable)
+        + min_gaps_between_activities(timetable)
+        + activity_ends_students_day(timetable)
+        + activities_consecutive(timetable)
+        + activities_grouped(timetable)
+        + activities_same_day(timetable)
+        + activities_same_time(timetable)
+        + activities_tag_max_hour_daily(timetable),
     ]
     return l2El(l)
 
@@ -772,7 +1024,9 @@ def timetable_to_rooms_not_available(timetable, activity=None):
         logger.debug("Activity is none")
         allocations = timetable.own_allocations.all()
     else:
-        allocations = timetable.own_allocations.filter(activityRealization__activity=activity)
+        allocations = timetable.own_allocations.filter(
+            activityRealization__activity=activity
+        )
     logger.debug("Allocations: {}".format(allocations))
     r = []
     for room in timetable.classrooms.all():
@@ -782,15 +1036,26 @@ def timetable_to_rooms_not_available(timetable, activity=None):
             logger.debug("Processing allocation {}".format(i))
             for hour in i.hours:
                 logger.debug("Not available hour: {}".format(hour))
-                l.append(['Not_Available_Time', None, [
-                    ['Day', i.get_day_display()],
-                    ['Hour', hour],
-                ]])
+                l.append(
+                    [
+                        "Not_Available_Time",
+                        None,
+                        [
+                            ["Day", i.get_day_display()],
+                            ["Hour", hour],
+                        ],
+                    ]
+                )
         if len(l) > 0:
             logger.debug("Number of not available times: {}".format(len(l)))
-            l = add_number_of(l, 'Number_of_Not_Available_Times')
-            r.append(['ConstraintRoomNotAvailableTimes', None,
-                      [['Weight_Percentage', '100'], ['Room', room.short_name]] + l])
+            l = add_number_of(l, "Number_of_Not_Available_Times")
+            r.append(
+                [
+                    "ConstraintRoomNotAvailableTimes",
+                    None,
+                    [["Weight_Percentage", "100"], ["Room", room.short_name]] + l,
+                ]
+            )
     logger.debug("Returning {}".format(r))
     logger.info("Exiting timetableToRoomsNotAvailable")
     return r
@@ -808,14 +1073,25 @@ def timetable_to_students_not_available(timetable, groupset=None):
         l = []
         for i in allocations.filter(activityRealization__groups=group):
             for hour in i.hours:
-                l.append(['Not_Available_Time', None, [
-                    ['Day', i.get_day_display()],
-                    ['Hour', hour],
-                ]])
+                l.append(
+                    [
+                        "Not_Available_Time",
+                        None,
+                        [
+                            ["Day", i.get_day_display()],
+                            ["Hour", hour],
+                        ],
+                    ]
+                )
         if len(l) > 0:
-            l = add_number_of(l, 'Number_of_Not_Available_Times')
-            r.append(['ConstraintStudentsSetNotAvailableTimes', None,
-                      [['Weight_Percentage', '100'], ['Students', group.id_string()]] + l])
+            l = add_number_of(l, "Number_of_Not_Available_Times")
+            r.append(
+                [
+                    "ConstraintStudentsSetNotAvailableTimes",
+                    None,
+                    [["Weight_Percentage", "100"], ["Students", group.id_string()]] + l,
+                ]
+            )
     return r
 
 
@@ -832,14 +1108,26 @@ def timetable_to_teachers_not_available(timetable, teachers=None):
         l = []
         for i in allocations.filter(activityRealization__teachers=teacher).distinct():
             for hour in i.hours:
-                l.append(['Not_Available_Time', None, [
-                    ['Day', i.get_day_display()],
-                    ['Hour', hour],
-                ]])
+                l.append(
+                    [
+                        "Not_Available_Time",
+                        None,
+                        [
+                            ["Day", i.get_day_display()],
+                            ["Hour", hour],
+                        ],
+                    ]
+                )
         if len(l) > 0:
-            l = add_number_of(l, 'Number_of_Not_Available_Times')
-            r.append(['ConstraintTeacherNotAvailableTimes', None,
-                      [['Weight_Percentage', '100'], ['Teacher', teacher.id_string()]] + l])
+            l = add_number_of(l, "Number_of_Not_Available_Times")
+            r.append(
+                [
+                    "ConstraintTeacherNotAvailableTimes",
+                    None,
+                    [["Weight_Percentage", "100"], ["Teacher", teacher.id_string()]]
+                    + l,
+                ]
+            )
     logger.info("Exiting timetableToTeachersNotAvailable")
     return r
 
@@ -857,7 +1145,7 @@ def activity_requirements_to_preferred_rooms(timetable):
             n_students = _shrunken_students(timetable, ar)
             for r in ar.preferred_rooms(timetable, n_students).distinct():
                 #    if r.short_name != "Eles" or bolonjaPodiplomci:  # Ugly hack
-                lr.append(['Preferred_Room', r.short_name])
+                lr.append(["Preferred_Room", r.short_name])
 
             #            if ar.id == 2407:
             #            print "GREGOR:", a.id , a.subject.code, a.preferred_rooms(timetable).distinct()
@@ -865,19 +1153,37 @@ def activity_requirements_to_preferred_rooms(timetable):
 
             # print "" + a.name + ", "  + str(lr)
             if len(lr) > 1:
-                l.append(['ConstraintActivityPreferredRooms', None, [
-                    ['Weight_Percentage', '100'],
-                    ['Activity_Id', str(ar.id)]] + add_number_of(lr, 'Number_of_Preferred_Rooms')])
+                l.append(
+                    [
+                        "ConstraintActivityPreferredRooms",
+                        None,
+                        [["Weight_Percentage", "100"], ["Activity_Id", str(ar.id)]]
+                        + add_number_of(lr, "Number_of_Preferred_Rooms"),
+                    ]
+                )
             elif len(lr) == 1:
-                l.append(['ConstraintActivityPreferredRoom', None, [
-                    ['Weight_Percentage', '100'],
-                    ['Activity_Id', str(ar.id)],
-                    ['Room', lr[0][1]],
-                    ['Permanently_Locked', 'true']]])
+                l.append(
+                    [
+                        "ConstraintActivityPreferredRoom",
+                        None,
+                        [
+                            ["Weight_Percentage", "100"],
+                            ["Activity_Id", str(ar.id)],
+                            ["Room", lr[0][1]],
+                            ["Permanently_Locked", "true"],
+                        ],
+                    ]
+                )
             elif len(lr) == 0:
                 raise Exception(
                     "No prefered room for ActivityRealization id {0} - {1} \n    size:{2}\n     requirements:{3}\n    NRequirements:{4})".format(
-                        ar.id, ar, ar.size, a.requirements.all(), a.requirements_per_student.all()))
+                        ar.id,
+                        ar,
+                        ar.size,
+                        a.requirements.all(),
+                        a.requirements_per_student.all(),
+                    )
+                )
     return l
 
 
@@ -890,30 +1196,59 @@ def allocations_to_preferred_room(timetable, allocationWeights):
             aw[a] = s_weight
     for (a, w) in aw.items():
         if w > 0:
-            l.append(['ConstraintActivityPreferredRoom', None, [
-                ['Weight_Percentage', str(100 * w)],
-                ['Activity_Id', str(a.activityRealization.id)],
-                ['Room', a.classroom.short_name],
-                ['Permanently_Locked', 'false']]])
+            l.append(
+                [
+                    "ConstraintActivityPreferredRoom",
+                    None,
+                    [
+                        ["Weight_Percentage", str(100 * w)],
+                        ["Activity_Id", str(a.activityRealization.id)],
+                        ["Room", a.classroom.short_name],
+                        ["Permanently_Locked", "false"],
+                    ],
+                ]
+            )
     return l
 
 
 def teacher_value_space_preferences(tt):
     fet_constraint_names = {
-        'MAXCHANGESWEEK': ('ConstraintTeacherMaxBuildingChangesPerWeek', 'Max_Building_Changes_Per_Week'),
-        'MAXCHANGESDAY': ('ConstraintTeacherMaxBuildingChangesPerDay', 'Max_Building_Changes_Per_Day'),
-        'MINCHANGEGAP': ('ConstraintTeacherMinGapsBetweenBuildingChanges', 'Min_Gaps_Between_Building_Changes'),
+        "MAXCHANGESWEEK": (
+            "ConstraintTeacherMaxBuildingChangesPerWeek",
+            "Max_Building_Changes_Per_Week",
+        ),
+        "MAXCHANGESDAY": (
+            "ConstraintTeacherMaxBuildingChangesPerDay",
+            "Max_Building_Changes_Per_Day",
+        ),
+        "MINCHANGEGAP": (
+            "ConstraintTeacherMinGapsBetweenBuildingChanges",
+            "Min_Gaps_Between_Building_Changes",
+        ),
     }
-    return generic_value_preferences(tt.preferenceset, tt.teachers.all(), fet_constraint_names, 'Teacher')
+    return generic_value_preferences(
+        tt.preferenceset, tt.teachers.all(), fet_constraint_names, "Teacher"
+    )
 
 
 def students_value_space_preferences(tt):
     fet_constraint_names = {
-        'MAXCHANGESWEEK': ('ConstraintStudentsSetMaxBuildingChangesPerWeek', 'Max_Building_Changes_Per_Week'),
-        'MAXCHANGESDAY': ('ConstraintStudentsSetMaxBuildingChangesPerDay', 'Max_Building_Changes_Per_Day'),
-        'MINCHANGEGAP': ('ConstraintStudentsSetMinGapsBetweenBuildingChanges', 'Min_Gaps_Between_Building_Changes'),
+        "MAXCHANGESWEEK": (
+            "ConstraintStudentsSetMaxBuildingChangesPerWeek",
+            "Max_Building_Changes_Per_Week",
+        ),
+        "MAXCHANGESDAY": (
+            "ConstraintStudentsSetMaxBuildingChangesPerDay",
+            "Max_Building_Changes_Per_Day",
+        ),
+        "MINCHANGEGAP": (
+            "ConstraintStudentsSetMinGapsBetweenBuildingChanges",
+            "Min_Gaps_Between_Building_Changes",
+        ),
     }
-    return generic_value_preferences(tt.preferenceset, tt.groups.all(), fet_constraint_names, 'Students')
+    return generic_value_preferences(
+        tt.preferenceset, tt.groups.all(), fet_constraint_names, "Students"
+    )
 
 
 def respected_to_rooms_not_available(timetable):
@@ -952,23 +1287,30 @@ def respected_to_teachers_not_available(timetable):
 
 def space_constraints_fet(tt, allocationWeights):
     logger.info("Entering spaceConstraintsFet")
-    l = ['Space_Constraints_List', None,
-         [['ConstraintBasicCompulsorySpace', None, [['Weight_Percentage', '100']]]] +
-         teacher_value_space_preferences(tt) +
-         respected_to_rooms_not_available(tt) +
-         activity_requirements_to_preferred_rooms(tt) +
-         allocations_to_preferred_room(tt, allocationWeights) +
-         students_value_space_preferences(tt) +
-         activitiesMaxNumberOfRooms(tt)
-         ]
+    l = [
+        "Space_Constraints_List",
+        None,
+        [["ConstraintBasicCompulsorySpace", None, [["Weight_Percentage", "100"]]]]
+        + teacher_value_space_preferences(tt)
+        + respected_to_rooms_not_available(tt)
+        + activity_requirements_to_preferred_rooms(tt)
+        + allocations_to_preferred_room(tt, allocationWeights)
+        + students_value_space_preferences(tt)
+        + activitiesMaxNumberOfRooms(tt),
+    ]
     logger.info("Exiting spaceConstraintsFet")
     return l2El(l)
 
 
-def generate_fet(tt, groupset, razor, razor_dict=None,
-                 allocation_weights={".*": (1.0, 1.0)},
-                 skip_pairs=[],
-                 disabled_types=[]):
+def generate_fet(
+    tt,
+    groupset,
+    razor,
+    razor_dict=None,
+    allocation_weights={".*": (1.0, 1.0)},
+    skip_pairs=[],
+    disabled_types=[],
+):
     logger.info("Entering generateFet")
     logger.debug("TT: {0}".format(tt))
     logger.debug("Groupset: {0}".format(groupset))
@@ -976,14 +1318,20 @@ def generate_fet(tt, groupset, razor, razor_dict=None,
     logger.debug("allocationWeights: {0}".format(allocation_weights))
     logger.debug("Skip pairs: {0}".format(skip_pairs))
     logger.debug("Disabled types: {}".format(disabled_types))
-    fet = ET.Element('fet', version="5.11.0")
-    fet.append(l2El(['Institution_Name', 'FRI']))
-    fet.append(l2El(['Comments', "Fakulteta za računalništvo in informatiko"
-                                 " Univerze v Ljubljani"]))
-    l = [['Name', i[0]] for i in timetable.models.WORKHOURS]
-    fet.append(l2El(['Hours_List', None, add_number_of(l, 'Number')]))
-    l = [['Name', i[1]] for i in timetable.models.WEEKDAYS]
-    fet.append(l2El(['Days_List', None, add_number_of(l, 'Number')]))
+    fet = ET.Element("fet", version="5.11.0")
+    fet.append(l2El(["Institution_Name", "FRI"]))
+    fet.append(
+        l2El(
+            [
+                "Comments",
+                "Fakulteta za računalništvo in informatiko" " Univerze v Ljubljani",
+            ]
+        )
+    )
+    l = [["Name", i[0]] for i in timetable.models.WORKHOURS]
+    fet.append(l2El(["Hours_List", None, add_number_of(l, "Number")]))
+    l = [["Name", i[1]] for i in timetable.models.WEEKDAYS]
+    fet.append(l2El(["Days_List", None, add_number_of(l, "Number")]))
     fet.append(student_year_fet(tt))
     fet.append(teachers_fet(tt))
     fet.append(subjects_fet(tt))
@@ -991,8 +1339,11 @@ def generate_fet(tt, groupset, razor, razor_dict=None,
     fet.append(activities_fet(tt, disabled_types))
     fet.append(buildings_fet())
     fet.append(room_fet(tt))
-    fet.append(time_constraints_fet(tt, groupset, razor, razor_dict,
-                                    allocation_weights, skip_pairs))
+    fet.append(
+        time_constraints_fet(
+            tt, groupset, razor, razor_dict, allocation_weights, skip_pairs
+        )
+    )
     fet.append(space_constraints_fet(tt, allocation_weights))
     return fet
 
@@ -1015,33 +1366,40 @@ Example:
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--enrollments__groupset', nargs=1,
-            action='store',
+            "--enrollments__groupset",
+            nargs=1,
+            action="store",
             type=str,
-            dest='groupset',
+            dest="groupset",
             default=None,
-            help='The groupset slug from which student enrollments are read.')
+            help="The groupset slug from which student enrollments are read.",
+        )
         parser.add_argument(
-            'timetable_slug', nargs=1,
-            type=str, )
+            "timetable_slug",
+            nargs=1,
+            type=str,
+        )
         parser.add_argument(
-            'razor', nargs=1,
-            type=int, )
+            "razor",
+            nargs=1,
+            type=int,
+        )
         parser.add_argument(
-            'filters', nargs='*',
+            "filters",
+            nargs="*",
             type=str,
         )
 
     def handle(self, *args, **options):
         # print(options)
-        groupset = options['groupset']
+        groupset = options["groupset"]
         if groupset is not None:
             groupset = GroupSet.objects.get(slug=groupset[0])
 
-        fet_timetable_name = options['timetable_slug'][0]
-        razor = options['razor'][0]
+        fet_timetable_name = options["timetable_slug"][0]
+        razor = options["razor"][0]
         allocation_weights = {}
-        filters = options['filters']
+        filters = options["filters"]
         if filters is None:
             filters = []
         for i in range(0, len(filters), 3):
@@ -1051,14 +1409,20 @@ Example:
                     raise Exception
                 f = tuple(f.items())
             except:
-                f = (('activityRealization__activity__short_name__regex',
-                      filters[i]),)
+                f = (("activityRealization__activity__short_name__regex", filters[i]),)
             allocation_weights[f] = (float(filters[i + 1]), float(filters[i + 2]))
         if len(allocation_weights) < 1:
-            allocation_weights = {(('activityRealization__activity__short_name__regex', '.*'),): (1.0, 1.0)}
-        razor_dict = {('P', 'P'): 3}
+            allocation_weights = {
+                (("activityRealization__activity__short_name__regex", ".*"),): (
+                    1.0,
+                    1.0,
+                )
+            }
+        razor_dict = {("P", "P"): 3}
         try:
-            timetable = friprosveta.models.Timetable.objects.get(slug=fet_timetable_name)
+            timetable = friprosveta.models.Timetable.objects.get(
+                slug=fet_timetable_name
+            )
         except Exception as e:
             print(e)
             print("Timetables:")
@@ -1067,12 +1431,16 @@ Example:
             exit(1)
         # Skip pairs: which activity pairs to skip when checking for overlaps
         fet = generate_fet(
-            timetable, groupset, razor=razor,
+            timetable,
+            groupset,
+            razor=razor,
             razor_dict=razor_dict,
             allocation_weights=allocation_weights,
-            # skip_pairs=[('P', 'P')],
+            skip_pairs=[("P", "P")],
             # disabled_types=['LV', 'AV'],
         )
         indent(fet)
         # this is a workaround for Django's stdout.write being buggy.
-        self.stdout.write(ET.tostring(fet, encoding='UTF-8').decode('UTF-8'), ending=None)
+        self.stdout.write(
+            ET.tostring(fet, encoding="UTF-8").decode("UTF-8"), ending=None
+        )

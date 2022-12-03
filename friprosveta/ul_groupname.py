@@ -2,8 +2,7 @@ from django_auth_ldap.config import NestedGroupOfNamesType
 
 
 class ULNestedGroupOfNamesType(NestedGroupOfNamesType):
-
-    def __init__(self, name_attr='cn'):
+    def __init__(self, name_attr="cn"):
         super(ULNestedGroupOfNamesType, self).__init__(name_attr)
 
     def group_name_from_info(self, group_info):
@@ -18,8 +17,8 @@ class ULNestedGroupOfNamesType(NestedGroupOfNamesType):
         """
         try:
             dn = group_info[0]
-            university = dn.split(',')[-3][3:]
-            name = university + '_' + group_info[1][self.name_attr][0]
+            university = dn.split(",")[-3][3:]
+            name = university + "_" + group_info[1][self.name_attr][0]
         except (KeyError, IndexError):
             name = None
 

@@ -2,8 +2,7 @@ import heapq
 
 from django.core.management.base import BaseCommand
 
-from friprosveta.models import ActivityRealization
-from friprosveta.models import Timetable, REALIZATIONSIZES
+from friprosveta.models import REALIZATIONSIZES, ActivityRealization, Timetable
 from timetable.models import TimetableSet
 
 
@@ -20,9 +19,13 @@ class Command(BaseCommand):
         tt = Timetable.objects.get(slug=args[0])
         timetable_set = TimetableSet.objects.get(slug=args[1])
         for activity in tt.activities.all():
-            self.create_realizations_for_activity(activity.activity, tt, timetable_set, True)
+            self.create_realizations_for_activity(
+                activity.activity, tt, timetable_set, True
+            )
 
-    def create_realizations_for_activity(self, activity, timetable, timetable_set, force=False):
+    def create_realizations_for_activity(
+        self, activity, timetable, timetable_set, force=False
+    ):
         """
         Create realizations for activity.
         If force flag is enabled, old activities are erased.
@@ -32,12 +35,17 @@ class Command(BaseCommand):
             for realization in activity.realizations.all():
                 realization.delete()
         elif activity.realizations.count() > 0:
-            print("Activity {0} already has realizations and force flag is disabled. Aborting.".format(activity).encode(
-                "utf-8"))
+            print(
+                "Activity {0} already has realizations and force flag is disabled. Aborting.".format(
+                    activity
+                ).encode(
+                    "utf-8"
+                )
+            )
             return
-        if activity.type == 'P':
+        if activity.type == "P":
             self.create_realizations_for_predavanje(activity, timetable, timetable_set)
-        if activity.type == 'LV' or activity.type == 'AV':
+        if activity.type == "LV" or activity.type == "AV":
             self.create_realizations_for_vaje(activity, timetable, timetable_set)
 
     def _add_single_realization(self, activity, flat_teachers, groups):
@@ -56,8 +64,9 @@ class Command(BaseCommand):
         """
         # This one is easy: just add one realization with all groups selected
         try:
-            self._add_single_realization(activity, [list(activity.teachers.all())],
-                                         list(activity.groups.all()))
+            self._add_single_realization(
+                activity, [list(activity.teachers.all())], list(activity.groups.all())
+            )
         except Exception:
             return
 
@@ -77,14 +86,20 @@ class Command(BaseCommand):
         Create realizations for activity of type avditorne vaje.
         Does not modify old realizations.
         """
-        teachers = [[activity.cycles(t.code, activity.lecture_type.id, timetable_set), t]
-                    for t in activity.teachers.all()]
+        teachers = [
+            [activity.cycles(t.code, activity.lecture_type.id, timetable_set), t]
+            for t in activity.teachers.all()
+        ]
         teachers.sort(key=lambda e: -e[0])
 
         max_size = 30
-        if activity.type == 'LV' and REALIZATIONSIZES[1] not in self.vsi_nacini_izvajanja(activity):
+        if activity.type == "LV" and REALIZATIONSIZES[
+            1
+        ] not in self.vsi_nacini_izvajanja(activity):
             max_size = 15
-        if activity.type == 'LV' and REALIZATIONSIZES[1] in self.vsi_nacini_izvajanja(activity):
+        if activity.type == "LV" and REALIZATIONSIZES[1] in self.vsi_nacini_izvajanja(
+            activity
+        ):
             flat_teachers = self._velike_cikle_asistentom(teachers)
         else:
             flat_teachers = []
@@ -102,8 +117,9 @@ class Command(BaseCommand):
         try:
             for group in group_list:
                 if group.size + current_groups_size > max_size:
-                    flat_teachers = self._add_single_realization(activity, flat_teachers,
-                                                                 current_groups)
+                    flat_teachers = self._add_single_realization(
+                        activity, flat_teachers, current_groups
+                    )
                     current_groups = []
                     current_groups_size = 0
                 current_groups.append(group)
