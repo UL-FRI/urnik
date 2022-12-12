@@ -1,6 +1,6 @@
 # vim:set ft=dockerfile:
-FROM debian:testing
-MAINTAINER Gregor Jerše <gregor.jerse@fri.uni-lj.si>
+FROM debian:stable
+LABEL maintainer="Gregor Jerše <gregor@jerse.info>"
 
 ENV URNIK_GIT_LOCATION=https://github.com/ul-fri/urnik.git
 ENV URNIK_GIT_BRANCH=master
@@ -13,7 +13,7 @@ ENV SECRET_KEY=very_secret_key
 RUN groupadd -r timetable && useradd -r -g timetable timetable
 
 # Change locale to sl_SI.UTF-8
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y locales
+RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y locales
 
 RUN sed -i -e 's/# sl_SI.UTF-8 UTF-8/sl_SI.UTF-8 UTF-8/' /etc/locale.gen && \
     dpkg-reconfigure --frontend=noninteractive locales && \
@@ -23,7 +23,8 @@ ENV LANG sl_SI.UTF-8
 ENV LC_ALL sl_SI.UTF-8 
 
 # Install required packages
-RUN apt-get update \
+RUN apt update \
+  && apt full-upgrade -y \
   && apt-get install -y \
   uwsgi \
   uwsgi-plugin-python3 \
@@ -48,7 +49,6 @@ WORKDIR /home/timetable
 # the appropriate subfolder.
 COPY --chown=timetable:timetable . urnik/
 COPY --chown=timetable:timetable wait-for-it.sh /
-
 
 # Install dependencies
 RUN pip3 install -r urnik/requirements_production.txt
