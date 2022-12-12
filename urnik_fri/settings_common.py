@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 DEBUG = False
 
@@ -6,7 +6,7 @@ ALLOWED_HOSTS = ["*"]
 
 AUTHENTICATION_BACKENDS = (
     # 'guardian.backends.ObjectPermissionBackend',
-    "django_auth_ldap.backend.LDAPBackend",
+    # "django_auth_ldap.backend.LDAPBackend",
     "django.contrib.auth.backends.ModelBackend",
 )
 

@@ -6,7 +6,7 @@ from django.forms import widgets
 from django.forms.boundfield import BoundField
 from django.forms.utils import ErrorList
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from timetable.models import (
     PREFERENCELEVELS,

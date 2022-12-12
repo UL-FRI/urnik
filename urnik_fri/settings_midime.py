@@ -9,9 +9,9 @@ MANAGERS = ADMINS
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": "urnik",  # Or path to database file if using sqlite3.
-        "USER": "gregor",  # Not used with sqlite3.
-        "PASSWORD": "",  # Not used with sqlite3.
+        "NAME": "timetable",  # Or path to database file if using sqlite3.
+        "USER": "timetable",  # Not used with sqlite3.
+        "PASSWORD": "database_password",  # Not used with sqlite3.
         "HOST": "127.0.0.1",  # Set to empty string for localhost. Not used with sqlite3.
         "PORT": "",  # Set to empty string for default. Not used with sqlite3.
     },
@@ -28,7 +28,7 @@ DATABASE_ROUTERS = [
 ]
 
 UNITIME_DB_USER = "unitime"
-UNITIME_DB_PASSWORD = "unitime"
+UNITIME_DB_PASSWORD = "database_password"
 UNITIME_DB_HOST = "localhost"
 UNITIME_DB_NAME = "timetable"
 
