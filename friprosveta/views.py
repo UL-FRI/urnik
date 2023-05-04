@@ -182,7 +182,7 @@ def default_timetable_redirect(request):
 # @cache_page(60 * 15)
 def results(request, timetable_slug):
     class StudentForm(django.forms.Form):
-        student = django.forms.CharField(label="vpisna", max_length=8)
+        student = django.forms.CharField(label=_("Student number"), max_length=8)
 
     selected_timetable = get_object_or_404(
         timetable.models.Timetable, slug=timetable_slug

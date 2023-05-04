@@ -4,10 +4,8 @@
 {% block body %}
 <h1>Urnik</h1>
 
-
-
 <form action="/timetable/{{timetable_slug}}/allocations" method="GET" style="display: inline-block;">
-{% trans "Student number" %} {{student_form.student}}
+{{ student_form }}
 <input type="submit" value='{% trans "Show timetable" %}'/>
 </form>
 
