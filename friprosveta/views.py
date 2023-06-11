@@ -1177,7 +1177,7 @@ def busy_students(request, timetable_slug, realization_id):
             for tp in g.time_preferences.filter(level="CANT"):
                 for h in tp.hours():
                     busy_set.add((tp.day, h))
-        for (day, h) in busy_set:
+        for day, h in busy_set:
             h_dict = busy_dict.get(h, dict())
             d = h_dict.get(day, 0)
             h_dict[day] = d + 1
@@ -1316,6 +1316,21 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
     # if request.user.is_staff:
     if True:
         own_activities = teacher.activities.filter(activityset=tt.activityset)
+        # Fill cycles_on_site with the number of cycles for each activity.
+        # This is the default for the cycles on site.
+        for activity in own_activities:
+            if activity.cycles_on_site is None:
+                timetable_set_ids = activity.activityset.timetable_set.values_list(
+                    "timetable_sets", flat=True
+                )
+                all_cycles = frinajave.models.TeacherSubjectCycles.objects.filter(
+                    subject_code=activity.subject.code,
+                    timetable_set_id__in=timetable_set_ids,
+                    lecture_type=activity.lecture_type_id,
+                ).aggregate(suma=Sum("cycles"))["suma"]
+                activity.cycles_on_site = int(round(all_cycles))
+                activity.save(update_fields=["cycles_on_site"])
+
         others_activities = friprosveta.models.Activity.objects.none()
     else:
         own_activities = (

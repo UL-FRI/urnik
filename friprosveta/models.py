@@ -225,11 +225,23 @@ class GroupSizeHint(models.Model):
 
 
 class Activity(timetable.models.Activity):
+    #: subject
     subject = models.ForeignKey(
         "Subject", related_name="activities", on_delete=models.CASCADE
     )
+
+    #: lecture type
     lecture_type = models.ForeignKey(
         "LectureType", related_name="activities", null=False, on_delete=models.CASCADE
+    )
+
+    #: cycles on site
+    cycles_on_site = models.IntegerField(
+        "Cikli na FRI",
+        help_text="Koliko ciklov zelim izvajati na FRI",
+        null=True,
+        blank=True,
+        default=0,
     )
 
     #: is the activity ready for scheduling
@@ -645,7 +657,7 @@ class Teacher(timetable.models.Teacher):
         }
 
         for day in busy:
-            for (hour, busy_weight) in busy[day]:
+            for hour, busy_weight in busy[day]:
                 if busy_weight >= weight and hour in free[day]:
                     free[day].remove(hour)
 
@@ -675,7 +687,7 @@ class Student(models.Model):
             studies[e.study] += 1
         # Default study is "BUN-RI"
         (study, m) = ("BUN-RI", -1)
-        for (s, v) in studies.items():
+        for s, v in studies.items():
             if v > m:
                 (study, m) = (s, v)
         return study.short_name
