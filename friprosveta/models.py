@@ -241,7 +241,7 @@ class Activity(timetable.models.Activity):
         help_text="Koliko ciklov zelim izvajati na FRI",
         null=True,
         blank=True,
-        default=0,
+        default=None,
     )
 
     #: is the activity ready for scheduling

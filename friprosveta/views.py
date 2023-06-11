@@ -1319,15 +1319,17 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
         # Fill cycles_on_site with the number of cycles for each activity.
         # This is the default for the cycles on site.
         for activity in own_activities:
+            timetable_set_ids = activity.activityset.timetable_set.values_list(
+                "timetable_sets", flat=True
+            )
+            all_cycles = frinajave.models.TeacherSubjectCycles.objects.filter(
+                subject_code=activity.subject.code,
+                timetable_set_id__in=timetable_set_ids,
+                lecture_type=activity.lecture_type_id,
+            ).aggregate(suma=Sum("cycles"))["suma"]
+            all_cycles = int(round(all_cycles))
+            activity.all_cycles = all_cycles
             if activity.cycles_on_site is None:
-                timetable_set_ids = activity.activityset.timetable_set.values_list(
-                    "timetable_sets", flat=True
-                )
-                all_cycles = frinajave.models.TeacherSubjectCycles.objects.filter(
-                    subject_code=activity.subject.code,
-                    timetable_set_id__in=timetable_set_ids,
-                    lecture_type=activity.lecture_type_id,
-                ).aggregate(suma=Sum("cycles"))["suma"]
                 activity.cycles_on_site = int(round(all_cycles))
                 activity.save(update_fields=["cycles_on_site"])
 

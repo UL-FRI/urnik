@@ -99,6 +99,10 @@ class ActivityLongRequirementsForm(forms.ModelForm):
 
 
 class ActivityMinimalForm(forms.ModelForm):
+    cycles_on_site = forms.IntegerField(
+        min_value=0, error_messages={"min_value": "Vnesite nenegativno celo število"}
+    )
+
     class Meta(ActivityLongRequirementsForm.Meta):
         model = friprosveta.models.Activity
         exclude = (
@@ -110,6 +114,7 @@ class ActivityMinimalForm(forms.ModelForm):
             "teachers",
             "activityRealizations",
             "requirements_per_student",
+            "ready_to_schedule",
             "lecture_type",
             "subject",
         )

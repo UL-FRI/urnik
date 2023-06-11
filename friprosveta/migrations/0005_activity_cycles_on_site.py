@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
             name="cycles_on_site",
             field=models.IntegerField(
                 blank=True,
-                default=0,
+                default=None,
                 help_text="Koliko ciklov zelim izvajati na FRI",
                 null=True,
                 verbose_name="Cikli na FRI",
