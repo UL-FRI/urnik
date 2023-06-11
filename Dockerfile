@@ -50,8 +50,8 @@ COPY --chown=timetable:timetable . urnik/
 COPY --chown=timetable:timetable wait-for-it.sh /
 
 # Install dependencies
-RUN pip3 install -r urnik/requirements_production.txt
-RUN pip3 install --upgrade --force-reinstall  pyldap
+RUN pip3 install -r urnik/requirements_production.txt --break-system-packages
+RUN pip3 install --upgrade --force-reinstall  pyldap --break-system-packages
 
 # Collect Django static files
 RUN python3 urnik/manage.py collectstatic --noinput --settings=urnik_fri.settings_example
