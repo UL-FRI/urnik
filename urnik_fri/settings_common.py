@@ -6,7 +6,7 @@ ALLOWED_HOSTS = ["*"]
 
 AUTHENTICATION_BACKENDS = (
     # 'guardian.backends.ObjectPermissionBackend',
-    # "django_auth_ldap.backend.LDAPBackend",
+    "django_auth_ldap.backend.LDAPBackend",
     "django.contrib.auth.backends.ModelBackend",
 )
 
@@ -77,6 +77,8 @@ LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_URL = "/accounts/logout/"
 ROOT_URLCONF = "urnik_fri.urls"
+
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # Profile
 AUTH_PROFILE_MODULE = "friprosveta.Teacher"
