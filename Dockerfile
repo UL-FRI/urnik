@@ -24,7 +24,6 @@ ENV LC_ALL sl_SI.UTF-8
 
 # Install required packages
 RUN apt update \
-  && apt full-upgrade -y \
   && apt-get install -y \
   uwsgi \
   uwsgi-plugin-python3 \
