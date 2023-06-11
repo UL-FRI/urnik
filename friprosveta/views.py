@@ -1352,10 +1352,10 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
             request.POST, prefix="pref-"
         )
         # own_act_formset = timetable.forms.ActivityRequirementsFormset(request.POST, request.FILES, prefix="ownact-")
-        own_act_formset = timetable.forms.ActivityMinimalFormset(
+        own_act_formset = friprosveta.forms.ActivityMinimalFormset(
             request.POST, request.FILES, prefix="ownact-"
         )
-        others_act_formset = timetable.forms.ActivityMinimalFormset(
+        others_act_formset = friprosveta.forms.ActivityMinimalFormset(
             request.POST, request.FILES, prefix="act-"
         )
         preference_form.full_clean()
@@ -1403,10 +1403,10 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
             got_post_msg = problem_msg
     if not problems:
         # own_act_formset = timetable.forms.ActivityRequirementsFormset(queryset=own_activities, prefix="ownact-" )
-        own_act_formset = timetable.forms.ActivityMinimalFormset(
+        own_act_formset = friprosveta.forms.ActivityMinimalFormset(
             queryset=own_activities, prefix="ownact-"
         )
-        others_act_formset = timetable.forms.ActivityMinimalFormset(
+        others_act_formset = friprosveta.forms.ActivityMinimalFormset(
             queryset=others_activities, prefix="act-"
         )
         preference_form = timetable.forms.TeacherPreferenceForm(

@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.forms.utils import ErrorList
 
 import frinajave
 import friprosveta.models
@@ -62,3 +63,78 @@ class NajavePercentageForm(forms.ModelForm):
         widgets = {
             "comment": forms.Textarea(attrs={"rows": 1, "cols": 20}),
         }
+
+
+class ActivityLongRequirementsForm(forms.ModelForm):
+    class Meta:
+        model = friprosveta.models.Activity
+        exclude = ("groups", "locations", "mustNotOverlap", "before", "teachers")
+
+    class Media:
+        js = ("js/jquery-1.7.1.min.js", "js/activities.js")
+
+    def __init__(
+        self,
+        data=None,
+        files=None,
+        auto_id="id_%s",
+        prefix=None,
+        initial=None,
+        error_class=ErrorList,
+        label_suffix=":",
+        empty_permitted=False,
+        instance=None,
+    ):
+        super(ActivityLongRequirementsForm, self).__init__(
+            data,
+            files,
+            auto_id,
+            prefix,
+            initial,
+            error_class,
+            label_suffix,
+            empty_permitted,
+            instance,
+        )
+
+
+class ActivityMinimalForm(forms.ModelForm):
+    class Meta(ActivityLongRequirementsForm.Meta):
+        model = friprosveta.models.Activity
+        exclude = (
+            "groups",
+            "short_name",
+            "locations",
+            "mustNotOverlap",
+            "before",
+            "teachers",
+            "activityRealizations",
+            "requirements_per_student",
+            "lecture_type",
+            "subject",
+        )
+        widgets = {
+            "requirements": FilteredSelectMultiple("Zahteve", is_stacked=False),
+            "name": forms.HiddenInput(),
+            "short_name": forms.HiddenInput(),
+            "activityset": forms.HiddenInput(),
+            "type": forms.HiddenInput(),
+            "duration": forms.HiddenInput(),
+        }
+
+    class Media:
+        extend = False  # remove this once django is fixed. See below.
+        css = {"all": ("admin/css/forms.css",)}
+        js = (
+            "admin/js/jsi18n.js",
+            "admin/js/vendor/jquery/jquery.js",
+            "admin/js/jquery.init.js",
+            "admin/js/core.js",
+            "admin/js/SelectBox.js",
+            "admin/js/SelectFilter2.js",
+        )
+
+
+ActivityMinimalFormset = forms.models.modelformset_factory(
+    friprosveta.models.Activity, form=ActivityMinimalForm, extra=0, can_delete=False
+)
