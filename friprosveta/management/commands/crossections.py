@@ -112,7 +112,6 @@ def parse_groups(current_timetable):
         for activity in subject.activities.filter(
             activityset=current_timetable.activityset
         ):
-
             for realization in activity.realizations.all():
                 assert realization not in realizations
                 realizations.append(realization)
@@ -179,7 +178,7 @@ def fix_regular_subjects_enrollments(
             enrollment.study = newstudy
             enrollment.save()
 
-    for ((classyear, study), regular_subjects) in regular_subjects_map.items():
+    for (classyear, study), regular_subjects in regular_subjects_map.items():
         print("Changing {0} {1}".format(study, classyear))
         study = friprosveta.models.Study.objects.get(short_name=study)
 
@@ -366,7 +365,6 @@ def enrol_students_in_database(students, subject_group, current_timetable):
 # vpisan: T ali F , za naju ni važno (že pofiltriramo ven)
 def enrol_students(students, subject_group):
     for student in students:
-
         study = student.skupina.strip()
         if len(study.split("-")) == 3:
             study = study[:-3]
@@ -465,7 +463,6 @@ def get_enroled_students_database(realization, students_cache, groupset=None):
     students = set()
     if realization not in students_cache:
         for group in realization.groups.all():
-
             if groupset is not None:
                 # A group is a match if it has a same short name and is on the same subject
                 matched_groups = groupset.groups.filter(
@@ -948,7 +945,6 @@ if __name__ == "__main__":
     (groupname_group, subject_group, realizations) = parse_groups(currentTimetable)
 
     if action == "enrol":
-
         print("Enroling")
         enrolStudentsToSubjects(lf, currentTimetable)
 

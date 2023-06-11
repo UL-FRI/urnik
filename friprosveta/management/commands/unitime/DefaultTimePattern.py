@@ -130,7 +130,7 @@ def default_time_pattern(tt):
         2: "SELECT uniqueid FROM time_pattern WHERE name='120'",
         1: "SELECT uniqueid FROM time_pattern WHERE name='60'",
     }
-    for (key, val) in durationids.items():
+    for key, val in durationids.items():
         db.execute(val)
         assert (
             db.rowcount == 1

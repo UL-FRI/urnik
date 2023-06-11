@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("timetable", "0002_auto_20180228_1129"),
         ("friprosveta", "0002_auto_20180228_1129"),

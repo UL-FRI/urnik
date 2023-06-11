@@ -127,7 +127,6 @@ def student_year_fet(timetable):
         lg = []
         # print year.name + ":" + str(year.id)
         for group, subgroups in groups.items():
-
             logger.debug("{}; {}".format(group.name, group.id))
             logger.debug("{}".format(subgroups))
             lsg = []
@@ -209,7 +208,6 @@ def activities_fet(timetable, disabled_types=[]):
     al = []
     for i in timetable.activities.distinct().all():
         for ar in i.realizations.all():
-
             tl = []
             sl = []
             al = []
@@ -417,7 +415,7 @@ def activities_grouped(tt):
         ):
             al.add(str(i.id))
         groups.add((pref.weight, tuple(al)))
-    for (w, g) in groups:
+    for w, g in groups:
         if len(g) == 2:
             l.append(
                 [
@@ -473,7 +471,7 @@ def activities_consecutive(tt):
         ).order_by("id"):
             al.add(str(i.id))
         groups.add((pref.weight, tuple(al)))
-    for (w, g) in groups:
+    for w, g in groups:
         if len(g) == 2:
             l.append(
                 [
@@ -628,7 +626,7 @@ def allocations_to_preferred_times(timetable, allocation_weights):
         for a in timetable.own_allocations.filter(**dict(f)).distinct():
             w = max(t_weight, aw.get(a, t_weight))
             aw[a] = t_weight
-    for (a, w) in aw.items():
+    for a, w in aw.items():
         if w > 0:
             logger.debug(
                 "Adding w {}; a_id {}; pd {}; ph {}; pl {}".format(
@@ -703,7 +701,7 @@ def generic_not_available_preferences(tt, objs, constraint_string, entity_string
                             [["Day", tp.get_day_display()], ["Hour", h]],
                         ]
                     )
-        for (p, al) in ad.items():
+        for p, al in ad.items():
             l.append(
                 [
                     constraint_string,
@@ -848,8 +846,8 @@ def teacher_time_preferences_to_preferred_times(tt):
             for h in p.hours():
                 prefs[id_string][w][day].add(h)
     l = []
-    for (teacher, i) in prefs.items():
-        for (w, j) in i.items():
+    for teacher, i in prefs.items():
+        for w, j in i.items():
             time_slots = []
             for day, hours in j.items():
                 for h in hours:
@@ -898,8 +896,8 @@ def tag_time_preferences_to_preferred_times(tt):
         for h in p.hours():
             prefs[p.tag.name][w][day].add(h)
     l = []
-    for (tag, i) in prefs.items():
-        for (w, j) in i.items():
+    for tag, i in prefs.items():
+        for w, j in i.items():
             time_slots = []
             for day, hours in j.items():
                 for h in hours:
@@ -1194,7 +1192,7 @@ def allocations_to_preferred_room(timetable, allocationWeights):
         for a in timetable.own_allocations.filter(**dict(f)).distinct():
             w = max(s_weight, aw.get(a, s_weight))
             aw[a] = s_weight
-    for (a, w) in aw.items():
+    for a, w in aw.items():
         if w > 0:
             l.append(
                 [

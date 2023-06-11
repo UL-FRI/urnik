@@ -23,7 +23,7 @@ def create_xml(array, doc=None, current=None):
         array = array[3:]
 
         elt = doc.createElement(name)
-        for (name, value) in properties.items():
+        for name, value in properties.items():
             elt.setAttribute(name, value)
 
         create_xml(children, doc, elt)

@@ -112,7 +112,7 @@ def time_patterns(tt):
         2: "SELECT uniqueid FROM time_pattern WHERE name='1x120'",
         1: "SELECT uniqueid FROM time_pattern WHERE name='1x60'",
     }
-    for (key, val) in durationids.items():
+    for key, val in durationids.items():
         db.execute(val)
         assert (
             db.rowcount == 1
@@ -192,7 +192,7 @@ def import_allocations_from_fet(timetable):
         2: "SELECT uniqueid FROM time_pattern WHERE name='1 x 120'",
         1: "SELECT uniqueid FROM time_pattern WHERE name='1 x 60'",
     }
-    for (key, val) in durationids.items():
+    for key, val in durationids.items():
         data.execute(val)
         assert (
             data.rowcount == 1
@@ -277,7 +277,7 @@ def import_allocations_as_new_timetable(timetable):
         1: "SELECT uniqueid FROM time_pattern WHERE name='1 x 60'",
     }
 
-    for (key, val) in durationids.items():
+    for key, val in durationids.items():
         data.execute(val)
         assert (
             data.rowcount == 1

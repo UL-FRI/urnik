@@ -103,7 +103,7 @@ class Command(BaseCommand):
             flat_teachers = self._velike_cikle_asistentom(teachers)
         else:
             flat_teachers = []
-            for (cycles, teacher) in teachers:
+            for cycles, teacher in teachers:
                 flat_teachers += cycles * [[teacher]]
         current_groups, current_groups_size = [], 0
 

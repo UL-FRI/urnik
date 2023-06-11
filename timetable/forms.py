@@ -132,10 +132,10 @@ class CommonTimetablePreferenceForm(forms.Form):
             self.fields["preferenceset"] = forms.IntegerField(
                 widget=forms.HiddenInput(), initial=preferenceset_id
             )
-        for (hour, hourname) in WORKHOURS:
+        for hour, hourname in WORKHOURS:
             self.levelFieldsByHourDay[hour] = OrderedDict()
             self.weightFieldsByHourDay[hour] = OrderedDict()
-            for (day, dayname) in WEEKDAYS:
+            for day, dayname in WEEKDAYS:
                 initial = [None, None]
                 if day in pd and hour in pd[day]:
                     initial = pd[day][hour]
@@ -178,12 +178,12 @@ class CommonTimetablePreferenceForm(forms.Form):
     def get_preferences(self):
         # print "get prefs!"
         l = []
-        for (day, dayname) in WEEKDAYS:
+        for day, dayname in WEEKDAYS:
             last_weight = 0.0
             last_level = None
             duration = 0
             start = WORKHOURS[0][0]
-            for (hour, hourname) in WORKHOURS:
+            for hour, hourname in WORKHOURS:
                 duration += 1
                 level = self.levelFieldsByHourDay[hour][day].data
                 weight = self.weightFieldsByHourDay[hour][day]
@@ -242,13 +242,13 @@ class CommonTimetablePreferenceForm(forms.Form):
         "Returns this form rendered as HTML <tr>s without the <table></table>."
         # someday, someone should replace this with proper i18n support
         s = '<tr class="teacherTimePrefTable"><th>{0}</th>'.format(_("Time"))
-        for (day, dayname) in WEEKDAYS:
+        for day, dayname in WEEKDAYS:
             s += "<th class='day'>{0}</th>".format(_(dayname), dayname)
         s += "</tr>"
-        for (hour, hourname) in WORKHOURS:
+        for hour, hourname in WORKHOURS:
             s += "<tr>\n"
             s += "    <td>{0}</td>\n".format(hourname)
-            for (day, dayname) in WEEKDAYS:
+            for day, dayname in WEEKDAYS:
                 wf = self.weightFieldsByHourDay[hour][day]
                 lf = self.levelFieldsByHourDay[hour][day]
                 s += "    <td>"
