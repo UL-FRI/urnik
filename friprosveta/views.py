@@ -1316,23 +1316,6 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
     # if request.user.is_staff:
     if True:
         own_activities = teacher.activities.filter(activityset=tt.activityset)
-        # Fill cycles_on_site with the number of cycles for each activity.
-        # This is the default for the cycles on site.
-        for activity in teacher.activities.filter(activityset=tt.activityset):
-            timetable_set_ids = activity.activityset.timetable_set.values_list(
-                "timetable_sets", flat=True
-            )
-            all_cycles = frinajave.models.TeacherSubjectCycles.objects.filter(
-                subject_code=activity.subject.code,
-                timetable_set_id__in=timetable_set_ids,
-                lecture_type=activity.lecture_type_id,
-            ).aggregate(suma=Sum("cycles"))["suma"]
-            all_cycles = int(round(all_cycles))
-            activity.all_cycles = all_cycles
-            if activity.cycles_on_site is None:
-                activity.cycles_on_site = int(round(all_cycles))
-                activity.save(update_fields=["cycles_on_site"])
-
         others_activities = friprosveta.models.Activity.objects.none()
     else:
         own_activities = (
@@ -1353,7 +1336,6 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
         preference_form = timetable.forms.TeacherPreferenceForm(
             request.POST, prefix="pref-"
         )
-        # own_act_formset = timetable.forms.ActivityRequirementsFormset(request.POST, request.FILES, prefix="ownact-")
         own_act_formset = friprosveta.forms.ActivityMinimalFormset(
             request.POST, request.FILES, prefix="ownact-"
         )
@@ -1404,8 +1386,24 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
         else:
             got_post_msg = problem_msg
     if not problems:
+        # Fill cycles_on_site with the number of cycles for each activity.
+        # This is the default for the cycles on site.
+        for activity in own_activities.all():
+            timetable_set_ids = activity.activityset.timetable_set.values_list(
+                "timetable_sets", flat=True
+            )
+            all_cycles = frinajave.models.TeacherSubjectCycles.objects.filter(
+                subject_code=activity.subject.code,
+                timetable_set_id__in=timetable_set_ids,
+                lecture_type=activity.lecture_type_id,
+            ).aggregate(suma=Sum("cycles"))["suma"]
+            all_cycles = int(round(all_cycles))
+            activity.all_cycles = all_cycles
+            if activity.cycles_on_site is None:
+                activity.cycles_on_site = int(round(all_cycles))
+                activity.save(update_fields=["cycles_on_site"])
         own_act_formset = friprosveta.forms.ActivityMinimalFormset(
-            queryset=own_activities.all(), prefix="ownact-"
+            queryset=own_activities, prefix="ownact-"
         )
         others_act_formset = friprosveta.forms.ActivityMinimalFormset(
             queryset=others_activities, prefix="act-"
