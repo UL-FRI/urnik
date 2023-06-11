@@ -69,8 +69,8 @@ ni v učilnicah, jo izberite spodaj.
 {% for activity in own_activity_formset.forms %}
 <div class="own_activity">
     <h3>{{activity.instance.name}}</h3>
-    <h4>{{ activity.instance.locations.all|join:", " }}</h4>
-    <h4>{{ activity.instance.groups.all|join:", " }}</h4>
+    <!--<h4>{{ activity.instance.locations.all|join:", " }}</h4>
+    <h4>{{ activity.instance.groups.all|join:", " }}</h4>-->
     <h4>Izberi število ciklov, ki se bo izvajalo na FRI (max {{ activity.instance.all_cycles }}).</h4>
     {%trans Zahteve %}
     <div class="requirements">
