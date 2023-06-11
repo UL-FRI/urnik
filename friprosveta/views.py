@@ -1318,7 +1318,7 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
         own_activities = teacher.activities.filter(activityset=tt.activityset)
         # Fill cycles_on_site with the number of cycles for each activity.
         # This is the default for the cycles on site.
-        for activity in own_activities:
+        for activity in teacher.activities.filter(activityset=tt.activityset):
             timetable_set_ids = activity.activityset.timetable_set.values_list(
                 "timetable_sets", flat=True
             )
@@ -1404,9 +1404,8 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
         else:
             got_post_msg = problem_msg
     if not problems:
-        # own_act_formset = timetable.forms.ActivityRequirementsFormset(queryset=own_activities, prefix="ownact-" )
         own_act_formset = friprosveta.forms.ActivityMinimalFormset(
-            queryset=own_activities, prefix="ownact-"
+            queryset=own_activities.all(), prefix="ownact-"
         )
         others_act_formset = friprosveta.forms.ActivityMinimalFormset(
             queryset=others_activities, prefix="act-"
