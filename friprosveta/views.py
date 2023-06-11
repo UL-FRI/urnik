@@ -1388,7 +1388,8 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
     if not problems:
         # Fill cycles_on_site with the number of cycles for each activity.
         # This is the default for the cycles on site.
-        for activity in own_activities.all():
+        for activity in own_activities:
+            activity.refresh_from_db()
             timetable_set_ids = activity.activityset.timetable_set.values_list(
                 "timetable_sets", flat=True
             )
