@@ -17,7 +17,7 @@ WEEKDAYS = (
 )
 
 WEEKDAYSSLO = dict()
-for (en, slo) in WEEKDAYS:
+for en, slo in WEEKDAYS:
     WEEKDAYSSLO[en] = slo
 
 PREFERENCELEVELS = (

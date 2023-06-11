@@ -42,7 +42,6 @@ class Command(BaseCommand):
         self.copy_groups(source_timetables, destination_timetable)
 
     def copy_groups(self, source_timetables, destination_timetable):
-
         groupset = destination_timetable.groupset
         for activity in destination_timetable.activities.all():
             activity = activity.activity
