@@ -1,10 +1,10 @@
 import colorsys
 import datetime
 import itertools
-import json
 import logging
 from bisect import bisect_left
 from collections import OrderedDict, defaultdict, namedtuple
+from decimal import Decimal
 
 import django.forms
 import icalendar
@@ -1398,7 +1398,7 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
                 subject_code=activity.subject.code,
                 timetable_set_id__in=timetable_set_ids,
                 lecture_type=activity.lecture_type_id,
-            ).aggregate(suma=Coalesce(Sum("cycles"), float(0)))["suma"]
+            ).aggregate(suma=Coalesce(Sum("cycles"), Decimal(0)))["suma"]
             all_cycles = int(round(all_cycles))
             activity.all_cycles = all_cycles
             if activity.cycles_on_site is None:
