@@ -17,6 +17,7 @@ from django.core import serializers
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import transaction
 from django.db.models import Q, Sum
+from django.db.models.functions import Coalesce
 from django.http import (
     Http404,
     HttpResponse,
@@ -1397,7 +1398,7 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
                 subject_code=activity.subject.code,
                 timetable_set_id__in=timetable_set_ids,
                 lecture_type=activity.lecture_type_id,
-            ).aggregate(suma=Sum("cycles"))["suma"]
+            ).aggregate(suma=Coalesce(Sum("cycles"), 0))["suma"]
             all_cycles = int(round(all_cycles))
             activity.all_cycles = all_cycles
             if activity.cycles_on_site is None:
