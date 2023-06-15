@@ -71,7 +71,9 @@ ni v učilnicah, jo izberite spodaj.
     <h3>{{activity.instance.name}}</h3>
     <!--<h4>{{ activity.instance.locations.all|join:", " }}</h4>
     <h4>{{ activity.instance.groups.all|join:", " }}</h4>-->
-    <h4>Izberi število ciklov, ki se bo izvajalo na FRI (max {{ activity.instance.all_cycles }}).</h4>
+    <h4>Izberi število ciklov, ki se bo izvajalo v živo na FRI (max {{ activity.instance.all_cycles }}). Priporočamo, da se vsaj
+        30% izvaja v živo na FRI.
+    </h4>
     {%trans Zahteve %}
     <div class="requirements">
     {% for f in activity %}
