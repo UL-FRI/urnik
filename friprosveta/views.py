@@ -210,7 +210,7 @@ def results(request, timetable_slug):
     if request.user.is_authenticated:
         try:
             accessing_student = friprosveta.models.Student.from_user(request.user)
-        except friprosveta.models.Student.DoesNotExist:
+        except Exception:
             accessing_student = None
         accessing_teacher = (
             request.user.teacher if hasattr(request.user, "teacher") else None
