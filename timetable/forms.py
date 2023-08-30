@@ -1074,21 +1074,20 @@ def realization_formset(activity, timetable=None):
 
     class CheckDeleteUsedInlineFormSet(forms.models.BaseInlineFormSet):
         def _should_delete_form(self, form):
+            """Check if the form should be deleted."""
+
+            def has_instance_allocations(form) -> bool:
+                """Return True when form instace has allocations."""
+                if form.instance is None or form.instance.id is None:
+                    return False
+                return form.instance.allocations.exists()
+
             should_delete = super(
                 CheckDeleteUsedInlineFormSet, self
             )._should_delete_form(form)
-            # try:
-            #     raw_pk_value = form._raw_value(pk_name)
-            # clean() for different types of PK fields can sometimes return
-            # the model instance, and sometimes the PK. Handle either.
-            #     pk_value = form.fields[pk_name].clean(raw_pk_value)
-            #     pk_value = getattr(pk_value, 'pk', pk_value)
-            #     obj = self._existing_object(pk_value)
-            # except:
-            #     obj = None
-            if form.instance is not None and should_delete:
-                if form.instance.allocations.count() > 0:
-                    should_delete = False
+            # The realization with allocations must not be deleted.
+            if should_delete and has_instance_allocations(form):
+                should_delete = not form.instance.allocations.exists()
             return should_delete
 
     return forms.models.inlineformset_factory(
