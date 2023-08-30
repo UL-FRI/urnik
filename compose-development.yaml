@@ -38,6 +38,8 @@ services:
       - POSTGRES_USER=timetable
       - POSTGRES_DB=timetable
       - POSTGRES_PASSWORD=database_password
+    ports:
+     - "5432:5432"
 
 volumes:
   timetable-data:
