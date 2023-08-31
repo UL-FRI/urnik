@@ -358,6 +358,13 @@ class Activity(models.Model):
         )
 
     def preferred_rooms(self, timetable=None):
+        """Return the list of preferred rooms.
+
+        When they are explicitely set return then otherwise filter by requirements.
+        """
+        if self.required_rooms.exists():
+            return self.required_rooms.all()
+
         location_ids = self.locations.all().values_list("id", flat=True)
         if timetable is None:
             cl = Classroom.objects.filter(location__id__in=location_ids).distinct()
