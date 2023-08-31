@@ -332,6 +332,7 @@ class Activity(models.Model):
     before = models.ManyToManyField(
         "self", symmetrical=False, related_name="after", blank=True
     )
+    required_rooms = models.ManyToManyField("Classroom")
 
     def groups_on_realizations_without_teachers(self, groupset):
         realizations = self.realizations_without_teachers(groupset)
