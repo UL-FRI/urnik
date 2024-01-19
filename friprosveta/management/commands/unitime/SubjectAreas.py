@@ -23,8 +23,6 @@ def subject_areas(tt, campus, term, year):
                 # TODO: id je zraven zato, da je koda unikatna. Upam, da je to OK.
                 "shortTitle": subject.short_name,
                 "longTitle": subject.name,
-                # "schedBookOnly": "false", - deprecated
-                # "pseudoSubjArea": "false", - deprecated
                 "department": "1",
             },
             [],
