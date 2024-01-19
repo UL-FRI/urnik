@@ -1,7 +1,6 @@
 from .CreateXML import create_xml
 
 
-# TODO: added campus, term, year as arguments
 def academic_areas(campus, term, year):
     area = [
         "academicArea",
