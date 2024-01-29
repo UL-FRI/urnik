@@ -17,7 +17,7 @@ def staff(tt, campus, term, year):
         entries += [
             "staffMember",
             {
-                "externalId": str(teacher.id),
+                "externalId": str(teacher.code),
                 "firstName": teacher.user.first_name,
                 "middleName": "",
                 "lastName": teacher.user.last_name,
