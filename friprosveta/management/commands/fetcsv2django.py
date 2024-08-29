@@ -72,7 +72,7 @@ example1: ./django/urnik/fetcsv2django.py urnik_fu_fmf_zelje-single_timetable.cs
         name_filter = options["allocation_name_filter"]
         dest_timetable_slug = options["dest_timetable_slug"]
         timetable = Timetable.objects.get(slug=dest_timetable_slug)
-        single_timetable_csv(fet_csv_file, timetable, clear=True, name_filter)
+        single_timetable_csv(fet_csv_file, timetable, clear=True, name_filter=name_filter)
 
         # roomsNotAvailableTimetableName = "FE"
         # roomsNotAvailableGroupActivityID = 331
