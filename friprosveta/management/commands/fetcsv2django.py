@@ -1,5 +1,6 @@
 import os
 import re
+import csv
 from collections import defaultdict
 from xml.etree import ElementTree as ET
 
@@ -13,14 +14,18 @@ def allocations_from_csv(f, timetable, name_filter=".*"):
     for i in WEEKDAYS:
         day_dict[i[1]] = i[0]
     l = []
-    with open(f) as f:
+    with open(f, mode="r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
+        seen_aids = set([None])
         for d in reader:
-            aid = d["Activity Id"]
-            aday = d["Day"]
-            ahour = d["Hour"]
-            aroom = d["Room"]
+            aid = d.get("Activity Id", None)
+            if aid in seen_aids:
+                continue
+            seen_aids.add(aid)
             try:
+                aday = d["Day"]
+                ahour = d["Hour"]
+                aroom = d["Room"]
                 realization = ActivityRealization.objects.get(id=int(aid))
                 if re.match(name_filter, realization.activity.short_name):
                     a = Allocation()
@@ -38,10 +43,9 @@ def allocations_from_csv(f, timetable, name_filter=".*"):
     return l
 
 
-def single_timetable_csv(d, timetable, fet_timetable_name, clear=True, name_filter=".*"):
-    fet_dir = d
+def single_timetable_csv(fet_csv_file, timetable, clear=True, name_filter=".*"):
     al = allocations_from_csv(
-        open(os.path.join(fet_dir, (fet_timetable_name + "_activities.xml"))),
+        fet_csv_file,
         timetable,
         name_filter,
     )
@@ -64,7 +68,7 @@ example1: ./django/urnik/fetcsv2django.py urnik_fu_fmf_zelje-single_timetable.cs
 
     def add_arguments(self, parser):
         parser.add_argument("fet_csv_file", nargs=1)
-        parser.add_argument("django_timetable_slug", nargs="?")
+        parser.add_argument("dest_timetable_slug", nargs="?")
         parser.add_argument("allocation_name_filter", nargs="?", default=".*")
 
     def handle(self, *args, **options):
