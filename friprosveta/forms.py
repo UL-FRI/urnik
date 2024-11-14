@@ -117,6 +117,7 @@ class ActivityMinimalForm(forms.ModelForm):
             "ready_to_schedule",
             "lecture_type",
             "subject",
+            "required_rooms",
         )
         widgets = {
             "requirements": FilteredSelectMultiple("Zahteve", is_stacked=False),

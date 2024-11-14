@@ -16,8 +16,8 @@ DATABASES = {
         "NAME": "timetable",  # Or path to database file if using sqlite3.
         "USER": "timetable",  # Not used with sqlite3.
         "PASSWORD": "database_password",  # Not used with sqlite3.
-        "HOST": "db",  # Set to empty string for localhost. Not used with sqlite3.
-        "PORT": "",  # Set to empty string for default. Not used with sqlite3.
+        "HOST": "127.0.0.1",  # Set to empty string for localhost. Not used with sqlite3.
+        "PORT": "5435",  # Set to empty string for default. Not used with sqlite3.
     }
 }
 
@@ -66,8 +66,8 @@ EMAIL_HOST_USER = "mail_user"
 EMAIL_HOST_PASSWORD = "mail_user_password"
 EMAIL_USE_TLS = True
 
-STATIC_ROOT = "/home/timetable/static"
-MEDIA_ROOT = "/home/timetable/media"
+STATIC_ROOT = "/home/gregor/urnik_local/static"
+MEDIA_ROOT = "/home/gregor/urnik_local/media"
 
 # Studis API setting
 STUDIS_API_BASE_URL = "https://studis.api/base_url"
@@ -96,7 +96,7 @@ LOGGING = {
         "file": {
             "level": "DEBUG",
             "class": "logging.FileHandler",
-            "filename": "/home/timetable/timetable.log",
+            "filename": "/home/gregor/urnik_local/timetable.log",
             "formatter": "verbose",
         },
     },

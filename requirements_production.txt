@@ -45,7 +45,7 @@ ipython-genutils==0.2.0
 jedi==0.18.0
 Jinja2~=3.0.2
 json5==0.9.6
-jupyterlab~=4.0.5
+#jupyterlab~=4.0.5
 kombu==5.2.4
 ldap3==2.9.1
 MarkupPy==1.14

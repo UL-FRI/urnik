@@ -1577,10 +1577,10 @@ def tag_time_preferences(request, timetable_slug, tag_id):
 @transaction.atomic
 def assignments(request, timetable_slug, subject_code):
     tt = get_object_or_404(timetable.models.Timetable, slug=timetable_slug)
-    try:
-        timetable_set = tt.timetable_sets.all()[0]
-    except:
-        raise Http404
+    #try:
+    #    timetable_set = tt.timetable_sets.all()[0]
+    #except:
+    #    raise Http404
     user = request.user.teacher
     subject = friprosveta.models.Subject.objects.get(code=subject_code)
 
@@ -1617,12 +1617,12 @@ def assignments(request, timetable_slug, subject_code):
                 # timetable.models.ActivityPercentage.objects.filter(activity=activity).delete()
                 activity.teachers.clear()
                 # Get old najave entries
-                old_najave = frinajave.models.TeacherSubjectCycles.objects.filter(
-                    lecture_type=lecture_type,
-                    timetable_set=timetable_set,
-                    subject_code=subject_code,
-                )
-                old_najave_ids = [entry.id for entry in old_najave.all()]
+                #old_najave = frinajave.models.TeacherSubjectCycles.objects.filter(
+                #    lecture_type=lecture_type,
+                #    timetable_set=timetable_set,
+                #    subject_code=subject_code,
+                #)
+                #old_najave_ids = [entry.id for entry in old_najave.all()]
 
                 for teacher in form.cleaned_data.get("teachers"):
                     teachers.add((teacher, activity.lecture_type.id))
@@ -1630,39 +1630,39 @@ def assignments(request, timetable_slug, subject_code):
                     # ap = percentages.get(teacher, ActivityPercentage(teacher=teacher, activity=activity))
                     # ap.save()
 
-                    old_najave_teacher_period = old_najave.filter(
-                        timetable_set=timetable_set, teacher_code=teacher.code
-                    )
+                    #old_najave_teacher_period = old_najave.filter(
+                    #    timetable_set=timetable_set, teacher_code=teacher.code
+                    #)
                     # a teacher can have 2
-                    assert (
-                        len(old_najave_teacher_period) <= 1
-                    ), "At most one entry per subject/techer/timetable_set/lecture_type combination: {0}, timetable_set {1}: {2}".format(
-                        teacher, timetable_set, list(old_najave_teacher_period.all())
-                    )
-                    cycles = 1
-                    instruction_type = None
-                    teacher_comment = ""
-                    if old_najave_teacher_period.count() == 1:
-                        old_najave_teacher_period = old_najave_teacher_period.get()
-                        cycles = old_najave_teacher_period.cycles
-                        instruction_type = old_najave_teacher_period.instruction_type
-                        teacher_comment = old_najave_teacher_period.comment
-                    subject_cycle = frinajave.models.TeacherSubjectCycles(
-                        lecture_type=lecture_type,
-                        timetable_set=timetable_set,
-                        subject_code=subject_code,
-                        teacher_code=teacher.code,
-                        cycles=cycles,
-                        comment=teacher_comment,
-                        instruction_type=instruction_type,
-                    )
-                    subject_cycle.save()
+                    #assert (
+                    #    len(old_najave_teacher_period) <= 1
+                    #), "At most one entry per subject/techer/timetable_set/lecture_type combination: {0}, timetable_set {1}: {2}".format(
+                    #    teacher, timetable_set, list(old_najave_teacher_period.all())
+                    #)
+                    #cycles = 1
+                    #instruction_type = None
+                    #teacher_comment = ""
+                    #if old_najave_teacher_period.count() == 1:
+                    #    old_najave_teacher_period = old_najave_teacher_period.get()
+                    #    cycles = old_najave_teacher_period.cycles
+                    #    instruction_type = old_najave_teacher_period.instruction_type
+                    #    teacher_comment = old_najave_teacher_period.comment
+                    #subject_cycle = frinajave.models.TeacherSubjectCycles(
+                    #    lecture_type=lecture_type,
+                    #    timetable_set=timetable_set,
+                    #    subject_code=subject_code,
+                    #    teacher_code=teacher.code,
+                    #    cycles=cycles,
+                    #    comment=teacher_comment,
+                    #    instruction_type=instruction_type,
+                    #)
+                    #subject_cycle.save()
                 # Remove all old najave entries
-                for entry_id in old_najave_ids:
-                    entry = frinajave.models.TeacherSubjectCycles.objects.get(
-                        pk=entry_id
-                    )
-                    entry.delete()
+                #for entry_id in old_najave_ids:
+                #    entry = frinajave.models.TeacherSubjectCycles.objects.get(
+                #        pk=entry_id
+                #    )
+                #    entry.delete()
     else:
         assignment_formset = AssignmentFormset(queryset=activities)
     media = assignment_formset.media
@@ -1895,10 +1895,12 @@ def subject_list(request, timetable_slug):
 
 
 @login_required
-def teacher_hours(request, timetable_set_slug):
+def teacher_hours(request, timetable_slug=None, timetable_set_slug=None):
     user = request.user.teacher
-    timetable_set = timetable.models.TimetableSet.objects.get(slug=timetable_set_slug)
-
+    timetable_set = set()
+    if timetable_set_slug is not None:
+        timetable_set = set(timetable.models.TimetableSet.objects.get(slug=timetable_set_slug).timetables.distinct())
+    timetable_set.add(timetable.models.Timetable.objects.get(slug=timetable_slug))
     def cycles_by_timetable_type(teacher, ttables=None, types=None):
         cycles_sums_by_tt = dict()
         for tt in ttables:
@@ -1955,23 +1957,23 @@ def teacher_hours(request, timetable_set_slug):
         return cycles_sums_by_tt
 
     # this is completely wrong for now.
-    ttables = timetable_set.timetables.distinct().order_by("start")
-    q = Q()
-    for tt in ttables:
+    q = Q(activities__activity__subject__managers=user)
+    for tt in timetable_set:
         q = q | Q(
             activities__activity__subject__activities__teachers=user,
             activities__activityset__timetable=tt,
         )
-    q = q | Q(activities__activity__subject__managers=user)
     others = friprosveta.models.Teacher.objects.filter(q).distinct().exclude(id=user.id)
     for o in others:
-        o.timetables_hours = cycles_by_timetable_type(o, ttables)
-    user.timetables_hours = cycles_by_timetable_type(user, ttables)
+        o.timetables_hours = cycles_by_timetable_type(o, timetable_set)
+    user.timetables_hours = cycles_by_timetable_type(user, timetable_set)
     sorted_others = sorted(others, key=lambda teacher: teacher.user.last_name)
     return render(
         request,
         "friprosveta/teacher_hours.html",
-        {"data": [user] + sorted_others, "timetable_set_slug": timetable_set_slug},
+        {"data": [user] + sorted_others, 
+         "timetable_slug": timetable_slug,
+         "timetable_set_slug": timetable_set_slug},
     )
 
 
@@ -2041,13 +2043,12 @@ def teacher_hours_table(request, timetable_set_slug):
 
     timetable_set = timetable.models.TimetableSet.objects.get(slug=timetable_set_slug)
     ttables = timetable_set.timetables.distinct().order_by("start")
-    q = Q()
+    q = Q(activities__activity__subject__managers=user)
     for tt in ttables:
         q = q | Q(
             activities__activity__subject__activities__teachers=user,
-            activities__activityset__timetable=tt,
+            activities__activityset__timetable=tt
         )
-    q = q | Q(activities__activity__subject__managers=user)
     visible_teachers = friprosveta.models.Teacher.objects.filter(q).distinct()
     shown_activity_types = ["LV", "AV", "P"]
     cycles = cycles_by_timetable_type(ttables, shown_activity_types)
