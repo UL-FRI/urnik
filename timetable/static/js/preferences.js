@@ -8,7 +8,8 @@ function showOrHide(cell){
     if (hideTab[cell.levelField.selectedIndex]){
         cell.weightField.style.display = 'none';
     } else {
-        cell.weightField.style.display = 'inline';
+        cell.weightField.style.display = 'none';
+        //cell.weightField.style.display = 'inline';
     }
     cell.bgColor = colorTab[cell.levelField.selectedIndex];
 }
@@ -40,8 +41,7 @@ function cellClicked(cell)
     si = (si + 1) % cell.levelField.options.length;
     if(si == 1){
         if (getUnwantedCells() > maxHated-1){
-            alert("Na voljo je " + maxHated + " nezaželjenih terminov");
-            return;
+            si = (si + 1) % cell.levelField.options.length;
         }
     }
 
