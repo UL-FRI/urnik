@@ -1,6 +1,7 @@
 import codecs
 import json
 from contextlib import suppress
+import ssl
 from typing import Union
 from urllib.request import Request, quote, urlopen
 
@@ -20,6 +21,10 @@ class Studis:
         self.cached_data = dict()
 
     def data(self, url):
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        
         if self.cached and url in self.cached_data:
             return self.cached_data[url]
         reader = codecs.getreader("utf-8")
@@ -27,7 +32,7 @@ class Studis:
         # Encode url (replace spaces with %20 etc...)
         req_url = quote(req_url, safe="/:=&?#+!$,;'@()*[]")
         request = Request(req_url, None, self.auth)
-        response = urlopen(request)
+        response = urlopen(request, context=ctx)
         data = json.load(reader(response))
         if self.cached:
             self.cached_data[url] = data

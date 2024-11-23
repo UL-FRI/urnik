@@ -61,8 +61,8 @@ DATETIME_FORMAT = "Y-m-d H:i"
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
 STATIC_URL = "/static/"
 MEDIA_URL = "/media/"
-MEDIA_ROOT = "/home/timetable/media"
-STATIC_ROOT = "/home/timetable/static"
+MEDIA_ROOT = "/home/gregor/urnik_local/media"
+STATIC_ROOT = "/home/gregor/urnik_local/static"
 
 
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a

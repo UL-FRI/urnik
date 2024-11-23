@@ -23,7 +23,7 @@
 		<tr><th>Predmet</th><th>Tip</th><th>Predvideno ciklov</th><th>Dodeljeno ciklov</th></tr>		
 	    {% for subject, cycleType, cycleNum, cycleNum1, cyclePercentage in subject_cycles %}
 	      <tr class="regular">
-	      	<td class="subject"><a href={% url "subject" timetable_set_slug=timetable_set_slug subject_code=subject.code %}>{{ subject }}</a></td>
+	      	<td class="subject"><a href={% url "subject" timetable_slug=timetable_slug subject_code=subject.code %}>{{ subject }}</a></td>
 	      	<td class="type">{{ cycleType }}</td>
 	      	<td class="num">{{ cycleNum1 }} {% if cyclePercentage < 1.0 %}({{ cyclePercentage }}) {% endif %}</td>
 	      	<td class="num">{{ cycleNum }}</td>

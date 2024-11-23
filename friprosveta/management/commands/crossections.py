@@ -515,9 +515,9 @@ def realizations_must_not_overlap_database(
         for realization2 in rs:
             type1 = realization1.activity.type
             type2 = realization2.activity.type
-            if type1 == type2 and type1 == "P":
-                print("Skipping lectures overlaps!!!")
-                continue
+            #if type1 == type2 and type1 == "P":
+            #    print("Skipping lectures overlaps!!!")
+            #    continue
             skip = False
             for pair in skip_pairs:
                 if sorted((type1, type2)) == sorted(pair):

@@ -222,7 +222,7 @@ example2: ./django/urnik/fet2django.py urnik_fu_fmf_zelje-multi "fri-2012-zimski
             print("Timetable dir name must end in -single or -multi")
             exit(1)
         name_filter = options["allocation_name_filter"]
-        dest_timetable_slug = options["dest_timetable_slug"]
+        dest_timetable_slug = options["django_timetable_slug"]
         if multi:
             nbest = options["n_best"]
             timetable = Timetable.objects.get(slug=dest_timetable_slug)

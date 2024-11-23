@@ -1434,7 +1434,7 @@ Example:
             razor=razor,
             razor_dict=razor_dict,
             allocation_weights=allocation_weights,
-            skip_pairs=[("P", "P")],
+            # skip_pairs=[("P", "P")],
             # disabled_types=['LV', 'AV'],
         )
         indent(fet)

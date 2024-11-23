@@ -509,7 +509,6 @@ class TeacherPreferenceForm(forms.Form):
 
     def is_valid(self):
         v = True
-        #        print "validating preferences"
         for f in self.subforms:
             if f.is_bound and not f.is_valid():
                 v = False
