@@ -1,6 +1,8 @@
 var colorTab = new Array("#FFFFFF","#FFFF00","#FF0000", "#00FF00");
 var hideTab = new Array(true, false, true, false);
 
+var maxHated = 5;
+
 function showOrHide(cell){
     cell.levelField.style.display ='none';
     if (hideTab[cell.levelField.selectedIndex]){
@@ -16,10 +18,33 @@ function preferenceOnClick(event)
     cellClicked(event.currentTarget);
 }
 
+
+// Gets unwanted (Yellow) (Backend "HATES") cells
+function getUnwantedCells(){
+    let total = 0;
+    [...document.getElementsByTagName("td")].forEach(function(cell){
+        try{
+            if (cell.levelField.selectedIndex == 1){
+                total++;
+            }
+        } catch(e){
+            // Might be one of the header cells that have no levelField defined. 
+        }
+    })
+    return total;
+}
+
 function cellClicked(cell)
 {
     var si = cell.levelField.selectedIndex;
     si = (si + 1) % cell.levelField.options.length;
+    if(si == 1){
+        if (getUnwantedCells() > maxHated-1){
+            alert("Na voljo je " + maxHated + " nezaželjenih terminov");
+            return;
+        }
+    }
+
     cell.levelField.selectedIndex = si;
     if ((si == 1) && (cell.weightField.value == '')){
         cell.weightField.value = "1.0"

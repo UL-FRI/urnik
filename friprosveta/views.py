@@ -1353,6 +1353,13 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
             and others_act_formset.is_valid()
             and can_edit
         ):
+            hates = 0
+            for p in preference_form.timePreferences.get_preferences():
+                if p.level == "HATE":
+                    hates += p.duration
+            
+            if hates > 5:
+                return HttpResponseForbidden("Preveč rumenih terminov")
             preference_form.save()
             try:
                 own_act_formset.save()
