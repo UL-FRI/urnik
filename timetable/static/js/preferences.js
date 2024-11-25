@@ -46,6 +46,7 @@ function cellClicked(cell)
     }
 
     cell.levelField.selectedIndex = si;
+    cell.weightField.value = "1.0";
     if ((si == 1) && (cell.weightField.value == '')){
         cell.weightField.value = "1.0"
     }
