@@ -1,7 +1,8 @@
 var colorTab = new Array("#FFFFFF","#FFFF00","#FF0000", "#00FF00");
 var hideTab = new Array(true, false, true, false);
 
-var maxHated = 5;
+const maxHated = 5;
+const maxWanted = 15;
 
 function showOrHide(cell){
     cell.levelField.style.display ='none';
@@ -35,12 +36,32 @@ function getUnwantedCells(){
     return total;
 }
 
+// Gets wanted (Green) (Backend "WANTS") cells
+function getWantedCells(){
+    let total = 0;
+    [...document.getElementsByTagName("td")].forEach(function(cell){
+        try{
+            if (cell.levelField.selectedIndex == 3){
+                total++;
+            }
+        } catch(e){
+            // Might be one of the header cells that have no levelField defined. 
+        }
+    })
+    return total;
+}
+
 function cellClicked(cell)
 {
     var si = cell.levelField.selectedIndex;
     si = (si + 1) % cell.levelField.options.length;
     if(si == 1){
         if (getUnwantedCells() > maxHated-1){
+            si = (si + 1) % cell.levelField.options.length;
+        }
+    }
+    if (si == 3){
+        if (getUnwantedCells() > maxWanted-1){
             si = (si + 1) % cell.levelField.options.length;
         }
     }

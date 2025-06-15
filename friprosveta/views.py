@@ -693,12 +693,13 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
     param_ids["timetable_slug"] = [timetable_slug]
     title, subtitles = _titles(param_ids)
     is_internet_explorer = "trident" in request.META["HTTP_USER_AGENT"].lower()
-    get_args = (
-        "?"
-        + "&".join("{}={}".format(escape(k), escape(v)) for k, v in request.GET.items())
-        if request.GET
-        else ""
-    )
+
+    get_args = ""
+    if request.GET:
+        get_args += "?"
+        for k, l in request.GET.lists():
+            for v in l:
+                get_args += "&{}={}".format(escape(k), escape(v))
 
     # not necessarily needed, but this helps make labs of the same subject be closer when looking at a huge timetable
     filtered_allocations = filtered_allocations.order_by(
@@ -1354,12 +1355,16 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
             and can_edit
         ):
             hates = 0
+            wants = 0
             for p in preference_form.timePreferences.get_preferences():
                 if p.level == "HATE":
                     hates += p.duration
+                if p.level == "WANT":
+                    wants += p.duration
             
-            if hates > 5:
-                return HttpResponseForbidden("Preveč rumenih terminov")
+            if hates > 5 or wants > 15:
+                return HttpResponseForbidden("Preveč rumenih ali zelenih terminov. Če videvate to sporočilo, se obrnite na skrbnika urnika.")
+            
             preference_form.save()
             try:
                 own_act_formset.save()
