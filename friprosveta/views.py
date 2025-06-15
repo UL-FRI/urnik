@@ -696,10 +696,7 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
 
     get_args = ""
     if request.GET:
-        get_args += "?"
-        for k, l in request.GET.lists():
-            for v in l:
-                get_args += "&{}={}".format(escape(k), escape(v))
+        get_args = "?" + request.GET.urlencode()
 
     # not necessarily needed, but this helps make labs of the same subject be closer when looking at a huge timetable
     filtered_allocations = filtered_allocations.order_by(
