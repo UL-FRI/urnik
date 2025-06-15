@@ -61,7 +61,7 @@ function cellClicked(cell)
         }
     }
     if (si == 3){
-        if (getWantedCells() > maxWanted-1){
+        if (getWantedCells() >= maxWanted){
             si = (si + 1) % cell.levelField.options.length;
         }
     }
