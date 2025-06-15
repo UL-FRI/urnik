@@ -39,7 +39,7 @@ django-sqlserver==1.11
 entrypoints==0.3
 et-xmlfile==1.1.0
 icalendar==4.0.9
-idna==3.3
+idna==3.7
 ipython==8.10.0
 ipython-genutils==0.2.0
 jedi==0.18.0
