@@ -21,7 +21,6 @@ ply
 psycopg2-binary
 python-memcached
 six
-slimit
 beautifulsoup4
 celery
 pyodbc

@@ -1,2 +1,50 @@
-[tool.isort]
-profile = "black"
+[build-system]
+requires = ["setuptools >= 80.9.0", "setuptools_scm >= 8.3.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "timetable-fri"
+description = "Timetabling app fro FRI"
+authors = [
+    { name = "Gregor Jerše", email = "gregor@jerse.info" },
+    { name = "Gašper Fele-Žorž", email = "polz@fri.uni-lj.si" },
+]
+dynamic = ["version"]
+readme = "README.md"
+license = "GPL-3.0-or-later"
+requires-python = ">=3.13, <3.14"
+keywords = ["timetabling", "scheduling", "university"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: Django :: 5.2",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "Django ~= 5.2.3",
+    "djangorestframework ~= 3.16.0",
+    "django-filter ~= 25.1",
+    "python-ldap ~= 3.4.3",
+    "django-auth-ldap ~= 5.2.0",
+    "django-impersonate ~= 1.9.5",
+    "django-import-export ~= 4.3.7",
+    "pytz ~= 2025.2",
+    "icalendar ~= 6.3.1",
+    "palettable ~= 3.3.3",
+]
+[project.optional-dependencies]
+postgres = ["psycopg2-binary ~= 2.9.10"]
+docs = ["sphinx", "sphinx-pyproject"]
+package = ["twine", "check-manifest", "build"]
+test = ["ruff", "pytest-cov"]
+devel = ["ipython"]
+[project.urls]
+repository = "https://github.com/ul-fri/urnik/"
+documentation = "https://github.com/ul-fri/urnik/"
+
+[tool.setuptools_scm]

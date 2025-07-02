@@ -24,9 +24,10 @@ def staff_time_preferences(tt):
                 + type * (time_preference.duration * 12)
                 + preferences[start_index + time_preference.duration * 12 :]
             )
-        external_id = teacher.id
+        external_id = teacher.code
 
-        teacher_id_query = "SELECT uniqueid FROM departmental_instructor WHERE external_uid={0}".format(
+        print(f"Searching for teacher with external id {external_id}")
+        teacher_id_query = "SELECT uniqueid FROM departmental_instructor WHERE external_uid='{0}'".format(
             external_id
         )
         db.execute(teacher_id_query)

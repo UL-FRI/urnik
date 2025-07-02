@@ -8,6 +8,8 @@ from django.db import models
 from django.db.models import Count, Q
 from django.utils.translation import gettext as _
 
+from contextlib import suppress
+
 WEEKDAYS = (
     ("MON", "ponedeljek"),
     ("TUE", "torek"),
@@ -569,11 +571,12 @@ def default_timetable(request):
     - Site.NotFoundException when site is not found.
     - IndexError when no public timetable exists for a given site.
     """
-    all_timetables = Timetable.objects.all()
-    current_site = get_current_site(request)
-    current_site_default_timetables = all_timetables.filter(
-        timetablesite__site=current_site, public=True, timetablesite__default=True
-    )
+    current_site_default_timetables = Timetable.objects.all()
+    with suppress(Site.DoesNotExist):
+        current_site = get_current_site(request)
+        current_site_default_timetables = current_site_default_timetables.filter(
+            timetablesite__site=current_site, public=True, timetablesite__default=True
+        )
     return current_site_default_timetables.order_by("-start")[0]
 
 
