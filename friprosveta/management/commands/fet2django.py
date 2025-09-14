@@ -178,7 +178,7 @@ def best_timetables(d, nbest, base_timetable, fet_timetable_name, name_filter=".
 def single_timetable(d, timetable, fet_timetable_name, clear=True, name_filter=".*"):
     fet_dir = d
     al = allocations_from_activities_file(
-        open(os.path.join(fet_dir, (fet_timetable_name + "_activities.xml"))),
+        open(os.path.join(fet_dir, (fet_timetable_name + "_activities.xml")), encoding="utf-8-sig"),
         timetable,
         name_filter,
     )

@@ -1,5 +1,5 @@
 # vim:set ft=dockerfile:
-FROM debian:stable
+FROM debian:oldstable
 LABEL maintainer="Gregor Jerše <gregor@jerse.info>"
 
 ENV URNIK_GIT_LOCATION=https://github.com/ul-fri/urnik.git
@@ -36,6 +36,8 @@ RUN apt update \
   libldap2-dev \
   unixodbc-dev \
   libmariadb-dev \
+  libpq-dev gcc \
+  pwgen \
   && rm -rf /var/lib/apt/lists/*
 
 
@@ -50,7 +52,8 @@ COPY --chown=timetable:timetable . urnik/
 COPY --chown=timetable:timetable wait-for-it.sh /
 
 # Install dependencies
-RUN pip3 install -r urnik/requirements_production.txt --break-system-packages
+# the CYTHON<3.0.0 is needed because pyyaml is broken building at the moment. Please if you are updating this, check if this is still the case. 
+RUN pip install "cython<3.0.0" --break-system-packages && pip3 install -r urnik/requirements_production.txt --break-system-packages
 RUN pip3 install --upgrade --force-reinstall  pyldap --break-system-packages
 
 # Collect Django static files
@@ -62,6 +65,16 @@ RUN chown timetable.timetable -R /home/timetable
 # Make wait-for-it.sh as executable. It is used by testing image to wait
 # for the database container to be online before the tests are ran.
 RUN chmod +x /wait-for-it.sh
+
+# Install jupyterlab for interactive work with the system.
+# Make sure to not expose it to the public
+RUN pip install --break-system-packages jupyterlab jupyter_collaboration 
+
+
+USER timetable
+
+# Set JupyterLab password using jupyter_server.auth.security.set_password
+RUN python3 -c "from jupyter_server.auth.security import set_password; set_password('$(pwgen 32 1)');"
 
 # UWSGI options are read from environmental variables.
 # They are specified in docker-compose file.
