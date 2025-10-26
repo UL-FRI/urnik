@@ -570,7 +570,8 @@ def default_timetable(request):
     - IndexError when no public timetable exists for a given site.
     """
     all_timetables = Timetable.objects.all()
-    current_site = get_current_site(request)
+    #current_site = get_current_site(request)
+    current_site = Site.objects.all().last()
     current_site_default_timetables = all_timetables.filter(
         timetablesite__site=current_site, public=True, timetablesite__default=True
     )
