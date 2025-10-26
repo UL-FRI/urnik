@@ -113,12 +113,12 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "simple",
         },
-        "file": {
-            "level": "DEBUG",
-            "class": "logging.FileHandler",
-            "filename": "/home/gregor/personal/urnik/debug.log",
-            "formatter": "verbose",
-        },
+        # "file": {
+        #     "level": "DEBUG",
+        #     "class": "logging.FileHandler",
+        #     "filename": "/home/gregor/personal/urnik/debug.log",
+        #     "formatter": "verbose",
+        # },
     },
     "loggers": {
         "django": {

@@ -29,7 +29,7 @@ class TeacherAdmin(ImportExportActionModelAdmin):
         "activities__name",
         "activities__short_name",
     )
-    filter_horizontal = ("activities",)
+    # filter_horizontal = ("activities",)
 
 
 class ClassroomNResourcesInline(admin.TabularInline):
@@ -41,7 +41,7 @@ class ClassroomNResourcesInline(admin.TabularInline):
 
 
 class ClassroomAdmin(ImportExportActionModelAdmin):
-    filter_horizontal = ("resources",)
+    # filter_horizontal = ("resources",)
     list_filter = ("classroomset",)
     inlines = [
         ClassroomNResourcesInline,
