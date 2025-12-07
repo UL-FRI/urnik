@@ -38,17 +38,6 @@ import frinajave
 import friprosveta.forms
 import friprosveta.models
 import timetable.forms
-import timetable.views
-from timetable.views import (
-    trade_request_list,
-    my_trade_requests,
-    create_trade_request,
-    trade_request_detail,
-    cancel_trade_request,
-    respond_to_trade_request,
-    reject_trade_request,
-    trade_match_queue,
-)
 from friprosveta.forms import AssignmentForm, NajavePercentageForm
 from timetable.models import (
     WEEKDAYS,

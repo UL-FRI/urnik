@@ -106,7 +106,6 @@ def allocations(request):
     filtered_allocations = Allocation.objects.filter()
     timetable = None
     r = request.REQUEST
-    timetable = None
     teacher = None
     classroom = None
     activity = None
@@ -771,11 +770,7 @@ def create_trade_request(request, timetable_slug=None):
 @login_required
 def trade_request_detail(request, pk, timetable_slug=None):
     """View details of a specific trade request."""
-    # Get timetable if slug provided (for context)
-    timetable = None
-    if timetable_slug:
-        timetable = get_object_or_404(Timetable, slug=timetable_slug)
-    
+
     trade_request = get_object_or_404(
         TradeRequest.objects.select_related(
             'requesting_teacher__user',
@@ -815,10 +810,6 @@ def trade_request_detail(request, pk, timetable_slug=None):
 @login_required
 def cancel_trade_request(request, pk, timetable_slug=None):
     """Cancel a trade request."""
-    # Get timetable if slug provided (for redirect context)
-    timetable = None
-    if timetable_slug:
-        timetable = get_object_or_404(Timetable, slug=timetable_slug)
     
     trade_request = get_object_or_404(TradeRequest, pk=pk)
     
@@ -900,7 +891,7 @@ def respond_to_trade_request(request, pk, timetable_slug=None):
     
     # Create a match between the two requests
     try:
-        trade_match = original_request.create_match(counter_request)
+        original_request.create_match(counter_request)
         messages.success(
             request, 
             f"Your response has been submitted! A trade match has been created and is now pending approval."
