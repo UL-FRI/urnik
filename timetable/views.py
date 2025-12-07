@@ -1120,7 +1120,8 @@ def trade_match_queue(request, timetable_slug=None):
                 try:
                     trade_request = TradeRequest.objects.get(pk=request_id)
                     timetable_slug = trade_request.offered_allocation.timetable.slug
-                except:
+                except TradeRequest.DoesNotExist:
+                    # If trade request doesn't exist, timetable_slug remains None and default view is shown
                     pass
         
         # Handle trade match (swap)
@@ -1155,7 +1156,8 @@ def trade_match_queue(request, timetable_slug=None):
                 try:
                     trade_match = TradeMatch.objects.get(pk=match_id)
                     timetable_slug = trade_match.request_1.offered_allocation.timetable.slug
-                except:
+                except TradeMatch.DoesNotExist:
+                    # If trade match doesn't exist, timetable_slug remains None and redirect to home
                     pass
         
         if timetable_slug:
