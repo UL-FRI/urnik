@@ -10,3 +10,4 @@ test_fixtures/
 .mypy_cache/
 .vscode/
 .pytest_cache/
+.sql

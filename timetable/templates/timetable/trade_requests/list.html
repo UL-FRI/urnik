@@ -1,0 +1,678 @@
+{% extends "base.html" %}
+{% load static %}
+{% load timetable_extras %}
+
+{% block title %}Trade Requests{% endblock %}
+
+{% block media %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+body {
+    background: #f5f7fa;
+}
+
+h1 {
+    color: #2c3e50;
+    margin-bottom: 30px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+h1 i {
+    color: #3498db;
+    font-size: 0.9em;
+}
+
+.page-header {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 0;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    box-shadow: 0 4px 6px rgba(52, 152, 219, 0.3);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(52, 152, 219, 0.4);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    color: white;
+    box-shadow: 0 4px 6px rgba(39, 174, 96, 0.3);
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #229954 0%, #1e8449 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(39, 174, 96, 0.4);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-outline-primary {
+    background: white;
+    color: #3498db;
+    border: 2px solid #3498db;
+    box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2);
+}
+
+.btn-outline-primary:hover {
+    background: #3498db;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+    text-decoration: none;
+}
+
+.btn-outline-warning {
+    background: white;
+    color: #f39c12;
+    border: 2px solid #f39c12;
+    box-shadow: 0 2px 4px rgba(243, 156, 18, 0.2);
+}
+
+.btn-outline-warning:hover {
+    background: #f39c12;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(243, 156, 18, 0.3);
+    text-decoration: none;
+}
+
+.btn-outline-danger {
+    background: white;
+    color: #e74c3c;
+    border: 2px solid #e74c3c;
+    box-shadow: 0 2px 4px rgba(231, 76, 60, 0.2);
+}
+
+.btn-outline-danger:hover {
+    background: #e74c3c;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+    text-decoration: none;
+}
+
+.btn-sm {
+    padding: 6px 14px;
+    font-size: 0.85em;
+}
+
+.filters-section {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.filters-section h4 {
+    color: #2c3e50;
+    font-size: 1.2em;
+    font-weight: 600;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 3px solid #3498db;
+    padding-bottom: 10px;
+}
+
+.filters-section h4 i {
+    color: #3498db;
+}
+
+.filters-section label {
+    display: block;
+    margin-bottom: 6px;
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 0.9em;
+}
+
+.filters-section select,
+.filters-section input[type="text"] {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #d5dde5;
+    border-radius: 6px;
+    font-size: 0.95em;
+    transition: all 0.2s;
+    background: white;
+}
+
+.filters-section select:focus,
+.filters-section input[type="text"]:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.relevant-filter {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffe9a8 100%);
+    padding: 15px;
+    border-radius: 8px;
+    border: 2px solid #f39c12;
+    margin-top: 15px;
+}
+
+.relevant-filter label {
+    font-weight: 600;
+    color: #856404;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.relevant-filter input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.trade-card {
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    padding: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.trade-card:hover {
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    transform: translateY(-2px);
+}
+
+.trade-card-header {
+    padding: 20px;
+    border-bottom: 2px solid #ecf0f1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.trade-card-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.trade-card-title h5 {
+    margin: 0;
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.trade-card-title a {
+    color: #2c3e50;
+    text-decoration: none;
+}
+
+.trade-card-title a:hover {
+    color: #3498db;
+}
+
+.trade-card-meta {
+    text-align: right;
+    font-size: 0.85em;
+    color: #7f8c8d;
+}
+
+.status-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8em;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 0.5px;
+}
+
+.status-badge i {
+    font-size: 0.9em;
+}
+
+.status-open { 
+    background: linear-gradient(135deg, #d4edda 0%, #a8ddb5 100%);
+    color: #155724;
+    border: 2px solid #28a745;
+}
+.status-matched { 
+    background: linear-gradient(135deg, #fff3cd 0%, #ffe9a8 100%);
+    color: #856404;
+    border: 2px solid #ffc107;
+}
+.status-pending_approval { 
+    background: linear-gradient(135deg, #d1ecf1 0%, #a8dde8 100%);
+    color: #0c5460;
+    border: 2px solid #17a2b8;
+}
+.status-approved { 
+    background: linear-gradient(135deg, #cce5ff 0%, #99ccff 100%);
+    color: #004085;
+    border: 2px solid #007bff;
+}
+.status-rejected { 
+    background: linear-gradient(135deg, #f8d7da 0%, #f5b7bd 100%);
+    color: #721c24;
+    border: 2px solid #dc3545;
+}
+.status-cancelled,
+.status-expired { 
+    background: linear-gradient(135deg, #e9ecef 0%, #ced4da 100%);
+    color: #495057;
+    border: 2px solid #6c757d;
+}
+
+.trade-card-body {
+    padding: 25px;
+}
+
+.trade-slots {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .trade-slots {
+        grid-template-columns: 1fr;
+    }
+}
+
+.trade-slot {
+    position: relative;
+}
+
+.trade-slot-label {
+    font-weight: 700;
+    font-size: 0.95em;
+    margin-bottom: 12px;
+    color: #34495e;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.trade-slot-label i {
+    font-size: 1.1em;
+}
+
+.allocation-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 16px;
+    border-radius: 8px;
+    border: 2px solid #d5dde5;
+    transition: all 0.2s;
+}
+
+.allocation-card:hover {
+    border-color: #3498db;
+    background: linear-gradient(135deg, #f0f8ff 0%, #e0f0ff 100%);
+}
+
+.allocation-title {
+    font-weight: 600;
+    font-size: 1.05em;
+    color: #2c3e50;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.allocation-detail {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 6px 0;
+    font-size: 0.9em;
+    color: #5d6d7e;
+}
+
+.allocation-detail i {
+    width: 20px;
+    color: #3498db;
+}
+
+.flexible-requirements {
+    background: linear-gradient(135deg, #e8f8f5 0%, #d5f4e6 100%);
+    border: 2px dashed #27ae60;
+}
+
+.flexible-requirements em {
+    color: #27ae60;
+    font-weight: 600;
+    font-style: normal;
+}
+
+.trade-reason {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #3498db;
+    margin-top: 15px;
+}
+
+.trade-reason strong {
+    color: #2c3e50;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.trade-matched {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffe9a8 100%);
+    padding: 15px;
+    border-radius: 8px;
+    border: 2px solid #f39c12;
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.trade-matched i {
+    font-size: 1.3em;
+    color: #f39c12;
+}
+
+.trade-matched strong {
+    color: #856404;
+}
+
+.trade-matched a {
+    color: #856404;
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.trade-card-actions {
+    padding: 15px 25px;
+    background: #f8f9fa;
+    border-top: 2px solid #ecf0f1;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.empty-state {
+    background: white;
+    padding: 60px 40px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.empty-state i {
+    font-size: 4em;
+    color: #bdc3c7;
+    margin-bottom: 20px;
+}
+
+.empty-state h4 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.empty-state p {
+    color: #7f8c8d;
+    margin-bottom: 25px;
+    font-size: 1.1em;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1><i class="fas fa-exchange-alt"></i> Trade Requests</h1>
+                
+                <div class="action-buttons">
+                    <a href="{% url 'create_trade_request' timetable_slug %}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Create New Trade Request
+                    </a>
+                    <a href="{% url 'my_trade_requests' timetable_slug %}" class="btn btn-outline-primary">
+                        <i class="fas fa-user"></i> My Requests
+                    </a>
+                    {% if user.is_staff %}
+                    <a href="{% url 'trade_match_queue' timetable_slug %}" class="btn btn-outline-warning">
+                        <i class="fas fa-clock"></i> Approval Queue
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="filters-section">
+                <h4><i class="fas fa-filter"></i> Filter Requests</h4>
+                <form method="GET">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label>{{ form.status.label }}</label>
+                            {{ form.status }}
+                        </div>
+                        <div class="col-md-3">
+                            <label>{{ form.teacher.label }}</label>
+                            {{ form.teacher }}
+                        </div>
+                        <div class="col-md-2">
+                            <label>{{ form.day.label }}</label>
+                            {{ form.day }}
+                        </div>
+                        <div class="col-md-3">
+                            <label>{{ form.search.label }}</label>
+                            {{ form.search }}
+                        </div>
+                        <div class="col-md-1">
+                            <label>&nbsp;</label>
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="relevant-filter">
+                        <label>
+                            {{ form.relevant_to_me }}
+                            <i class="fas fa-star"></i> {{ form.relevant_to_me.label }}
+                            <span style="font-weight: normal; font-size: 0.9em;">- {{ form.relevant_to_me.help_text }}</span>
+                        </label>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Trade Requests List -->
+            {% if trade_requests %}
+                {% for request in trade_requests %}
+                <div class="trade-card">
+                    <div class="trade-card-header">
+                        <div class="trade-card-title">
+                            <h5>
+                                <a href="{% url 'trade_request_detail' timetable_slug request.pk %}">
+                                    <i class="fas fa-user-circle"></i> {{ request.requesting_teacher }}
+                                </a>
+                            </h5>
+                            <span class="status-badge status-{{ request.status|lower }}">
+                                <i class="fas fa-circle"></i> {{ request.get_status_display }}
+                            </span>
+                        </div>
+                        <div class="trade-card-meta">
+                            <div><i class="far fa-calendar-alt"></i> {{ request.created_at|date:"M d, Y" }}</div>
+                            <div><i class="far fa-clock"></i> {{ request.created_at|date:"H:i" }}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="trade-card-body">
+                        <div class="trade-slots">
+                            <!-- Offered Slot -->
+                            <div class="trade-slot">
+                                <div class="trade-slot-label">
+                                    <i class="fas fa-hand-holding"></i> Offering to Trade
+                                </div>
+                                <div class="allocation-card">
+                                    <strong class="allocation-title" title="{{ request.offered_allocation.activityRealization.activity.name }}">
+                                        {{ request.offered_allocation.activityRealization.activity.name|truncate_activity:40 }}
+                                    </strong>
+                                    <div class="allocation-detail">
+                                        <i class="fas fa-calendar-day"></i>
+                                        <span>{{ request.offered_allocation.get_day_display }}, {{ request.offered_allocation.start|format_time }}</span>
+                                    </div>
+                                    <div class="allocation-detail">
+                                        <i class="fas fa-door-open"></i>
+                                        <span>{{ request.offered_allocation.classroom|default:"TBA" }}</span>
+                                    </div>
+                                    <div class="allocation-detail">
+                                        <i class="fas fa-hourglass-half"></i>
+                                        <span>{{ request.offered_allocation.duration|format_duration }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Desired Slot -->
+                            <div class="trade-slot">
+                                <div class="trade-slot-label">
+                                    <i class="fas fa-bullseye"></i> Looking For
+                                </div>
+                                {% if request.desired_allocation %}
+                                    <div class="allocation-card">
+                                        <strong class="allocation-title" title="{{ request.desired_allocation.activityRealization.activity.name }}">
+                                            {{ request.desired_allocation.activityRealization.activity.name|truncate_activity:40 }}
+                                        </strong>
+                                        <div class="allocation-detail">
+                                            <i class="fas fa-calendar-day"></i>
+                                            <span>{{ request.desired_allocation.get_day_display }}, {{ request.desired_allocation.start|format_time }}</span>
+                                        </div>
+                                        <div class="allocation-detail">
+                                            <i class="fas fa-door-open"></i>
+                                            <span>{{ request.desired_allocation.classroom|default:"TBA" }}</span>
+                                        </div>
+                                        <div class="allocation-detail">
+                                            <i class="fas fa-hourglass-half"></i>
+                                            <span>{{ request.desired_allocation.duration|format_duration }}</span>
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="allocation-card flexible-requirements">
+                                        <em><i class="fas fa-magic"></i> Flexible Requirements</em>
+                                        {% if request.desired_day %}
+                                            <div class="allocation-detail">
+                                                <i class="fas fa-calendar-day"></i>
+                                                <span>Preferred day: {{ request.get_desired_day_display }}</span>
+                                            </div>
+                                        {% endif %}
+                                        {% if request.desired_start_time %}
+                                            <div class="allocation-detail">
+                                                <i class="fas fa-clock"></i>
+                                                <span>Preferred time: {{ request.desired_start_time|format_time }}</span>
+                                            </div>
+                                        {% endif %}
+                                        {% if request.desired_duration %}
+                                            <div class="allocation-detail">
+                                                <i class="fas fa-hourglass-half"></i>
+                                                <span>Duration: {{ request.desired_duration|format_duration }}</span>
+                                            </div>
+                                        {% endif %}
+                                        {% if not request.desired_day and not request.desired_start_time and not request.desired_duration %}
+                                            <div class="allocation-detail" style="color: #27ae60; font-weight: 600;">
+                                                <i class="fas fa-check-circle"></i>
+                                                <span>Any suitable time slot</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if request.reason %}
+                        <div class="trade-reason">
+                            <strong><i class="fas fa-comment-dots"></i> Reason:</strong>
+                            <div>{{ request.reason }}</div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if request.matched_with %}
+                        <div class="trade-matched">
+                            <i class="fas fa-handshake"></i>
+                            <div>
+                                <strong>Matched with:</strong>
+                                <a href="{% url 'trade_request_detail' timetable_slug request.matched_with.pk %}">
+                                    {{ request.matched_with.requesting_teacher }}
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="trade-card-actions">
+                        <a href="{% url 'trade_request_detail' timetable_slug request.pk %}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                        
+                        {% if user.teacher == request.requesting_teacher and request.status in 'OPEN,MATCHED' %}
+                        <a href="{% url 'cancel_trade_request' timetable_slug request.pk %}" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <h4>No Trade Requests Found</h4>
+                    <p>No trade requests match your current filters. Try adjusting your search criteria.</p>
+                    <a href="{% url 'create_trade_request' timetable_slug %}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Create Your First Trade Request
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

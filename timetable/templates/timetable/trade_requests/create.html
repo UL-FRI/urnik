@@ -1,0 +1,1434 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Create Trade Request{% endblock %}
+
+{% block media %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+body {
+    background: #f5f7fa;
+}
+
+h1 {
+    color: #2c3e50;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+.form-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.allocation-preview {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin: 10px 0;
+}
+
+.form-section {
+    margin-bottom: 25px;
+    padding: 25px;
+    background: white;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+}
+
+.form-section h4 {
+    color: #2c3e50;
+    font-size: 1.3em;
+    font-weight: 600;
+    border-bottom: 3px solid #3498db;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-section h4 i {
+    color: #3498db;
+}
+
+.help-text {
+    font-size: 0.9em;
+    color: #7f8c8d;
+    margin-top: 8px;
+    line-height: 1.5;
+}
+
+.criteria-or {
+    text-align: center;
+    font-weight: 600;
+    color: #95a5a6;
+    margin: 25px 0;
+    position: relative;
+}
+
+.criteria-or:before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(to right, transparent, #ecf0f1 15%, #ecf0f1 85%, transparent);
+    z-index: 1;
+}
+
+.criteria-or span {
+    background: white;
+    padding: 0 20px;
+    position: relative;
+    z-index: 2;
+}
+
+.btn-back {
+    margin-right: 10px;
+}
+
+.text-center {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px solid #ecf0f1;
+}
+
+/* Visual allocation selector styles */
+.allocation-grid {
+    display: grid;
+    grid-template-columns: 70px repeat(5, 1fr);
+    gap: 2px;
+    background: #e8eef3;
+    border: 2px solid #d5dde5;
+    margin-top: 15px;
+    overflow-x: auto;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.grid-header {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    color: white;
+    padding: 12px 5px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.95em;
+    letter-spacing: 0.5px;
+}
+
+.grid-time {
+    background: #f8f9fa;
+    padding: 10px 8px;
+    text-align: center;
+    font-size: 0.85em;
+    color: #2c3e50;
+    font-weight: 600;
+    border-right: 2px solid #e8eef3;
+}
+
+.grid-cell {
+    background: white;
+    min-height: 50px;
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    padding: 2px;
+}
+
+.grid-cell:empty:hover {
+    background: #f8f9fa;
+    cursor: default;
+}
+
+.allocation-block {
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.allocation-block:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+    z-index: 10;
+}
+
+.allocation-block.selectable {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border: 2px solid #64b5f6;
+}
+
+.allocation-block.selectable:hover {
+    background: linear-gradient(135deg, #bbdefb 0%, #90caf9 100%);
+    border-color: #42a5f5;
+}
+
+.allocation-block.selected {
+    background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+    border: 3px solid #0d47a1;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.4);
+}
+
+.allocation-block.other {
+    background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+    border: 2px solid #ffb74d;
+}
+
+.allocation-block.other:hover {
+    background: linear-gradient(135deg, #ffecb3 0%, #ffe082 100%);
+    border-color: #ffa726;
+}
+
+.allocation-block.other.selected {
+    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+    border: 3px solid #e65100;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(245, 124, 0, 0.4);
+}
+
+.allocation-name {
+    font-weight: 600;
+    margin-bottom: 3px;
+    line-height: 1.3;
+}
+
+.allocation-room {
+    opacity: 0.85;
+    font-size: 0.9em;
+    margin-top: 2px;
+}
+
+.allocation-teachers {
+    opacity: 0.75;
+    font-size: 0.85em;
+    margin-top: 3px;
+    font-style: italic;
+}
+
+.selector-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #ecf0f1;
+}
+
+.selector-header strong {
+    font-size: 1.1em;
+    color: #2c3e50;
+}
+
+.filter-controls {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+.filter-controls input,
+.filter-controls select {
+    padding: 8px 12px;
+    border: 2px solid #d5dde5;
+    border-radius: 6px;
+    font-size: 0.9em;
+    transition: all 0.2s;
+    flex: 1;
+    min-width: 150px;
+}
+
+.filter-controls input:focus,
+.filter-controls select:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.filter-controls button {
+    padding: 8px 16px;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.filter-controls button:hover {
+    background: #c0392b;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(231, 76, 60, 0.3);
+}
+
+#filter-stats {
+    font-weight: 600;
+    color: #7f8c8d;
+}
+
+.selected-info {
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    border-left: 5px solid #4caf50;
+    border-radius: 8px;
+    margin-top: 15px;
+    font-size: 1em;
+    box-shadow: 0 3px 8px rgba(76, 175, 80, 0.2);
+    display: flex;
+    align-items: center;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.selected-info.other {
+    background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%);
+    border-left-color: #ff9800;
+    box-shadow: 0 3px 8px rgba(255, 152, 0, 0.2);
+}
+
+.selected-info strong {
+    color: #2c3e50;
+    font-size: 1em;
+    margin-right: 8px;
+}
+
+/* Hide original select fields */
+#id_offered_allocation,
+#id_desired_allocation {
+    display: none;
+}
+
+/* Teacher and slot select dropdowns */
+#my-slot-select,
+#teacher-select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #d5dde5;
+    border-radius: 6px;
+    font-size: 1em;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+#my-slot-select:focus,
+#teacher-select:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+#my-slot-select option,
+#teacher-select option {
+    padding: 10px;
+}
+
+/* Wizard Styles */
+.wizard-steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 25px 0;
+    margin-bottom: 25px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 8px;
+}
+
+.wizard-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 2;
+}
+
+.step-number {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: white;
+    border: 3px solid #bdc3c7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1em;
+    color: #95a5a6;
+    transition: all 0.3s ease;
+}
+
+.wizard-step.active .step-number {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    border-color: #2980b9;
+    color: white;
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+    transform: scale(1.1);
+}
+
+.wizard-step.completed .step-number {
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    border-color: #229954;
+    color: white;
+}
+
+.step-label {
+    font-size: 0.85em;
+    color: #7f8c8d;
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.wizard-step.active .step-label {
+    color: #2c3e50;
+    font-weight: 700;
+}
+
+.wizard-step-connector {
+    width: 80px;
+    height: 3px;
+    background: #bdc3c7;
+    margin: 0 15px;
+    border-radius: 2px;
+    position: relative;
+    top: -12px;
+}
+
+.wizard-content {
+    display: none;
+}
+
+.wizard-content.active {
+    display: block;
+}
+
+.wizard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #ecf0f1;
+}
+
+.wizard-header h5 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.3em;
+    font-weight: 600;
+}
+
+.wizard-search {
+    padding: 10px 15px;
+    border: 2px solid #d5dde5;
+    border-radius: 6px;
+    width: 300px;
+    font-size: 0.95em;
+    transition: all 0.2s;
+}
+
+.wizard-search:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.wizard-back-btn {
+    padding: 8px 16px;
+    background: white;
+    border: 2px solid #d5dde5;
+    border-radius: 6px;
+    color: #7f8c8d;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.wizard-back-btn:hover {
+    background: #ecf0f1;
+    border-color: #95a5a6;
+    color: #2c3e50;
+}
+
+.wizard-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 15px;
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 10px 5px;
+}
+
+.wizard-card {
+    background: white;
+    border: 2px solid #d5dde5;
+    border-radius: 8px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.wizard-card:hover {
+    border-color: #3498db;
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+    transform: translateY(-2px);
+}
+
+.wizard-card-title {
+    font-weight: 700;
+    font-size: 1.05em;
+    color: #2c3e50;
+    margin-bottom: 8px;
+}
+
+.wizard-card-subtitle {
+    font-size: 0.9em;
+    color: #7f8c8d;
+    line-height: 1.5;
+}
+
+.wizard-card-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 600;
+}
+
+.wizard-allocation-list {
+    max-height: 550px;
+    overflow-y: auto;
+    padding: 5px;
+}
+
+.wizard-allocation-item {
+    background: white;
+    border: 2px solid #d5dde5;
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.wizard-allocation-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+}
+
+.wizard-allocation-item:hover {
+    border-color: #3498db;
+    box-shadow: 0 6px 20px rgba(52, 152, 219, 0.2);
+    transform: translateX(8px);
+    background: linear-gradient(90deg, #f8f9fa 0%, white 100%);
+}
+
+.wizard-allocation-item:hover::before {
+    transform: scaleY(1);
+}
+
+.wizard-allocation-item.selected {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border: 3px solid #2196f3;
+    box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+    transform: translateX(8px);
+}
+
+.wizard-allocation-item.selected::before {
+    width: 6px;
+    background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+    transform: scaleY(1);
+}
+
+.wizard-allocation-main {
+    flex: 1;
+}
+
+.wizard-allocation-day-time {
+    font-weight: 700;
+    font-size: 1.15em;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.wizard-allocation-day-time i {
+    color: #3498db;
+    font-size: 0.9em;
+}
+
+.wizard-allocation-details {
+    font-size: 0.95em;
+    color: #7f8c8d;
+    line-height: 1.6;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.wizard-allocation-details i {
+    color: #95a5a6;
+    font-size: 0.85em;
+}
+
+.wizard-allocation-badge {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    color: white;
+    text-align: center;
+    min-width: 80px;
+    margin-left: 24px;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+    font-size: 1.1em;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wizard-allocation-item:hover .wizard-allocation-badge {
+    background: linear-gradient(135deg, #2980b9 0%, #2471a3 100%);
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(41, 128, 185, 0.5);
+}
+
+.wizard-allocation-item.selected .wizard-allocation-badge {
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    box-shadow: 0 4px 12px rgba(39, 174, 96, 0.5);
+    transform: scale(1.05);
+}
+
+.wizard-no-results {
+    text-align: center;
+    padding: 60px 20px;
+    color: #95a5a6;
+}
+
+.wizard-no-results i {
+    font-size: 3em;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.duration-warning {
+    background: #fff3cd;
+    border-left-color: #ffc107 !important;
+    border-color: #ffc107 !important;
+}
+
+.duration-warning:hover {
+    background: #ffe69c;
+    border-color: #ff9800 !important;
+}
+
+.duration-warning-text {
+    color: #856404;
+    font-size: 0.85em;
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+}
+
+.duration-warning-text i {
+    color: #ffc107;
+}
+
+.view-toggle {
+    display: flex;
+    gap: 0;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.view-toggle button {
+    padding: 8px 20px;
+    border: none;
+    background: white;
+    color: #7f8c8d;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+    border-right: 1px solid #d5dde5;
+}
+
+.view-toggle button:last-child {
+    border-right: none;
+}
+
+.view-toggle button.active {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+}
+
+.view-toggle button:hover:not(.active) {
+    background: #ecf0f1;
+    color: #2c3e50;
+}
+
+/* List view styles */
+.allocation-list {
+    max-height: 550px;
+    overflow-y: auto;
+    border: 2px solid #d5dde5;
+    border-radius: 6px;
+    background: white;
+}
+
+.allocation-list::-webkit-scrollbar {
+    width: 10px;
+}
+
+.allocation-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 0 6px 6px 0;
+}
+
+.allocation-list::-webkit-scrollbar-thumb {
+    background: #bdc3c7;
+    border-radius: 5px;
+}
+
+.allocation-list::-webkit-scrollbar-thumb:hover {
+    background: #95a5a6;
+}
+
+.allocation-list-item {
+    padding: 15px 18px;
+    border-bottom: 1px solid #ecf0f1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+}
+
+.allocation-list-item:hover {
+    background: linear-gradient(90deg, #f8f9fa 0%, white 100%);
+    border-left: 4px solid #3498db;
+    padding-left: 14px;
+}
+
+.allocation-list-item.selected {
+    background: linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%);
+    border-left: 5px solid #2196f3;
+    padding-left: 13px;
+    box-shadow: inset 0 0 10px rgba(33, 150, 243, 0.1);
+}
+
+.allocation-list-item.other.selected {
+    background: linear-gradient(90deg, #fff8e1 0%, #ffecb3 100%);
+    border-left: 5px solid #ff9800;
+    box-shadow: inset 0 0 10px rgba(255, 152, 0, 0.1);
+}
+
+.allocation-list-item:last-child {
+    border-bottom: none;
+}
+
+.list-item-main {
+    flex: 1;
+    padding-right: 15px;
+}
+
+.list-item-title {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 6px;
+    font-size: 0.95em;
+}
+
+.list-item-details {
+    font-size: 0.85em;
+    color: #7f8c8d;
+    line-height: 1.5;
+}
+
+.list-item-time {
+    text-align: right;
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.9em;
+    min-width: 100px;
+    padding: 8px 12px;
+    background: #ecf0f1;
+    border-radius: 6px;
+    white-space: nowrap;
+    margin-left: 15px;
+}
+
+/* Form input styling */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 0.95em;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group input[type="datetime-local"],
+.form-group select,
+.form-group textarea,
+.form-control {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #d5dde5;
+    border-radius: 6px;
+    font-size: 0.95em;
+    transition: all 0.2s;
+    background: white;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus,
+.form-control:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Button styling */
+.btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 6px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    box-shadow: 0 4px 6px rgba(52, 152, 219, 0.3);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(52, 152, 219, 0.4);
+}
+
+.btn-secondary {
+    background: white;
+    color: #7f8c8d;
+    border: 2px solid #d5dde5;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-secondary:hover {
+    background: #ecf0f1;
+    border-color: #bdc3c7;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-back {
+    margin-right: 15px;
+}
+
+/* Option styling */
+.option-container {
+    background: white;
+    border: 2px solid #d5dde5;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.option-container:hover {
+    border-color: #3498db;
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+}
+
+.option-container.active {
+    border-color: #3498db;
+    background: linear-gradient(135deg, #f8fbff 0%, #f0f8ff 100%);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+}
+
+.option-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 15px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #ecf0f1;
+}
+
+.option-number {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.2em;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+}
+
+.option-title {
+    font-size: 1.15em;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.option-description {
+    font-size: 0.9em;
+    color: #7f8c8d;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-left: 3px solid #3498db;
+    border-radius: 4px;
+}
+
+.options-divider {
+    text-align: center;
+    margin: 30px 0;
+    position: relative;
+}
+
+.options-divider:before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(to right, transparent, #bdc3c7 15%, #bdc3c7 85%, transparent);
+    z-index: 1;
+}
+
+.options-divider span {
+    background: #f5f7fa;
+    padding: 10px 25px;
+    position: relative;
+    z-index: 2;
+    font-weight: 700;
+    color: #7f8c8d;
+    font-size: 1.1em;
+    border: 2px solid #bdc3c7;
+    border-radius: 25px;
+    display: inline-block;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h1>Create Trade Request</h1>
+            
+            <div class="form-container">
+                <form method="POST" id="trade-form">
+                    {% csrf_token %}
+                    
+                    <!-- What you're offering -->
+                    <!-- Hidden form field for offered allocation -->
+                    {{ form.offered_allocation }}
+                    
+                    <!-- Teacher and Subject Selection -->
+                    <div class="form-section">
+                        <h4><i class="fas fa-exchange-alt"></i> Find a Time Slot to Trade</h4>
+                        
+                        <div class="form-group">
+                            <label for="teacher-select"><strong>Select Teacher:</strong></label>
+                            <select id="teacher-select" class="form-control">
+                                <option value="">-- Select a teacher --</option>
+                            </select>
+                            <div class="help-text">Choose the teacher whose time slots you want to see</div>
+                        </div>
+                        
+                        <div class="form-group" id="subject-select-group" style="display:none;">
+                            <label for="subject-select"><strong>Select Subject:</strong></label>
+                            <select id="subject-select" class="form-control">
+                                <option value="">-- Select a subject --</option>
+                            </select>
+                            <div class="help-text">Choose the subject/activity</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Select desired allocation -->
+                    <div class="form-section" id="desired-section">
+                        <h4><i class="fas fa-clock"></i> When Would You Like to Move Your Class?</h4>
+                        <p class="help-text" style="margin-bottom: 25px;">Choose one of the following options:</p>
+                        
+                        <!-- Hidden form field -->
+                        {{ form.desired_allocation }}
+                        
+                        <!-- Option 1: Select specific timeslot -->
+                        <div class="option-container" id="option-1-container" style="display:none;">
+                            <div class="option-header">
+                                <div class="option-number">1</div>
+                                <h5 class="option-title">Select a Specific Time Slot to Swap With</h5>
+                            </div>
+                            <div class="option-description">
+                                <i class="fas fa-info-circle"></i> Browse available time slots from a teacher's schedule and select one to swap with. This creates a direct swap offer.
+                            </div>
+                            
+                            <!-- Wizard selector -->
+                            <div id="desired-wizard">
+                                <!-- Available Time Slots -->
+                                <div id="wizard-step-3" class="wizard-content active">
+                                    <div class="wizard-header">
+                                        <h5 id="step3-title">Available Time Slots</h5>
+                                    </div>
+                                    <div id="allocation-final-list" class="wizard-allocation-list"></div>
+                                </div>
+                                
+                                <div id="desired-info" class="selected-info other" style="display:none;"></div>
+                            </div>
+                            
+                            {% for error in form.desired_allocation.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="options-divider" id="options-divider" style="display:none;">
+                            <span>OR</span>
+                        </div>
+                        
+                        <!-- Option 2: Specify preferences -->
+                        <div class="option-container" id="option-2-container">
+                            <div class="option-header">
+                                <div class="option-number">2</div>
+                                <h5 class="option-title">Specify Your Time Preferences (No Specific Swap)</h5>
+                            </div>
+                            <div class="option-description">
+                                <i class="fas fa-info-circle"></i> Tell others when you'd prefer to have your class. Anyone can offer to swap their time slot with you.
+                            </div>
+                            
+                        <div class="row" id="time-preferences">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="id_desired_day"><strong>Preferred Day:</strong></label>
+                                    {{ form.desired_day }}
+                                    <div class="help-text">Which day would you prefer?</div>
+                                    {% for error in form.desired_day.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="id_desired_start_time"><strong>Preferred Start Time:</strong></label>
+                                    {{ form.desired_start_time }}
+                                    <div class="help-text">What time would you like to start?</div>
+                                    {% for error in form.desired_start_time.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="id_desired_classroom"><strong>Preferred Classroom:</strong></label>
+                                    {{ form.desired_classroom }}
+                                    <div class="help-text">Which classroom would you prefer?</div>
+                                    {% for error in form.desired_classroom.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Additional details -->
+                    <div class="form-section">
+                        <h4><i class="fas fa-info-circle"></i> Additional Details</h4>
+                        
+                        <div class="form-group">
+                            {{ form.reason.label_tag }}
+                            {{ form.reason }}
+                            {% if form.reason.help_text %}
+                            <div class="help-text">{{ form.reason.help_text }}</div>
+                            {% endif %}
+                            {% for error in form.reason.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Form errors -->
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                        <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Submit buttons -->
+                    <div class="text-center">
+                        <a href="{% url 'my_trade_requests' timetable_slug %}" class="btn btn-secondary btn-back">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Create Trade Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Parse allocation data from Django
+    const teacherAllocations = {{ teacher_allocations_json|safe }};
+    const otherAllocations = {{ other_allocations_json|safe }};
+    
+    // State
+    let selectedTeacher = null;
+    let selectedSubject = null;
+    let selectedActivity = null;
+    let selectedDesired = null;
+    
+    // Form fields
+    const desiredField = document.getElementById('id_desired_allocation');
+    const desiredDay = document.getElementById('id_desired_day');
+    const desiredStartTime = document.getElementById('id_desired_start_time');
+    
+    // Populate teacher dropdown
+    const teacherSelect = document.getElementById('teacher-select');
+    const subjectSelect = document.getElementById('subject-select');
+    
+    // Extract unique teachers
+    const teacherMap = new Map();
+    otherAllocations.forEach(alloc => {
+        const teachers = alloc.teachers.split(',').map(t => t.trim());
+        teachers.forEach(teacher => {
+            if (!teacherMap.has(teacher)) {
+                teacherMap.set(teacher, []);
+            }
+            teacherMap.get(teacher).push(alloc);
+        });
+    });
+    
+    // Sort teachers alphabetically and populate dropdown
+    const teachers = Array.from(teacherMap.entries())
+        .map(([name, allocations]) => ({
+            name,
+            count: allocations.length
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+    
+    teachers.forEach(teacher => {
+        const option = document.createElement('option');
+        option.value = teacher.name;
+        option.textContent = `${teacher.name} (${teacher.count} slots)`;
+        teacherSelect.appendChild(option);
+    });
+    
+    // Handle teacher selection
+    teacherSelect.addEventListener('change', function() {
+        selectedTeacher = this.value;
+        selectedSubject = null;
+        subjectSelect.value = '';
+        
+        // Clear the allocation list when teacher changes
+        document.getElementById('allocation-final-list').innerHTML = '';
+        
+        // Clear desired allocation selection
+        desiredField.value = '';
+        selectedDesired = null;
+        document.getElementById('desired-info').style.display = 'none';
+        
+        if (selectedTeacher) {
+            // Show subject dropdown and populate it
+            document.getElementById('subject-select-group').style.display = 'block';
+            populateSubjectDropdown();
+            
+            // Hide option 1 until subject is selected, show option 2
+            document.getElementById('option-1-container').style.display = 'none';
+            document.getElementById('option-2-container').style.display = 'block';
+            document.getElementById('options-divider').style.display = 'none';
+        } else {
+            // No teacher selected - hide subject dropdown and option 1, show only option 2
+            document.getElementById('subject-select-group').style.display = 'none';
+            document.getElementById('option-1-container').style.display = 'none';
+            document.getElementById('option-2-container').style.display = 'block';
+            document.getElementById('options-divider').style.display = 'none';
+        }
+    });
+    
+    // Populate subject dropdown based on selected teacher
+    function populateSubjectDropdown() {
+        subjectSelect.innerHTML = '<option value="">-- Select a subject --</option>';
+        
+        // Filter allocations by selected teacher
+        const teacherAllocsFiltered = otherAllocations.filter(alloc => 
+            alloc.teachers.toLowerCase().includes(selectedTeacher.toLowerCase())
+        );
+        
+        // Group by activity/subject
+        const subjectMap = new Map();
+        teacherAllocsFiltered.forEach(alloc => {
+            if (!subjectMap.has(alloc.activity)) {
+                subjectMap.set(alloc.activity, []);
+            }
+            subjectMap.get(alloc.activity).push(alloc);
+        });
+        
+        // Sort subjects alphabetically
+        const subjects = Array.from(subjectMap.entries())
+            .map(([name, allocations]) => ({
+                name,
+                count: allocations.length
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name));
+        
+        subjects.forEach(subject => {
+            const option = document.createElement('option');
+            option.value = subject.name;
+            option.textContent = `${subject.name} (${subject.count} slots)`;
+            subjectSelect.appendChild(option);
+        });
+    }
+    
+    // Handle subject selection
+    subjectSelect.addEventListener('change', function() {
+        selectedSubject = this.value;
+        if (selectedSubject) {
+            selectedActivity = selectedSubject;
+            // Show both options with divider
+            document.getElementById('option-1-container').style.display = 'block';
+            document.getElementById('option-2-container').style.display = 'block';
+            document.getElementById('options-divider').style.display = 'block';
+            // Start with final allocation list
+            goToFinalList();
+        } else {
+            // Subject cleared - hide option 1, show only option 2
+            document.getElementById('option-1-container').style.display = 'none';
+            document.getElementById('option-2-container').style.display = 'block';
+            document.getElementById('options-divider').style.display = 'none';
+        }
+    });
+    
+    // Direct function to show final allocation list (skip steps 1-2)
+    function goToFinalList() {
+        // Simply ensure the wizard content is visible (it's already marked as active in HTML)
+        const wizardContent = document.getElementById('wizard-step-3');
+        if (wizardContent) {
+            wizardContent.classList.add('active');
+        }
+        
+        buildFinalAllocationList();
+    }
+    
+    function buildFinalAllocationList() {
+        document.getElementById('step3-title').textContent = `Select Time Slot: ${selectedSubject}`;
+        
+        // Filter allocations by teacher and subject
+        const finalAllocations = otherAllocations.filter(alloc => 
+            alloc.teachers.toLowerCase().includes(selectedTeacher.toLowerCase()) &&
+            alloc.activity === selectedSubject
+        );
+        
+        // Sort by day and time
+        const dayOrder = {MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5};
+        finalAllocations.sort((a, b) => {
+            if (dayOrder[a.day] !== dayOrder[b.day]) {
+                return dayOrder[a.day] - dayOrder[b.day];
+            }
+            return a.start.localeCompare(b.start);
+        });
+        
+        const list = document.getElementById('allocation-final-list');
+        list.innerHTML = '';
+        
+        if (finalAllocations.length === 0) {
+            list.innerHTML = '<div class="wizard-no-results"><i class="fas fa-search"></i><br>No time slots found</div>';
+            return;
+        }
+        
+        // Get the offered allocation's duration
+        const offeredSelect = document.getElementById('id_offered_allocation');
+        const offeredId = offeredSelect ? offeredSelect.value : null;
+        const offeredAlloc = teacherAllocations.find(a => a.id == offeredId);
+        const offeredDuration = offeredAlloc ? offeredAlloc.duration : null;
+        
+        finalAllocations.forEach(alloc => {
+            const item = document.createElement('div');
+            item.className = 'wizard-allocation-item';
+            const durationMismatch = offeredDuration && alloc.duration !== offeredDuration;
+            
+            if (durationMismatch) {
+                item.classList.add('duration-warning');
+            }
+            
+            item.dataset.id = alloc.id;
+            
+            let warningHtml = '';
+            if (durationMismatch) {
+                warningHtml = `
+                    <div class="duration-warning-text">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Duration mismatch: Your class is ${offeredDuration}h, this is ${alloc.duration}h
+                    </div>
+                `;
+            }
+            
+            item.innerHTML = `
+                <div class="wizard-allocation-main">
+                    <div class="wizard-allocation-day-time">
+                        <i class="fas fa-calendar-day"></i>
+                        ${getDayName(alloc.day)}, ${alloc.start}
+                    </div>
+                    <div class="wizard-allocation-details">
+                        <i class="fas fa-door-open"></i> ${alloc.classroom}
+                        <i class="fas fa-clock" style="margin-left: 12px;"></i> ${alloc.duration} ${alloc.duration === 1 ? 'hour' : 'hours'}
+                    </div>
+                    ${warningHtml}
+                </div>
+                <div class="wizard-allocation-badge">
+                    <i class="fas fa-hourglass-half" style="font-size: 0.85em; margin-right: 4px;"></i>
+                    ${alloc.duration}h
+                </div>
+            `;
+            item.addEventListener('click', () => selectDesired(alloc));
+            list.appendChild(item);
+        });
+    }
+    
+    function selectDesired(alloc) {
+        selectedDesired = alloc;
+        desiredField.value = alloc.id;
+        
+        // Clear criteria fields
+        desiredDay.value = '';
+        desiredStartTime.value = '';
+        
+        // Update visual selection in wizard
+        document.querySelectorAll('.wizard-allocation-item').forEach(item => {
+            item.classList.toggle('selected', item.dataset.id == alloc.id);
+        });
+        
+        // Show selection info
+        const info = document.getElementById('desired-info');
+        info.style.display = 'block';
+        info.innerHTML = `
+            <i class="fas fa-check-circle" style="color: #27ae60; margin-right: 8px;"></i>
+            <strong>Selected:</strong>
+            ${alloc.activity} • ${alloc.teachers} • ${alloc.classroom} • ${getDayName(alloc.day)} ${alloc.start} (+${alloc.duration}h)
+        `;
+    }
+    
+    function getDayName(code) {
+        const dayMap = {MON: 'Monday', TUE: 'Tuesday', WED: 'Wednesday', THU: 'Thursday', FRI: 'Friday'};
+        return dayMap[code] || code;
+    }
+    
+    // Clear desired allocation if criteria are used
+    [desiredDay, desiredStartTime].forEach(field => {
+        field.addEventListener('change', function() {
+            const hasCriteria = desiredDay.value !== '' || 
+                              desiredStartTime.value !== '';
+            
+            if (hasCriteria) {
+                desiredField.value = '';
+                selectedDesired = null;
+                document.querySelectorAll('.wizard-allocation-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                document.getElementById('desired-info').style.display = 'none';
+            }
+        });
+    });
+    
+    function getDayName(code) {
+        const dayMap = {MON: 'Monday', TUE: 'Tuesday', WED: 'Wednesday', THU: 'Thursday', FRI: 'Friday'};
+        return dayMap[code] || code;
+    }
+    
+    // Pre-select if form has initial value for desired allocation
+    if (desiredField.value) {
+        const alloc = otherAllocations.find(a => a.id == desiredField.value);
+        if (alloc) selectDesired(alloc);
+    }
+});
+</script>
+{% endblock %}

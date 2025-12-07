@@ -23,11 +23,13 @@
                         {% if timetable_slug %}
                       <li class="leaf"><a href={% url "my_preferences" timetable_slug=timetable_slug %}>{% trans "Settings" %}</a></li>
                       <li class="leaf"><a href={% url "subject_list" timetable_slug=timetable_slug %}>{% trans "Subjects" %}</a></li>
+                      <li class="leaf"><a href={% url "my_trade_requests" timetable_slug=timetable_slug %}>{% trans "Trade Requests" %}</a></li>
                           {% if user.is_staff %}
                       <li class="leaf"><a href={% url "teacher_hours" timetable_slug=timetable_slug %}>{% trans "Obremenitve" %}</a></li>
                       <li class="leaf"><a href={% url "teacher_preference_list" timetable_slug=timetable_slug %}>{% trans "Others settings" %}</a></li>
                       <li class="leaf"><a href={% url "group_preference_list" timetable_slug=timetable_slug %}>{% trans "Group settings" %}</a></li>
                       <li class="leaf"><a href={% url "tag_preference_list" timetable_slug=timetable_slug %}>{% trans "Tags" %}</a></li>
+                      <li class="leaf"><a href={% url "trade_match_queue" timetable_slug=timetable_slug %}>{% trans "Trade Approvals" %}</a></li>
                           {% endif %}
                         {% endif %}
                       <li class="leaf"><a href={% value_from_settings LOGOUT_URL %}>{% trans "Logout" %}</a></li>

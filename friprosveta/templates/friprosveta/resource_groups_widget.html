@@ -1,0 +1,114 @@
+{% load i18n %}
+<div class="resource-groups-container">
+    {% for group_data in grouped_resources %}
+    <div class="resource-group {% if group_data.group.required or group_data.group.exactly_one %}required-group{% endif %}">
+        <h4 class="resource-group-name">
+            {{ group_data.group.name }}
+            {% if group_data.group.exactly_one %}
+            <span style="color: red;" title="Obvezno izberite natančno eno možnost">* (natančno 1)</span>
+            {% elif group_data.group.required %}
+            <span style="color: red;" title="Obvezno izberite vsaj eno možnost">* (vsaj 1)</span>
+            {% endif %}
+        </h4>
+        <div class="resource-list">
+            {% for resource in group_data.resources %}
+            <div class="resource-item">
+                <label>
+                    <input type="checkbox" 
+                           name="{{ form_field.html_name }}" 
+                           value="{{ resource.id }}"
+                           id="id_{{ form_field.html_name }}_{{ activity_id }}_{{ resource.id }}"
+                           {% if resource.selected %}checked{% endif %}>
+                    {{ resource.name }}
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+    
+    {% if ungrouped_resources %}
+    <div class="resource-group">
+        <h4 class="resource-group-name">{% trans "Other Resources" %}</h4>
+        <div class="resource-list">
+            {% for resource in ungrouped_resources %}
+            <div class="resource-item">
+                <label>
+                    <input type="checkbox" 
+                           name="{{ form_field.html_name }}" 
+                           value="{{ resource.id }}"
+                           id="id_{{ form_field.html_name }}_{{ activity_id }}_{{ resource.id }}"
+                           {% if resource.selected %}checked{% endif %}>
+                    {{ resource.name }}
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    {% if form_field.errors %}
+    <div class="field-errors" style="color: red; margin-top: 10px;">
+        {% for error in form_field.errors %}
+        <p>{{ error }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.resource-groups-container {
+    margin: 15px 0;
+}
+
+.resource-group {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.resource-group.required-group {
+    border-color: #ff6b6b;
+    background-color: #fff5f5;
+}
+
+.resource-group-name {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #333;
+    font-size: 16px;
+}
+
+.resource-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 8px;
+}
+
+.resource-item {
+    padding: 5px;
+}
+
+.resource-item label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.resource-item input[type="checkbox"] {
+    margin-right: 8px;
+    width: 18px;
+    height: 18px;
+}
+
+.field-errors {
+    font-weight: bold;
+    padding: 10px;
+    background-color: #ffebee;
+    border: 1px solid #ef5350;
+    border-radius: 4px;
+}
+</style>

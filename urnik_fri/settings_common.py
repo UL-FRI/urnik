@@ -22,7 +22,7 @@ ANONYMOUS_USER_ID = -1
 # database can manage content for multiple sites.
 
 # Gregor: comment the entry bellow so that site ID is looked up from the database.
-# SITE_ID = 1
+SITE_ID = 1
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name

@@ -2,12 +2,15 @@ import logging
 from collections import OrderedDict, namedtuple
 
 from django import forms
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import models, transaction
 from django.forms import formsets
 from django.http import Http404
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.template import RequestContext
+from django.utils import timezone
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import UpdateView
 from django.views.generic.list import ListView
@@ -16,6 +19,8 @@ from timetable.forms import (
     ActivityRequirementsFormset,
     GroupPreferenceForm,
     TeacherPreferenceForm,
+    TradeRequestForm,
+    TradeRequestSearchForm,
 )
 from timetable.models import (
     WEEKDAYS,
@@ -27,6 +32,7 @@ from timetable.models import (
     Teacher,
     Timetable,
 )
+from timetable.models.timetables import TradeRequest, TradeMatch
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +106,6 @@ def allocations(request):
     filtered_allocations = Allocation.objects.filter()
     timetable = None
     r = request.REQUEST
-    timetable = None
     teacher = None
     classroom = None
     activity = None
@@ -298,7 +303,9 @@ def activity_requirements(request):
 
 
 @login_required
-def teacher_single_preferences(request, timetable_id=None):
+def teacher_single_preferences_DEPRECATED(request, timetable_id=None):
+    # DEPRECATED: This view is no longer used. Democratic preferences are used via friprosveta app.
+    # Keeping this function to avoid breaking any old references, but it should not be called.
     try:
         teacher = request.user.teacher
         timetable = Timetable.objects.get(id=int(timetable_id))
@@ -475,3 +482,728 @@ class ActivityDetailView(DetailView):
 
 class ActivityUpdateView(UpdateView):
     model = Activity
+
+
+# Trade Request Views
+@login_required
+def trade_request_list(request, timetable_slug=None):
+    """List all trade requests with optional filtering."""
+    
+    # Get timetable if slug provided
+    timetable = None
+    if timetable_slug:
+        timetable = get_object_or_404(Timetable, slug=timetable_slug)
+    
+    form = TradeRequestSearchForm(request.GET)
+    trade_requests = TradeRequest.objects.select_related(
+        'requesting_teacher__user',
+        'offered_allocation__activityRealization__activity',
+        'offered_allocation__classroom',
+        'desired_allocation__activityRealization__activity',
+        'desired_allocation__classroom',
+        'matched_with'
+    ).prefetch_related(
+        'offered_allocation__activityRealization__teachers',
+        'desired_allocation__activityRealization__teachers'
+    )
+    
+    # Filter by timetable if provided
+    if timetable:
+        trade_requests = trade_requests.filter(
+            offered_allocation__timetable=timetable
+        )
+    
+    # Apply filters BEFORE slicing
+    if form.is_valid():
+        if form.cleaned_data['status']:
+            trade_requests = trade_requests.filter(status=form.cleaned_data['status'])
+        
+        if form.cleaned_data['teacher']:
+            trade_requests = trade_requests.filter(requesting_teacher=form.cleaned_data['teacher'])
+        
+        if form.cleaned_data['day']:
+            trade_requests = trade_requests.filter(
+                models.Q(offered_allocation__day=form.cleaned_data['day']) |
+                models.Q(desired_allocation__day=form.cleaned_data['day']) |
+                models.Q(desired_day=form.cleaned_data['day'])
+            )
+        
+        if form.cleaned_data['search']:
+            search_term = form.cleaned_data['search']
+            trade_requests = trade_requests.filter(
+                models.Q(offered_allocation__activityRealization__activity__name__icontains=search_term) |
+                models.Q(desired_allocation__activityRealization__activity__name__icontains=search_term) |
+                models.Q(reason__icontains=search_term)
+            )
+        
+        if form.cleaned_data.get('relevant_to_me') and hasattr(request.user, 'teacher'):
+            # Show requests where the desired allocation is taught by the current user
+            teacher = request.user.teacher
+            trade_requests = trade_requests.filter(
+                models.Q(desired_allocation__activityRealization__teachers=teacher) |
+                models.Q(desired_allocation__isnull=True)  # Include flexible requests
+            ).exclude(requesting_teacher=teacher)  # Don't show my own requests
+    
+    # Limit to recent requests for performance (MUST be last)
+    trade_requests = trade_requests.order_by('-created_at')[:100]
+    
+    return render(request, 'timetable/trade_requests/list.html', {
+        'trade_requests': trade_requests,
+        'form': form,
+        'timetable_slug': timetable_slug,
+    })
+
+
+@login_required
+def my_trade_requests(request, timetable_slug=None):
+    """List the current user's trade requests and requests relevant to them."""
+    try:
+        teacher = request.user.teacher
+    except AttributeError:
+        # Debug: Check if user exists but doesn't have teacher relationship
+        return render(request, 'timetable/trade_requests/no_teacher.html', {
+            'debug_info': {
+                'user': request.user,
+                'user_id': request.user.id,
+                'is_authenticated': request.user.is_authenticated,
+                'has_teacher': hasattr(request.user, 'teacher'),
+            }
+        })
+    
+    # Get timetable if slug provided
+    timetable = None
+    if timetable_slug:
+        timetable = get_object_or_404(Timetable, slug=timetable_slug)
+    
+    # My requests (requests I created)
+    my_requests = TradeRequest.objects.filter(
+        requesting_teacher=teacher
+    ).select_related(
+        'offered_allocation__activityRealization__activity',
+        'offered_allocation__classroom',
+        'desired_allocation__activityRealization__activity',
+        'desired_allocation__classroom',
+        'matched_with'
+    ).order_by('-created_at')
+    
+    # Requests relevant to me (where I teach what they want)
+    relevant_requests = TradeRequest.objects.filter(
+        models.Q(desired_allocation__activityRealization__teachers=teacher) |
+        models.Q(desired_allocation__isnull=True)  # Include flexible requests
+    ).exclude(
+        requesting_teacher=teacher  # Exclude my own requests
+    ).filter(
+        status='OPEN'  # Only show open requests (not matched/accepted yet)
+    ).select_related(
+        'offered_allocation__activityRealization__activity',
+        'offered_allocation__classroom',
+        'desired_allocation__activityRealization__activity',
+        'desired_allocation__classroom',
+        'requesting_teacher__user',
+        'matched_with'
+    ).order_by('-created_at')
+    
+    # Filter by timetable if provided
+    if timetable:
+        my_requests = my_requests.filter(offered_allocation__timetable=timetable)
+        relevant_requests = relevant_requests.filter(offered_allocation__timetable=timetable)
+    
+    return render(request, 'timetable/trade_requests/my_requests.html', {
+        'my_requests': my_requests,
+        'relevant_requests': relevant_requests,
+        'teacher': teacher,
+        'timetable': timetable if timetable_slug else None,
+        'timetable_slug': timetable_slug,
+    })
+
+
+@login_required
+def create_trade_request(request, timetable_slug=None):
+    """Create a new trade request."""
+    try:
+        teacher = request.user.teacher
+    except AttributeError:
+        messages.error(request, "You need to be registered as a teacher to create trade requests.")
+        return render(request, 'timetable/trade_requests/no_teacher.html', {
+            'timetable_slug': timetable_slug,
+        })
+    
+    # Get timetable if slug provided
+    timetable = None
+    if timetable_slug:
+        timetable = get_object_or_404(Timetable, slug=timetable_slug)
+    
+    # Check for pre-selected values from URL parameters
+    offered_allocation_id = request.GET.get('offered_allocation')
+    desired_day = request.GET.get('desired_day')
+    desired_start_time = request.GET.get('desired_start_time')
+    initial_data = {}
+    
+    if offered_allocation_id:
+        try:
+            from timetable.models import Allocation
+            offered_allocation = Allocation.objects.get(
+                id=offered_allocation_id,
+                activityRealization__teachers=teacher
+            )
+            initial_data['offered_allocation'] = offered_allocation
+            messages.info(request, f'Pre-selected time slot to trade: {offered_allocation.get_day_display()} {offered_allocation.start}')
+        except (Allocation.DoesNotExist, ValueError):
+            messages.warning(request, 'The selected time slot is not valid or you do not teach it.')
+    
+    if desired_day:
+        initial_data['desired_day'] = desired_day
+        
+    if desired_start_time:
+        initial_data['desired_start_time'] = desired_start_time
+        
+    if desired_day or desired_start_time:
+        day_str = dict(WEEKDAYS).get(desired_day, desired_day) if desired_day else "any day"
+        time_str = desired_start_time if desired_start_time else "any time"
+        messages.info(request, f'Target time slot preference: {day_str} at {time_str}')
+    
+    if request.method == 'POST':
+        form = TradeRequestForm(request.POST, teacher=teacher, timetable=timetable, initial=initial_data)
+        if form.is_valid():
+            # Additional check for duplicate active requests (belt and suspenders approach)
+            offered_alloc = form.cleaned_data.get('offered_allocation')
+            if offered_alloc:
+                # Only OPEN and PENDING_APPROVAL are considered blocking statuses
+                active_statuses = ['OPEN', 'PENDING_APPROVAL']
+                existing_requests = TradeRequest.objects.filter(
+                    requesting_teacher=teacher,
+                    offered_allocation=offered_alloc,
+                    status__in=active_statuses
+                )
+                
+                if existing_requests.exists():
+                    existing = existing_requests.first()
+                    messages.error(
+                        request, 
+                        f'You already have an active trade request ({existing.get_status_display()}) '
+                        f'for this time slot. Please cancel or complete it before creating a new one.'
+                    )
+                    return render(request, 'timetable/trade_requests/create.html', {
+                        'form': form,
+                        'timetable_slug': timetable_slug,
+                        'teacher_allocations_json': teacher_allocs_json,
+                        'other_allocations_json': other_allocs_json,
+                    })
+            
+            trade_request = form.save(commit=False)
+            trade_request.requesting_teacher = teacher
+            
+            # Check if the desired time slot is free (info added by form validation)
+            if form.cleaned_data.get('_slot_is_free'):
+                # Automatically move to pending approval since no swap is needed
+                trade_request.status = 'PENDING_APPROVAL'
+                slot_desc = form.cleaned_data.get('_free_slot_description', 'your desired time')
+                trade_request.save()
+                messages.success(
+                    request, 
+                    f'✅ Trade request created and sent for admin approval! Good news: {slot_desc} appears to be free - '
+                    f'your class can be moved there without requiring a swap. Waiting for administrator approval.'
+                )
+            else:
+                # Keep as OPEN status - needs matching with another teacher
+                trade_request.save()
+                # Automatic matching disabled for performance - use admin actions instead
+                messages.success(request, 'Trade request created successfully! Use the admin interface to find and approve matches.')
+            
+            if timetable_slug:
+                return redirect('my_trade_requests', timetable_slug=timetable_slug)
+            else:
+                return redirect('my_trade_requests')
+    else:
+        form = TradeRequestForm(teacher=teacher, timetable=timetable, initial=initial_data)
+    
+    # Prepare allocations data for visual selector
+    from timetable.models import Allocation
+    import json
+    
+    # Get teacher's allocations
+    teacher_allocations = Allocation.objects.filter(
+        activityRealization__teachers=teacher
+    ).select_related(
+        'activityRealization__activity',
+        'classroom',
+        'timetable'
+    )
+    if timetable:
+        teacher_allocations = teacher_allocations.filter(timetable=timetable)
+    
+    # Get all other allocations (potential trades)
+    other_allocations = Allocation.objects.exclude(
+        activityRealization__teachers=teacher
+    ).select_related(
+        'activityRealization__activity',
+        'classroom',
+        'timetable'
+    )
+    if timetable:
+        other_allocations = other_allocations.filter(timetable=timetable)
+    
+    # Convert to JSON-serializable format
+    def allocation_to_dict(alloc):
+        return {
+            'id': alloc.id,
+            'day': alloc.day,
+            'start': alloc.start,
+            'duration': alloc.duration,
+            'activity': alloc.activityRealization.activity.name,
+            'classroom': str(alloc.classroom),
+            'teachers': ', '.join([str(t) for t in alloc.activityRealization.teachers.all()]),
+        }
+    
+    teacher_allocs_json = json.dumps([allocation_to_dict(a) for a in teacher_allocations])
+    other_allocs_json = json.dumps([allocation_to_dict(a) for a in other_allocations])
+    
+    return render(request, 'timetable/trade_requests/create.html', {
+        'form': form,
+        'teacher': teacher,
+        'timetable_slug': timetable_slug,
+        'teacher_allocations_json': teacher_allocs_json,
+        'other_allocations_json': other_allocs_json,
+    })
+
+
+@login_required
+def trade_request_detail(request, pk, timetable_slug=None):
+    """View details of a specific trade request."""
+
+    trade_request = get_object_or_404(
+        TradeRequest.objects.select_related(
+            'requesting_teacher__user',
+            'offered_allocation__activityRealization__activity',
+            'offered_allocation__classroom',
+            'desired_allocation__activityRealization__activity',
+            'desired_allocation__classroom',
+            'matched_with',
+            'approved_by__user'
+        ),
+        pk=pk
+    )
+    
+    # Check if user can view this request
+    can_view = (
+        request.user.is_staff or 
+        (hasattr(request.user, 'teacher') and request.user.teacher == trade_request.requesting_teacher)
+    )
+    
+    if not can_view:
+        messages.error(request, "You don't have permission to view this trade request.")
+        timetable_slug = trade_request.offered_allocation.timetable.slug
+        return redirect('trade_request_list', timetable_slug=timetable_slug)
+    
+    # Find potential matches if the request is open
+    potential_matches = []
+    if trade_request.status == 'OPEN':
+        potential_matches = trade_request.find_potential_matches()
+    
+    return render(request, 'timetable/trade_requests/detail.html', {
+        'trade_request': trade_request,
+        'potential_matches': potential_matches,
+        'timetable_slug': timetable_slug,
+    })
+
+
+@login_required
+def cancel_trade_request(request, pk, timetable_slug=None):
+    """Cancel a trade request."""
+    
+    trade_request = get_object_or_404(TradeRequest, pk=pk)
+    
+    # Check if user can cancel this request
+    if not (hasattr(request.user, 'teacher') and request.user.teacher == trade_request.requesting_teacher):
+        messages.error(request, "You can only cancel your own trade requests.")
+        fallback_slug = trade_request.offered_allocation.timetable.slug
+        return redirect('trade_request_list', timetable_slug=timetable_slug or fallback_slug)
+    
+    if trade_request.status not in ['OPEN', 'MATCHED', 'PENDING_APPROVAL']:
+        messages.error(request, "You can only cancel open, matched, or pending approval trade requests.")
+        if timetable_slug:
+            return redirect('my_trade_requests', timetable_slug=timetable_slug)
+        else:
+            return redirect('my_trade_requests')
+    
+    # Cancel the trade request directly without confirmation page
+    trade_request.status = 'CANCELLED'
+    trade_request.save()
+    
+    # If it was matched, also reset the matched request
+    if trade_request.matched_with:
+        matched_request = trade_request.matched_with
+        matched_request.status = 'OPEN'
+        matched_request.matched_with = None
+        matched_request.save()
+        messages.success(request, 'Trade request cancelled successfully. The matched request has been reopened.')
+    else:
+        messages.success(request, 'Trade request cancelled successfully.')
+    
+    # Redirect back to the referring page or default to my_trade_requests
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        return redirect(referer)
+    elif timetable_slug:
+        return redirect('my_trade_requests', timetable_slug=timetable_slug)
+    else:
+        return redirect('my_trade_requests')
+
+
+@login_required
+@transaction.atomic
+def respond_to_trade_request(request, pk, timetable_slug=None):
+    """Create a counter trade request to respond to an existing request."""
+    try:
+        teacher = request.user.teacher
+    except AttributeError:
+        messages.error(request, "You need to be registered as a teacher to respond to trade requests.")
+        if timetable_slug:
+            return redirect('my_trade_requests', timetable_slug=timetable_slug)
+        # Get timetable from URL or default
+        default_tt = Timetable.objects.first()
+        fallback_slug = default_tt.slug if default_tt else 'default'
+        return redirect('trade_request_list', timetable_slug=fallback_slug)
+    
+    original_request = get_object_or_404(TradeRequest, pk=pk)
+    
+    # Check if the teacher can fulfill this request
+    can_fulfill = False
+    if original_request.desired_allocation:
+        # Check if teacher teaches the desired allocation
+        can_fulfill = teacher in original_request.desired_allocation.activityRealization.teachers.all()
+    else:
+        # Flexible request - teacher can respond with any of their allocations
+        can_fulfill = True
+    
+    if not can_fulfill:
+        messages.error(request, "You cannot respond to this request as you don't teach the desired time slot.")
+        return redirect('trade_request_detail', timetable_slug=timetable_slug, pk=pk)
+    
+    # Create a counter request
+    counter_request = TradeRequest(
+        requesting_teacher=teacher,
+        offered_allocation=original_request.desired_allocation,  # What they want becomes what I offer
+        desired_allocation=original_request.offered_allocation,  # What they offer becomes what I want
+        reason=f"Response to trade request #{original_request.pk}"
+    )
+    counter_request.save()
+    
+    # Create a match between the two requests
+    try:
+        original_request.create_match(counter_request)
+        messages.success(
+            request, 
+            f"Your response has been submitted! A trade match has been created and is now pending approval."
+        )
+    except ValueError as e:
+        counter_request.delete()
+        messages.error(request, f"Could not create trade match: {str(e)}")
+    
+    if timetable_slug:
+        return redirect('my_trade_requests', timetable_slug=timetable_slug)
+    return redirect('my_trade_requests', original_request.offered_allocation.timetable.slug)
+
+
+@login_required
+@transaction.atomic
+def reject_trade_request(request, pk, timetable_slug=None):
+    """Reject a trade request as a teacher (before it reaches admin approval)."""
+    try:
+        teacher = request.user.teacher
+    except AttributeError:
+        messages.error(request, "You need to be registered as a teacher to reject trade requests.")
+        if timetable_slug:
+            return redirect('my_trade_requests', timetable_slug=timetable_slug)
+        default_tt = Timetable.objects.first()
+        fallback_slug = default_tt.slug if default_tt else 'default'
+        return redirect('trade_request_list', timetable_slug=fallback_slug)
+    
+    trade_request = get_object_or_404(TradeRequest, pk=pk)
+    
+    # Check if the teacher can reject this request
+    # Teachers can reject requests that are offered to them (desired_allocation is theirs)
+    can_reject = False
+    if trade_request.desired_allocation:
+        can_reject = teacher in trade_request.desired_allocation.activityRealization.teachers.all()
+    
+    if not can_reject:
+        messages.error(request, "You cannot reject this trade request.")
+        if timetable_slug:
+            return redirect('my_trade_requests', timetable_slug=timetable_slug)
+        return redirect('my_trade_requests', trade_request.offered_allocation.timetable.slug)
+    
+    if trade_request.status != 'OPEN':
+        messages.error(request, "This trade request can no longer be rejected.")
+        if timetable_slug:
+            return redirect('my_trade_requests', timetable_slug=timetable_slug)
+        return redirect('my_trade_requests', trade_request.offered_allocation.timetable.slug)
+    
+    if request.method == 'POST':
+        reason = request.POST.get('reason', '')
+        try:
+            trade_request.reject_by_teacher(teacher, reason)
+            messages.success(request, "You have rejected this trade request.")
+        except ValueError as e:
+            messages.error(request, f"Could not reject trade request: {str(e)}")
+        
+        if timetable_slug:
+            return redirect('my_trade_requests', timetable_slug=timetable_slug)
+        return redirect('my_trade_requests', trade_request.offered_allocation.timetable.slug)
+    
+    # Show confirmation page
+    # Ensure timetable_slug is set for template URLs
+    if not timetable_slug:
+        timetable_slug = trade_request.offered_allocation.timetable.slug
+    
+    return render(request, 'timetable/trade_requests/reject_confirm.html', {
+        'trade_request': trade_request,
+        'timetable_slug': timetable_slug,
+    })
+
+
+@login_required
+@transaction.atomic
+def trade_match_queue(request, timetable_slug=None):
+    """View the trade match approval queue (for staff)."""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to access the approval queue.")
+        # Get a default timetable if none provided
+        if not timetable_slug:
+            default_tt = Timetable.objects.first()
+            if default_tt:
+                timetable_slug = default_tt.slug
+        if timetable_slug:
+            return redirect('trade_request_list', timetable_slug=timetable_slug)
+        return redirect('/')
+    
+    # Get timetable if slug provided
+    timetable = None
+    if timetable_slug:
+        timetable = get_object_or_404(Timetable, slug=timetable_slug)
+    
+    # Handle POST requests (approve/reject)
+    if request.method == 'POST':
+        match_id = request.POST.get('match_id')
+        request_id = request.POST.get('request_id')
+        action = request.POST.get('action')
+        rejection_reason = request.POST.get('rejection_reason', '')
+        
+        # Handle individual trade request (free slot move)
+        if request_id and action:
+            try:
+                trade_request = TradeRequest.objects.get(pk=request_id)
+                reviewer = request.user.teacher if hasattr(request.user, 'teacher') else None
+                
+                if action == 'approve':
+                    with transaction.atomic():
+                        # Execute the move - change the allocation's day/time
+                        allocation = trade_request.offered_allocation
+                        original_classroom = allocation.classroom
+                        new_day = allocation.day
+                        new_start = allocation.start
+                        new_classroom = allocation.classroom
+                        
+                        # If they specified a desired allocation, use its day/time/classroom
+                        if trade_request.desired_allocation:
+                            new_day = trade_request.desired_allocation.day
+                            new_start = trade_request.desired_allocation.start
+                            new_classroom = trade_request.desired_allocation.classroom
+                        # Otherwise use the specified preferences
+                        elif trade_request.desired_day or trade_request.desired_start_time:
+                            if trade_request.desired_day:
+                                new_day = trade_request.desired_day
+                            if trade_request.desired_start_time:
+                                new_start = trade_request.desired_start_time
+                            
+                            # Use desired classroom if specified
+                            if trade_request.desired_classroom:
+                                new_classroom = trade_request.desired_classroom
+                            else:
+                                # Find an available classroom for the new time slot
+                                # Check if the original classroom is available at the new time
+                                conflicting_in_original = Allocation.objects.filter(
+                                    timetable=allocation.timetable,
+                                    classroom=original_classroom,
+                                    day=new_day,
+                                    start=new_start
+                                ).exclude(id=allocation.id).exists()
+                                
+                                if conflicting_in_original:
+                                    # Original classroom is occupied, find an alternative
+                                    # Get all classrooms that could fit this activity
+                                    from timetable.models import Classroom
+                                    suitable_classrooms = Classroom.objects.filter(
+                                        timetable=allocation.timetable
+                                    )
+                                    
+                                    # Try to find a free classroom
+                                    for classroom in suitable_classrooms:
+                                        occupied = Allocation.objects.filter(
+                                            timetable=allocation.timetable,
+                                            classroom=classroom,
+                                            day=new_day,
+                                            start=new_start
+                                        ).exclude(id=allocation.id).exists()
+                                        
+                                        if not occupied:
+                                            new_classroom = classroom
+                                            break
+                                    else:
+                                        # No classroom available
+                                        messages.error(
+                                            request,
+                                            f"❌ Cannot approve: No classroom is available at {dict(WEEKDAYS).get(new_day)} {new_start}. "
+                                            f"All classrooms are occupied at this time."
+                                        )
+                                        raise Exception("No available classroom")
+                        
+                        # Check one more time for any conflicts (teacher, classroom, etc.)
+                        conflicts = Allocation.objects.filter(
+                            timetable=allocation.timetable,
+                            day=new_day,
+                            start=new_start
+                        ).filter(
+                            models.Q(classroom=new_classroom) |
+                            models.Q(activityRealization__teachers__in=allocation.activityRealization.teachers.all())
+                        ).exclude(id=allocation.id)
+                        
+                        if conflicts.exists():
+                            conflict = conflicts.first()
+                            conflict_reason = "classroom" if conflict.classroom == new_classroom else "teacher"
+                            messages.error(
+                                request,
+                                f"❌ Cannot approve: {conflict_reason.capitalize()} conflict detected at {dict(WEEKDAYS).get(new_day)} {new_start}. "
+                                f"Please resolve conflicts before approving."
+                            )
+                            raise Exception(f"{conflict_reason.capitalize()} conflict")
+                        
+                        # All checks passed - execute the move
+                        allocation.day = new_day
+                        allocation.start = new_start
+                        allocation.classroom = new_classroom
+                        allocation.save()
+                        
+                        # Update the trade request status
+                        trade_request.status = 'APPROVED'
+                        trade_request.approved_by = reviewer
+                        trade_request.approval_date = timezone.now()
+                        
+                        classroom_note = f" (classroom changed to {new_classroom})" if new_classroom != original_classroom else ""
+                        trade_request.approval_notes = f"Approved and executed via web interface - free slot move{classroom_note}"
+                        trade_request.save()
+                    
+                    classroom_msg = f" in {new_classroom}" if new_classroom != original_classroom else ""
+                    messages.success(
+                        request, 
+                        f"✅ Move approved and executed! {trade_request.requesting_teacher}'s class has been moved to "
+                        f"{dict(WEEKDAYS).get(new_day)} at {new_start}{classroom_msg}."
+                    )
+                elif action == 'reject':
+                    trade_request.status = 'REJECTED'
+                    trade_request.approved_by = reviewer
+                    trade_request.approval_date = timezone.now()
+                    trade_request.approval_notes = f"Rejected: {rejection_reason}" if rejection_reason else "Rejected by administrator"
+                    trade_request.save()
+                    
+                    messages.warning(
+                        request, 
+                        f"Move request rejected. {trade_request.requesting_teacher} will be notified."
+                    )
+            except TradeRequest.DoesNotExist:
+                messages.error(request, "Trade request not found.")
+            except Exception as e:
+                messages.error(request, f"Error processing request: {str(e)}")
+            
+            # Get timetable_slug from request if not provided
+            if not timetable_slug and request_id:
+                try:
+                    trade_request = TradeRequest.objects.get(pk=request_id)
+                    timetable_slug = trade_request.offered_allocation.timetable.slug
+                except:
+                    pass
+        
+        # Handle trade match (swap)
+        elif match_id and action:
+            try:
+                trade_match = TradeMatch.objects.get(pk=match_id)
+                reviewer = request.user.teacher if hasattr(request.user, 'teacher') else None
+                
+                if action == 'approve':
+                    trade_match.approve(reviewer, notes="Approved via web interface")
+                    messages.success(
+                        request, 
+                        f"Trade approved! {trade_match.request_1.requesting_teacher} and "
+                        f"{trade_match.request_2.requesting_teacher} have been notified."
+                    )
+                elif action == 'reject':
+                    notes = f"Rejected: {rejection_reason}" if rejection_reason else "Rejected by administrator"
+                    trade_match.reject(reviewer, notes=notes)
+                    
+                    messages.warning(
+                        request, 
+                        f"Trade rejected. {trade_match.request_1.requesting_teacher} and "
+                        f"{trade_match.request_2.requesting_teacher} will see this as REJECTED with your reason."
+                    )
+            except TradeMatch.DoesNotExist:
+                messages.error(request, "Trade match not found.")
+            except Exception as e:
+                messages.error(request, f"Error processing trade: {str(e)}")
+        
+            # Redirect back to queue - if no timetable_slug, get one from the trade match
+            if not timetable_slug and match_id:
+                try:
+                    trade_match = TradeMatch.objects.get(pk=match_id)
+                    timetable_slug = trade_match.request_1.offered_allocation.timetable.slug
+                except:
+                    pass
+        
+        if timetable_slug:
+            return redirect('trade_match_queue', timetable_slug=timetable_slug)
+        return redirect('/')
+    
+    # Get pending trade matches (two-way swaps)
+    pending_matches = TradeMatch.objects.filter(
+        status='PENDING_APPROVAL'
+    ).select_related(
+        'request_1__requesting_teacher__user',
+        'request_1__offered_allocation__activityRealization__activity',
+        'request_1__offered_allocation__classroom',
+        'request_2__requesting_teacher__user',
+        'request_2__offered_allocation__activityRealization__activity',
+        'request_2__offered_allocation__classroom'
+    )
+    
+    # Filter by timetable if provided
+    if timetable:
+        pending_matches = pending_matches.filter(
+            request_1__offered_allocation__timetable=timetable
+        )
+    
+    pending_matches = pending_matches.order_by('created_at')
+    
+    # Get pending individual trade requests (free slot moves)
+    pending_requests = TradeRequest.objects.filter(
+        status='PENDING_APPROVAL',
+        matched_with__isnull=True  # Not part of a TradeMatch
+    ).select_related(
+        'requesting_teacher__user',
+        'offered_allocation__activityRealization__activity',
+        'offered_allocation__classroom',
+        'desired_allocation__activityRealization__activity',
+        'desired_allocation__classroom'
+    )
+    
+    # Filter by timetable if provided
+    if timetable:
+        pending_requests = pending_requests.filter(
+            offered_allocation__timetable=timetable
+        )
+    
+    pending_requests = pending_requests.order_by('created_at')
+    
+    return render(request, 'timetable/trade_requests/approval_queue.html', {
+        'pending_matches': pending_matches,
+        'pending_requests': pending_requests,
+        'timetable_slug': timetable_slug,
+    })
