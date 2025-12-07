@@ -184,4 +184,4 @@ class ActivityRealization(models.Model):
         return classrooms
 
     def id_string(self):
-        self.activity.name + "-" + self.id
+        return self.activity.name + "-" + str(self.id)
