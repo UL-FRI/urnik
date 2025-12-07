@@ -1155,7 +1155,7 @@ def trade_match_queue(request, timetable_slug=None):
                 try:
                     trade_match = TradeMatch.objects.get(pk=match_id)
                     timetable_slug = trade_match.request_1.offered_allocation.timetable.slug
-                except:
+                except (TradeMatch.DoesNotExist, AttributeError):
                     pass
         
         if timetable_slug:
