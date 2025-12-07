@@ -37,6 +37,62 @@
             padding-right: 2px;
             border-left: thin solid rgb(237, 237, 237);
         }
+
+        /* Trade-related styles */
+        .grid-entry.trade-available {
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .grid-entry.trade-available:after {
+            content: "🔄";
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 10px;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .grid-entry.trade-selected {
+            border: 2px solid #dc3545 !important;
+            box-shadow: 0 0 10px rgba(220, 53, 69, 0.3);
+        }
+        
+        .grid-entry.trade-target {
+            border: 2px dashed #28a745 !important;
+            animation: pulse-target 1.5s infinite;
+        }
+        
+        @keyframes pulse-target {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+        
+        .trade-arrow {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .trade-arrow svg {
+            overflow: visible;
+        }
+        
+        .trade-mode-info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #dc3545;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            z-index: 1001;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -57,6 +113,16 @@
         <a href="?type=LV&type=AV&type=LAB{{ context_links.type }}">Show only lab work</a><br/>
         <a href="?{{ context_links.type }}">Show lectures and lab work</a><br/>
         <a href="{% url "allocations_ical" timetable_slug %}{{ get_args }}" style="font-weight: bold;">Export to calendar</a><br/>
+        
+        {% if user_is_teacher %}
+        <div style="border-top: 1px solid #ccc; margin-top: 10px; padding-top: 10px;">
+            <strong>🔄 Trading</strong><br/>
+            <a href="{% url 'my_trade_requests' timetable_slug %}" style="color: #007bff;">My Requests ({{ user_trade_requests|length }})</a><br/>
+            <a href="{% url 'trade_request_list' timetable_slug %}" style="color: #28a745;">Browse All</a><br/>
+            <a href="{% url 'create_trade_request' timetable_slug %}" style="color: #dc3545; font-weight: bold;">+ New Request</a><br/>
+            <small style="color: #666;">Click your allocations to trade</small>
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -74,7 +140,12 @@
         {% for day, hour_allocations in allocations_by_day %}
             <div class="grid-day-column" style="grid-area: day{{ day }}">
                 {% for a in hour_allocations %}
-                    <div class="grid-entry" style="grid-row: {{ a.hour_index|add:1 }} / span {{ a.duration }}; background-color: hsla({{ a.color.h }}, {{ a.color.s }}, {{ a.color.l }}, 0.7)">
+                    <div class="grid-entry{% if user_is_teacher and a.object in teacher_allocations %} trade-available{% endif %}" 
+                         style="grid-row: {{ a.hour_index|add:1 }} / span {{ a.duration }}; background-color: hsla({{ a.color.h }}, {{ a.color.s }}, {{ a.color.l }}, 0.7);" 
+                         data-allocation-id="{{ a.object.id }}" 
+                         data-day="{{ a.object.day }}" 
+                         data-start="{{ a.object.start }}" 
+                         data-duration="{{ a.duration }}">
                         <div class="description">
                             <div class="top-aligned">
                                 <div class="row">
@@ -90,6 +161,16 @@
                                      </div>
                                 </div>
                                 <div class="row"><a class="link-classroom" href="?classroom={{ a.object.classroom.id }}{{ context_links.classroom }}">{{ a.object.classroom.short_name }}</a></div>
+                                
+                                {% if user_is_teacher and a.object in teacher_allocations %}
+                                <div class="row trade-button-row">
+                                    <a href="{% url 'create_trade_request' timetable_slug %}?offered_allocation={{ a.object.id }}" 
+                                       class="trade-btn-inline" 
+                                       title="Request a trade for this time slot">
+                                        Trade
+                                    </a>
+                                </div>
+                                {% endif %}
 
                                 {% for teacher in a.object.activityRealization.teachers.all %}
                                     <div class="row"><a class="link-teacher" href="?teacher={{ teacher.id }}{{ context_links.teacher }}">{{ teacher.user.first_name }} {{ teacher.user.last_name }}</a></div>

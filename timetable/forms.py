@@ -14,6 +14,7 @@ from timetable.models import (
     WORKHOURS,
     Activity,
     ActivityRealization,
+    Allocation,
     Group,
     GroupTimePreference,
     Preference,
@@ -24,6 +25,7 @@ from timetable.models import (
     TeacherDescriptivePreference,
     TeacherTimePreference,
     TeacherValuePreference,
+    TradeRequest,
 )
 
 
@@ -1118,3 +1120,301 @@ ActivityShortFormset = forms.models.modelformset_factory(
 ActivityMinimalFormset = forms.models.modelformset_factory(
     Activity, form=ActivityMinimalForm, extra=0, can_delete=False
 )
+
+
+class TradeRequestForm(forms.ModelForm):
+    """Form for creating a new trade request."""
+    
+    class Meta:
+        model = TradeRequest
+        fields = [
+            'offered_allocation',
+            'desired_allocation', 
+            'desired_day',
+            'desired_start_time',
+            'desired_duration',
+            'desired_classroom',
+            'reason',
+            'expires_at'
+        ]
+        widgets = {
+            'reason': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Optional: Why do you want to make this trade?'}),
+            'expires_at': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'desired_day': forms.Select(choices=[('', '--- Any Day ---')] + list(WEEKDAYS)),
+            'desired_start_time': forms.Select(choices=[('', '--- Any Time ---')] + list(WORKHOURS)),
+            'desired_duration': forms.NumberInput(attrs={'min': 1, 'max': 8, 'placeholder': 'Hours'}),
+        }
+        labels = {
+            'offered_allocation': 'My time slot to trade away',
+            'desired_allocation': 'Specific time slot I want (optional)',
+            'desired_day': 'OR preferred day',
+            'desired_start_time': 'OR preferred start time',
+            'desired_duration': 'OR preferred duration (hours)',
+            'desired_classroom': 'OR preferred classroom',
+            'reason': 'Reason for time slot trade (optional)',
+            'expires_at': 'Request expires (optional)',
+        }
+        help_texts = {
+            'offered_allocation': 'The time slot you want to exchange with another teacher',
+            'desired_allocation': 'A specific time slot you want, or leave empty to specify preferences',
+            'desired_day': 'Choose a preferred day for your new time slot',
+            'desired_start_time': 'Choose a preferred start time for your new time slot',
+            'desired_duration': 'How many hours should your new time slot last?',
+            'desired_classroom': 'Choose a preferred classroom for your new time slot',
+            'expires_at': 'When should this request automatically expire?',
+        }
+    
+    def __init__(self, *args, **kwargs):
+        teacher = kwargs.pop('teacher', None)
+        timetable = kwargs.pop('timetable', None)
+        super().__init__(*args, **kwargs)
+        
+        # Store teacher for validation
+        self._teacher = teacher
+        
+        if teacher:
+            # Only show allocations that belong to this teacher
+            try:
+                teacher_allocations = Allocation.objects.filter(
+                    activityRealization__teachers=teacher
+                ).select_related(
+                    'activityRealization__activity',
+                    'classroom',
+                    'timetable'
+                )
+                
+                # Filter by timetable if provided
+                if timetable:
+                    teacher_allocations = teacher_allocations.filter(timetable=timetable)
+                
+                self.fields['offered_allocation'].queryset = teacher_allocations
+                
+                # For desired allocation, show all allocations from the same timetable(s)
+                if timetable:
+                    timetables = [timetable]
+                else:
+                    timetables = list(set(alloc.timetable for alloc in teacher_allocations if alloc.timetable))
+                
+                if timetables:
+                    all_allocations = Allocation.objects.filter(
+                        timetable__in=timetables
+                    ).exclude(
+                        activityRealization__teachers=teacher
+                    ).select_related(
+                        'activityRealization__activity',
+                        'classroom',
+                        'timetable'
+                    )
+                    self.fields['desired_allocation'].queryset = all_allocations
+                else:
+                    # If no timetables found, show empty queryset
+                    self.fields['desired_allocation'].queryset = Allocation.objects.none()
+                    
+            except Exception as e:
+                # If there's any error in queryset setup, provide empty querysets
+                self.fields['offered_allocation'].queryset = Allocation.objects.none()
+                self.fields['desired_allocation'].queryset = Allocation.objects.none()
+        
+        # Make desired_allocation not required
+        self.fields['desired_allocation'].required = False
+        self.fields['expires_at'].required = False
+        self.fields['desired_classroom'].required = False
+        
+        # Populate classroom choices based on timetable
+        # Classrooms are related to timetables through allocations
+        if timetable:
+            from timetable.models import Classroom
+            # Get all classrooms used in this timetable
+            classroom_ids = Allocation.objects.filter(
+                timetable=timetable
+            ).values_list('classroom', flat=True).distinct()
+            
+            classrooms = Classroom.objects.filter(id__in=classroom_ids).order_by('name')
+            self.fields['desired_classroom'].queryset = classrooms
+        elif teacher:
+            # Get classrooms from teacher's timetables
+            from timetable.models import Classroom
+            teacher_allocations = Allocation.objects.filter(
+                activityRealization__teachers=teacher
+            )
+            
+            # Get timetables
+            teacher_timetables = teacher_allocations.values_list('timetable', flat=True).distinct()
+            
+            # Get classrooms used in those timetables
+            classroom_ids = Allocation.objects.filter(
+                timetable__in=teacher_timetables
+            ).values_list('classroom', flat=True).distinct()
+            
+            classrooms = Classroom.objects.filter(id__in=classroom_ids).order_by('name')
+            self.fields['desired_classroom'].queryset = classrooms
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        desired_allocation = cleaned_data.get('desired_allocation')
+        desired_day = cleaned_data.get('desired_day')
+        desired_start_time = cleaned_data.get('desired_start_time')
+        desired_duration = cleaned_data.get('desired_duration')
+        offered_allocation = cleaned_data.get('offered_allocation')
+        
+        # Either specify a specific allocation OR criteria, but not both
+        has_specific = bool(desired_allocation)
+        has_criteria = any([desired_day, desired_start_time, desired_duration])
+        
+        if not has_specific and not has_criteria:
+            raise forms.ValidationError(
+                "Please either select a specific allocation you want, or specify your preferences (day/time/duration)."
+            )
+        
+        if has_specific and has_criteria:
+            raise forms.ValidationError(
+                "Please choose either a specific allocation OR specify criteria, not both."
+            )
+        
+        # Validate that the teacher can trade the offered allocation
+        # This validation is done here since we have access to the teacher through the form
+        if offered_allocation and hasattr(self, '_teacher') and self._teacher:
+            if not offered_allocation.teachers.filter(id=self._teacher.id).exists():
+                raise forms.ValidationError(
+                    "You can only trade allocations that you teach."
+                )
+            
+            # Check for existing active trade requests for this allocation
+            # Only OPEN and PENDING_APPROVAL are considered blocking statuses
+            # MATCHED and APPROVED are essentially completed and don't block new requests
+            active_statuses = ['OPEN', 'PENDING_APPROVAL']
+            existing_requests = TradeRequest.objects.filter(
+                requesting_teacher=self._teacher,
+                offered_allocation=offered_allocation,
+                status__in=active_statuses
+            )
+            
+            # Exclude current instance if editing
+            if self.instance and self.instance.pk:
+                existing_requests = existing_requests.exclude(pk=self.instance.pk)
+            
+            if existing_requests.exists():
+                # Get the first matching request for better error message
+                existing = existing_requests.first()
+                raise forms.ValidationError(
+                    f"You already have an active trade request ({existing.get_status_display()}) "
+                    f"for this time slot. Please cancel or complete it before creating a new one."
+                )
+            
+            # Check for conflicts when specifying time preferences instead of specific allocation
+            if not desired_allocation and (desired_day or desired_start_time):
+                desired_classroom = cleaned_data.get('desired_classroom')
+                
+                # Get the timetable from the offered allocation
+                timetable = offered_allocation.timetable
+                
+                # Check if day and time are both specified (required for conflict checking)
+                if desired_day and desired_start_time:
+                    # Check for teacher conflicts first
+                    teacher_conflicts = Allocation.objects.filter(
+                        timetable=timetable,
+                        day=desired_day,
+                        start=desired_start_time,
+                        activityRealization__teachers__in=offered_allocation.activityRealization.teachers.all()
+                    ).exclude(id=offered_allocation.id)
+                    
+                    if teacher_conflicts.exists():
+                        conflict = teacher_conflicts.first()
+                        self.add_error(None, forms.ValidationError(
+                            f"❌ Teacher conflict: One of your teachers already has a class at "
+                            f"{dict(WEEKDAYS).get(desired_day)} {desired_start_time} - "
+                            f"{conflict.activityRealization.activity.name} in {conflict.classroom}."
+                        ))
+                    
+                    # Check classroom availability if classroom is specified
+                    if desired_classroom:
+                        classroom_conflicts = Allocation.objects.filter(
+                            timetable=timetable,
+                            day=desired_day,
+                            start=desired_start_time,
+                            classroom=desired_classroom
+                        ).exclude(id=offered_allocation.id)
+                        
+                        if classroom_conflicts.exists():
+                            conflict = classroom_conflicts.first()
+                            teachers = ', '.join([str(t) for t in conflict.activityRealization.teachers.all()])
+                            self.add_error('desired_classroom', forms.ValidationError(
+                                f"❌ Classroom conflict: {desired_classroom} is already occupied at "
+                                f"{dict(WEEKDAYS).get(desired_day)} {desired_start_time} by "
+                                f"{conflict.activityRealization.activity.name} ({teachers})."
+                            ))
+                    
+                    # If no conflicts, check if slot is completely free
+                    if not teacher_conflicts.exists() and (not desired_classroom or not classroom_conflicts.exists()):
+                        # Check if there are ANY allocations at this time (regardless of classroom)
+                        any_allocations = Allocation.objects.filter(
+                            timetable=timetable,
+                            day=desired_day,
+                            start=desired_start_time
+                        ).exclude(id=offered_allocation.id)
+                        
+                        if not any_allocations.exists():
+                            # Completely free slot
+                            day_str = dict(WEEKDAYS).get(desired_day)
+                            classroom_str = f" in {desired_classroom}" if desired_classroom else ""
+                            cleaned_data['_slot_is_free'] = True
+                            cleaned_data['_free_slot_description'] = f"{day_str} at {desired_start_time}{classroom_str}"
+                        elif desired_classroom:
+                            # Classroom is free but other classes exist at this time
+                            day_str = dict(WEEKDAYS).get(desired_day)
+                            cleaned_data['_slot_is_free'] = True
+                            cleaned_data['_free_slot_description'] = f"{day_str} at {desired_start_time} in {desired_classroom}"
+                else:
+                    # Day or time not fully specified - can't check conflicts thoroughly
+                    pass
+        
+        return cleaned_data
+
+
+class TradeRequestSearchForm(forms.Form):
+    """Form for searching and filtering trade requests."""
+    
+    STATUS_CHOICES = [
+        ('', '--- Any Status ---'),
+        ('OPEN', 'Open'),
+        ('MATCHED', 'Matched'),
+        ('PENDING_APPROVAL', 'Pending Approval'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+        ('CANCELLED', 'Cancelled'),
+        ('EXPIRED', 'Expired'),
+    ]
+    
+    status = forms.ChoiceField(
+        choices=STATUS_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    
+    teacher = forms.ModelChoiceField(
+        queryset=Teacher.objects.all(),
+        required=False,
+        empty_label="--- Any Teacher ---",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    
+    day = forms.ChoiceField(
+        choices=[('', '--- Any Day ---')] + list(WEEKDAYS),
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
+    
+    search = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Search in activity names, reasons...'
+        })
+    )
+    
+    relevant_to_me = forms.BooleanField(
+        required=False,
+        label='Show requests I can fulfill',
+        help_text='Show only requests where I teach the desired time slot',
+        widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+    )

@@ -1,0 +1,466 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Trade Approval Queue{% endblock %}
+
+{% block extra_css %}
+<style>
+.queue-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.queue-header {
+    background: #fff;
+    border-radius: 8px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.match-card {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.trade-summary {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.teacher-section {
+    border: 1px solid #e9ecef;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.teacher-section.teacher-1 {
+    border-left: 4px solid #007bff;
+}
+
+.teacher-section.teacher-2 {
+    border-left: 4px solid #28a745;
+}
+
+.allocation-details {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+.teacher-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.teacher-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.teacher-avatar.teacher-2 {
+    background: #28a745;
+}
+
+.approval-actions {
+    background: #f8f9fa;
+    border-radius: 5px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.empty-queue {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+}
+
+.empty-queue i {
+    font-size: 4em;
+    margin-bottom: 20px;
+    color: #dee2e6;
+}
+
+.stats-bar {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 2em;
+    font-weight: bold;
+    color: #007bff;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.trade-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5em;
+    color: #007bff;
+    margin: 0 15px;
+}
+
+.btn-approve {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.btn-approve:hover {
+    background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+    color: white;
+}
+
+.btn-reject {
+    background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.btn-reject:hover {
+    background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+    color: white;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="queue-container">
+        <!-- Header -->
+        <div class="queue-header">
+            <h1><i class="fas fa-clipboard-check"></i> Trade Approval Queue</h1>
+            <p class="text-muted mb-0">Review and approve pending trade matches</p>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-bar">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ pending_matches|length|add:pending_requests|length }}</div>
+                        <div class="stat-label">Pending Approval</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ pending_matches|length }}</div>
+                        <div class="stat-label">Trade Swaps</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-item">
+                        <div class="stat-number">{{ pending_requests|length }}</div>
+                        <div class="stat-label">Free Slot Moves</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if pending_requests %}
+            <!-- Pending Individual Requests (Free Slot Moves) -->
+            <h3 class="mt-4 mb-3"><i class="fas fa-arrow-right"></i> Free Slot Moves</h3>
+            {% for req in pending_requests %}
+            <div class="match-card">
+                <div class="trade-summary" style="background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4><i class="fas fa-arrow-right"></i> Free Slot Move Request #{{ req.pk }}</h4>
+                        <small class="text-muted">
+                            <i class="fas fa-clock"></i> Requested {{ req.created_at|date:"M d, Y H:i" }}
+                        </small>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Teacher Info and Current Slot -->
+                    <div class="col-md-5">
+                        <div class="teacher-section teacher-1">
+                            <div class="teacher-info">
+                                <div class="teacher-avatar">
+                                    {{ req.requesting_teacher.user.first_name|first|upper }}{{ req.requesting_teacher.user.last_name|first|upper }}
+                                </div>
+                                <div>
+                                    <h5>{{ req.requesting_teacher }}</h5>
+                                    <small class="text-muted">{{ req.requesting_teacher.code }}</small>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <strong>Current Slot:</strong>
+                                <div class="allocation-details">
+                                    <strong>{{ req.offered_allocation.activityRealization.activity.name }}</strong><br>
+                                    <i class="fas fa-calendar"></i> {{ req.offered_allocation.get_day_display }} {{ req.offered_allocation.start }}<br>
+                                    <i class="fas fa-door-open"></i> {{ req.offered_allocation.classroom }}<br>
+                                    <i class="fas fa-clock"></i> {{ req.offered_allocation.duration }}h
+                                </div>
+                            </div>
+                            
+                            {% if req.reason %}
+                            <div class="mt-3">
+                                <strong>Reason:</strong><br>
+                                <em>"{{ req.reason }}"</em>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Arrow -->
+                    <div class="col-md-2">
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <div class="trade-arrow" style="color: #28a745;">
+                                <i class="fas fa-arrow-right"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Desired Slot -->
+                    <div class="col-md-5">
+                        <div class="teacher-section" style="border-left: 4px solid #28a745; background: #f0fff4;">
+                            <h5 style="color: #28a745;"><i class="fas fa-check-circle"></i> Desired Slot (Free)</h5>
+                            
+                            {% if req.desired_allocation %}
+                                <div class="allocation-details" style="background: #e8f5e9;">
+                                    <strong>{{ req.desired_allocation.activityRealization.activity.name }}</strong><br>
+                                    <i class="fas fa-calendar"></i> {{ req.desired_allocation.get_day_display }} {{ req.desired_allocation.start }}<br>
+                                    <i class="fas fa-door-open"></i> {{ req.desired_allocation.classroom }}<br>
+                                    <i class="fas fa-clock"></i> {{ req.desired_allocation.duration }}h
+                                </div>
+                            {% else %}
+                                <div class="allocation-details" style="background: #e8f5e9;">
+                                    <em>Time preferences:</em><br>
+                                    {% if req.desired_day %}
+                                        <i class="fas fa-calendar"></i> Day: {{ req.get_desired_day_display }}<br>
+                                    {% endif %}
+                                    {% if req.desired_start_time %}
+                                        <i class="fas fa-clock"></i> Time: {{ req.desired_start_time }}<br>
+                                    {% endif %}
+                                    {% if req.desired_duration %}
+                                        <i class="fas fa-hourglass-half"></i> Duration: {{ req.desired_duration }}h<br>
+                                    {% endif %}
+                                    {% if not req.desired_day and not req.desired_start_time and not req.desired_duration %}
+                                        <span style="color: #28a745;">✨ Any free slot</span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                            
+                            <div class="alert alert-success mt-3 mb-0" style="font-size: 0.9em;">
+                                <i class="fas fa-info-circle"></i> This slot is free - no swap needed
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Approval Actions -->
+                <div class="approval-actions">
+                    <form method="POST" style="display: inline;" onsubmit="return confirm('Approve this move? The teacher will be notified.');">
+                        {% csrf_token %}
+                        <input type="hidden" name="request_id" value="{{ req.pk }}">
+                        <input type="hidden" name="action" value="approve">
+                        <button type="submit" class="btn btn-approve">
+                            <i class="fas fa-check"></i> Approve Move
+                        </button>
+                    </form>
+                    
+                    <form method="POST" style="display: inline-block; margin-left: 10px;" onsubmit="return confirm('Reject this move request?');">
+                        {% csrf_token %}
+                        <input type="hidden" name="request_id" value="{{ req.pk }}">
+                        <input type="hidden" name="action" value="reject">
+                        <div style="display: inline-block; vertical-align: middle;">
+                            <input type="text" name="rejection_reason" placeholder="Reason for rejection (optional)" 
+                                   style="padding: 8px; border: 1px solid #dc3545; border-radius: 4px; width: 300px; margin-right: 5px;">
+                        </div>
+                        <button type="submit" class="btn btn-reject">
+                            <i class="fas fa-times"></i> Reject Move
+                        </button>
+                    </form>
+                    
+                    <div class="float-right">
+                        <a href="{% url 'trade_request_detail' timetable_slug req.pk %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if pending_matches %}
+            <!-- Pending Matches (Trade Swaps) -->
+            <h3 class="mt-4 mb-3"><i class="fas fa-handshake"></i> Trade Swaps</h3>
+            <!-- Pending Matches -->
+            {% for match in pending_matches %}
+            <div class="match-card">
+                <div class="trade-summary">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4><i class="fas fa-handshake"></i> Trade Match #{{ match.pk }}</h4>
+                        <small class="text-muted">
+                            <i class="fas fa-clock"></i> Matched {{ match.created_at|date:"M d, Y H:i" }}
+                        </small>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Teacher 1 -->
+                    <div class="col-md-5">
+                        <div class="teacher-section teacher-1">
+                            <div class="teacher-info">
+                                <div class="teacher-avatar">
+                                    {{ match.request_1.requesting_teacher.user.first_name|first|upper }}{{ match.request_1.requesting_teacher.user.last_name|first|upper }}
+                                </div>
+                                <div>
+                                    <h5>{{ match.request_1.requesting_teacher }}</h5>
+                                    <small class="text-muted">{{ match.request_1.requesting_teacher.code }}</small>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <strong>Giving up:</strong>
+                                <div class="allocation-details">
+                                    <strong>{{ match.request_1.offered_allocation.activityRealization.activity.name }}</strong><br>
+                                    <i class="fas fa-calendar"></i> {{ match.request_1.offered_allocation.get_day_display }} {{ match.request_1.offered_allocation.start }}<br>
+                                    <i class="fas fa-door-open"></i> {{ match.request_1.offered_allocation.classroom }}<br>
+                                    <i class="fas fa-clock"></i> {{ match.request_1.offered_allocation.duration }}h
+                                </div>
+                            </div>
+                            
+                            {% if match.request_1.reason %}
+                            <div class="mt-3">
+                                <strong>Reason:</strong><br>
+                                <em>"{{ match.request_1.reason }}"</em>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Trade Arrow -->
+                    <div class="col-md-2">
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <div class="trade-arrow">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Teacher 2 -->
+                    <div class="col-md-5">
+                        <div class="teacher-section teacher-2">
+                            <div class="teacher-info">
+                                <div class="teacher-avatar teacher-2">
+                                    {{ match.request_2.requesting_teacher.user.first_name|first|upper }}{{ match.request_2.requesting_teacher.user.last_name|first|upper }}
+                                </div>
+                                <div>
+                                    <h5>{{ match.request_2.requesting_teacher }}</h5>
+                                    <small class="text-muted">{{ match.request_2.requesting_teacher.code }}</small>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <strong>Giving up:</strong>
+                                <div class="allocation-details">
+                                    <strong>{{ match.request_2.offered_allocation.activityRealization.activity.name }}</strong><br>
+                                    <i class="fas fa-calendar"></i> {{ match.request_2.offered_allocation.get_day_display }} {{ match.request_2.offered_allocation.start }}<br>
+                                    <i class="fas fa-door-open"></i> {{ match.request_2.offered_allocation.classroom }}<br>
+                                    <i class="fas fa-clock"></i> {{ match.request_2.offered_allocation.duration }}h
+                                </div>
+                            </div>
+                            
+                            {% if match.request_2.reason %}
+                            <div class="mt-3">
+                                <strong>Reason:</strong><br>
+                                <em>"{{ match.request_2.reason }}"</em>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Approval Actions -->
+                <div class="approval-actions">
+                    <form method="POST" style="display: inline;" onsubmit="return confirm('Approve this trade? Both teachers will be notified.');">
+                        {% csrf_token %}
+                        <input type="hidden" name="match_id" value="{{ match.pk }}">
+                        <input type="hidden" name="action" value="approve">
+                        <button type="submit" class="btn btn-approve">
+                            <i class="fas fa-check"></i> Approve Trade
+                        </button>
+                    </form>
+                    
+                    <form method="POST" style="display: inline-block; margin-left: 10px;" onsubmit="return confirm('Reject this trade? Both teachers will see your reason.');">
+                        {% csrf_token %}
+                        <input type="hidden" name="match_id" value="{{ match.pk }}">
+                        <input type="hidden" name="action" value="reject">
+                        <div style="display: inline-block; vertical-align: middle;">
+                            <input type="text" name="rejection_reason" placeholder="Reason for rejection (optional)" 
+                                   style="padding: 8px; border: 1px solid #dc3545; border-radius: 4px; width: 300px; margin-right: 5px;">
+                        </div>
+                        <button type="submit" class="btn btn-reject">
+                            <i class="fas fa-times"></i> Reject Trade
+                        </button>
+                    </form>
+                    
+                    <div class="float-right">
+                        <a href="{% url 'trade_request_detail' timetable_slug match.request_1.pk %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye"></i> View Request 1
+                        </a>
+                        <a href="{% url 'trade_request_detail' timetable_slug match.request_2.pk %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye"></i> View Request 2
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if not pending_matches and not pending_requests %}
+            <!-- Empty State -->
+            <div class="empty-queue">
+                <i class="fas fa-clipboard-check"></i>
+                <h3>No Pending Approvals</h3>
+                <p>All trade requests have been processed. New requests will appear here for approval.</p>
+                <a href="{% url 'trade_request_list' timetable_slug %}" class="btn btn-primary">
+                    <i class="fas fa-list"></i> View All Trade Requests
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

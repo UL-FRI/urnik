@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+{% load timetable_extras %}
+
+{% block media %}
+<style>
+    .reject-container {
+        max-width: 900px;
+        margin: 30px auto;
+        padding: 0 20px;
+    }
+    
+    .reject-header {
+        background: #dc3545;
+        color: white;
+        padding: 25px;
+        border-radius: 8px 8px 0 0;
+    }
+    
+    .reject-header h2 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 600;
+    }
+    
+    .reject-body {
+        background: white;
+        padding: 30px;
+        border-radius: 0 0 8px 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .warning-banner {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 15px 20px;
+        margin-bottom: 25px;
+        border-radius: 4px;
+        color: #856404;
+    }
+    
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 20px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .trade-comparison {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 20px;
+        margin-bottom: 25px;
+        align-items: center;
+    }
+    
+    .allocation-card {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 6px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .allocation-card h3 {
+        font-size: 13px;
+        text-transform: uppercase;
+        color: #6c757d;
+        margin: 0 0 12px 0;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+    }
+    
+    .allocation-content {
+        font-size: 14px;
+        line-height: 1.6;
+    }
+    
+    .allocation-content .activity-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 10px;
+        display: block;
+    }
+    
+    .allocation-content .detail-line {
+        margin-bottom: 6px;
+        color: #495057;
+    }
+    
+    .arrow-separator {
+        font-size: 24px;
+        color: #adb5bd;
+        text-align: center;
+    }
+    
+    .reason-box {
+        background: #e7f3ff;
+        border-left: 4px solid #0066cc;
+        padding: 15px 20px;
+        border-radius: 4px;
+        margin-bottom: 25px;
+    }
+    
+    .reason-box h3 {
+        font-size: 14px;
+        font-weight: 600;
+        color: #004085;
+        margin: 0 0 8px 0;
+    }
+    
+    .reason-box p {
+        margin: 0;
+        color: #004085;
+        line-height: 1.5;
+    }
+    
+    .form-section {
+        margin-bottom: 20px;
+    }
+    
+    .form-section label {
+        font-size: 15px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+        display: block;
+    }
+    
+    .form-section textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 14px;
+        font-family: inherit;
+        resize: vertical;
+    }
+    
+    .form-section textarea:focus {
+        outline: none;
+        border-color: #dc3545;
+        box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.1);
+    }
+    
+    .form-section .help-text {
+        font-size: 13px;
+        color: #6c757d;
+        margin-top: 6px;
+    }
+    
+    .button-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding-top: 15px;
+    }
+    
+    .btn {
+        padding: 10px 24px;
+        font-size: 15px;
+        font-weight: 500;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-cancel {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .btn-cancel:hover {
+        background: #5a6268;
+    }
+    
+    .btn-reject {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .btn-reject:hover {
+        background: #c82333;
+    }
+    
+    .teacher-name {
+        font-weight: 600;
+    }
+    
+    @media (max-width: 768px) {
+        .trade-comparison {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        .arrow-separator {
+            transform: rotate(90deg);
+        }
+        
+        .button-row {
+            flex-direction: column;
+        }
+        
+        .btn {
+            width: 100%;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="reject-container">
+    <div class="reject-header">
+        <h2>Reject Trade Request</h2>
+    </div>
+    
+    <div class="reject-body">
+        <div class="warning-banner">
+            <strong>Are you sure you want to reject this trade request?</strong>
+            <br>This action will notify <span class="teacher-name">{{ trade_request.requesting_teacher }}</span> that you've declined their offer.
+        </div>
+        
+        <div class="section-title">Trade Request Details</div>
+        
+        <div class="trade-comparison">
+            <div class="allocation-card">
+                <h3>They're Offering</h3>
+                <div class="allocation-content">
+                    <span class="activity-name">{{ trade_request.offered_allocation.activityRealization.activity.name }}</span>
+                    <div class="detail-line">
+                        {{ trade_request.offered_allocation.get_day_display }}
+                    </div>
+                    <div class="detail-line">
+                        {{ trade_request.offered_allocation.start|format_time }} - {{ trade_request.offered_allocation.end|format_time }}
+                    </div>
+                    {% if trade_request.offered_allocation.classroom %}
+                    <div class="detail-line">
+                        {{ trade_request.offered_allocation.classroom }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="arrow-separator">→</div>
+            
+            <div class="allocation-card">
+                <h3>They Want (Your Slot)</h3>
+                <div class="allocation-content">
+                    {% if trade_request.desired_allocation %}
+                        <span class="activity-name">{{ trade_request.desired_allocation.activityRealization.activity.name }}</span>
+                        <div class="detail-line">
+                            {{ trade_request.desired_allocation.get_day_display }}
+                        </div>
+                        <div class="detail-line">
+                            {{ trade_request.desired_allocation.start|format_time }} - {{ trade_request.desired_allocation.end|format_time }}
+                        </div>
+                        {% if trade_request.desired_allocation.classroom %}
+                        <div class="detail-line">
+                            {{ trade_request.desired_allocation.classroom }}
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <span class="activity-name" style="font-style: italic; color: #6c757d;">Flexible - any suitable time slot</span>
+                        {% if trade_request.desired_day %}
+                        <div class="detail-line">
+                            Preferred day: {{ trade_request.get_desired_day_display }}
+                        </div>
+                        {% endif %}
+                        {% if trade_request.desired_start_time %}
+                        <div class="detail-line">
+                            Preferred time: {{ trade_request.desired_start_time|format_time }}
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        {% if trade_request.reason %}
+        <div class="reason-box">
+            <h3>Their Reason</h3>
+            <p>{{ trade_request.reason }}</p>
+        </div>
+        {% endif %}
+        
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="form-section">
+                <label for="reason">Reason for Rejection (Optional)</label>
+                <textarea name="reason" id="reason" rows="4" 
+                          placeholder="Let {{ trade_request.requesting_teacher }} know why you're declining..."></textarea>
+                <div class="help-text">
+                    This message will be visible to {{ trade_request.requesting_teacher }}.
+                </div>
+            </div>
+            
+            <div class="button-row">
+                <a href="{% url 'my_trade_requests' timetable_slug %}" class="btn btn-cancel">
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-reject">
+                    Confirm Rejection
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

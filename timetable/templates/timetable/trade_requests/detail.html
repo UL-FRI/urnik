@@ -1,0 +1,404 @@
+{% extends "base.html" %}
+{% load static %}
+{% load timetable_extras %}
+
+{% block title %}Trade Request Details{% endblock %}
+
+{% block extra_css %}
+<style>
+.detail-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.trade-header {
+    background: #fff;
+    border-radius: 8px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.status-badge {
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.85em;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status-open { background-color: #d4edda; color: #155724; }
+.status-matched { background-color: #fff3cd; color: #856404; }
+.status-pending_approval { background-color: #d1ecf1; color: #0c5460; }
+.status-approved { background-color: #cce5ff; color: #004085; }
+.status-rejected { background-color: #f8d7da; color: #721c24; }
+.status-cancelled { background-color: #e9ecef; color: #495057; }
+.status-expired { background-color: #e9ecef; color: #495057; }
+
+.allocation-card {
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.allocation-card.offering {
+    border-left: 4px solid #dc3545;
+}
+
+.allocation-card.wanting {
+    border-left: 4px solid #28a745;
+}
+
+.allocation-details {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin-top: 15px;
+}
+
+.meta-info {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.match-info {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.potential-matches {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.match-card {
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: #f8f9fa;
+}
+
+.match-card:hover {
+    background: #e9ecef;
+    cursor: pointer;
+}
+
+.teacher-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.teacher-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    font-weight: bold;
+}
+
+.timeline {
+    margin: 20px 0;
+}
+
+.timeline-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-left: 30px;
+    position: relative;
+}
+
+.timeline-item:before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #007bff;
+    transform: translateY(-50%);
+}
+
+.timeline-item:after {
+    content: '';
+    position: absolute;
+    left: 13px;
+    top: 50%;
+    bottom: -15px;
+    width: 2px;
+    background: #dee2e6;
+}
+
+.timeline-item:last-child:after {
+    display: none;
+}
+
+.actions-panel {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="detail-container">
+        <!-- Header -->
+        <div class="trade-header">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1>Trade Request #{{ trade_request.pk }}</h1>
+                    <p class="text-muted mb-2">
+                        Requested by <strong>{{ trade_request.requesting_teacher }}</strong>
+                    </p>
+                    <span class="status-badge status-{{ trade_request.status|lower }}">
+                        <i class="{{ trade_request.status|status_icon }}"></i> {{ trade_request.get_status_display }}
+                    </span>
+                </div>
+                <div class="text-right">
+                    <small class="text-muted">
+                        Created: {{ trade_request.created_at|date:"M d, Y H:i" }} ({{ trade_request.created_at|time_since_short }})
+                    </small>
+                    {% if trade_request.expires_at %}
+                    <br><small class="text-muted">
+                        Expires: {{ trade_request.expires_at|date:"M d, Y H:i" }}
+                    </small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Trade Details -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="allocation-card offering">
+                    <h4><i class="fas fa-arrow-up text-danger"></i> Offering</h4>
+                    <div class="teacher-info">
+                        <div class="teacher-avatar">
+                            {{ trade_request.requesting_teacher.user.first_name|first|upper }}{{ trade_request.requesting_teacher.user.last_name|first|upper }}
+                        </div>
+                        <div>
+                            <strong>{{ trade_request.requesting_teacher }}</strong><br>
+                            <small class="text-muted">{{ trade_request.requesting_teacher.code }}</small>
+                        </div>
+                    </div>
+                    <div class="allocation-details">
+                        <h5 title="{{ trade_request.offered_allocation.activityRealization.activity.name }}">{{ trade_request.offered_allocation.activityRealization.activity.name|truncate_activity:50 }}</h5>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <i class="fas fa-calendar"></i> <strong>{{ trade_request.offered_allocation.get_day_display|format_day_short }}</strong><br>
+                                <i class="fas fa-clock"></i> {{ trade_request.offered_allocation.start|format_time }} - {{ trade_request.offered_allocation.end|format_time }}<br>
+                                <i class="fas fa-hourglass-half"></i> {{ trade_request.offered_allocation.duration|format_duration }}
+                            </div>
+                            <div class="col-sm-6">
+                                <i class="fas fa-door-open"></i> {{ trade_request.offered_allocation.classroom|default:"TBA" }}<br>
+                                <i class="fas fa-users"></i> {{ trade_request.offered_allocation.activityRealization.size|default:"N/A" }} student{{ trade_request.offered_allocation.activityRealization.size|pluralize }}<br>
+                                <i class="fas fa-table"></i> {{ trade_request.offered_allocation.timetable.name }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="allocation-card wanting">
+                    <h4><i class="fas fa-arrow-down text-success"></i> Wanting</h4>
+                    <div class="allocation-details">
+                        {% if trade_request.desired_allocation %}
+                            <h5>{{ trade_request.desired_allocation.activityRealization.activity.name }}</h5>
+                            <div class="row">
+                                <div class="col-sm-6">
+                                    <i class="fas fa-calendar"></i> <strong>{{ trade_request.desired_allocation.get_day_display }}</strong><br>
+                                    <i class="fas fa-clock"></i> {{ trade_request.desired_allocation.start }} - {{ trade_request.desired_allocation.end }}<br>
+                                    <i class="fas fa-hourglass-half"></i> {{ trade_request.desired_allocation.duration }} hour{{ trade_request.desired_allocation.duration|pluralize }}
+                                </div>
+                                <div class="col-sm-6">
+                                    <i class="fas fa-door-open"></i> {{ trade_request.desired_allocation.classroom }}<br>
+                                    <i class="fas fa-users"></i> {{ trade_request.desired_allocation.activityRealization.size }} student{{ trade_request.desired_allocation.activityRealization.size|pluralize }}<br>
+                                    <i class="fas fa-table"></i> {{ trade_request.desired_allocation.timetable.name }}
+                                </div>
+                            </div>
+                        {% else %}
+                            <h5><i class="fas fa-search"></i> Flexible Requirements</h5>
+                            <div class="preferences">
+                                {% if trade_request.desired_day %}
+                                <div><i class="fas fa-calendar"></i> <strong>Day:</strong> {{ trade_request.get_desired_day_display }}</div>
+                                {% endif %}
+                                {% if trade_request.desired_start_time %}
+                                <div><i class="fas fa-clock"></i> <strong>Start Time:</strong> {{ trade_request.desired_start_time }}</div>
+                                {% endif %}
+                                {% if trade_request.desired_duration %}
+                                <div><i class="fas fa-hourglass-half"></i> <strong>Duration:</strong> {{ trade_request.desired_duration }} hour{{ trade_request.desired_duration|pluralize }}</div>
+                                {% endif %}
+                                {% if not trade_request.desired_day and not trade_request.desired_start_time and not trade_request.desired_duration %}
+                                <div><i class="fas fa-star"></i> <strong>Preference:</strong> Any suitable allocation</div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Match Information -->
+        {% if trade_request.matched_with %}
+        <div class="match-info">
+            <h4><i class="fas fa-handshake"></i> Matched Trade</h4>
+            <p>This request has been matched with a compatible trade request from <strong>{{ trade_request.matched_with.requesting_teacher }}</strong>.</p>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>They are offering:</strong><br>
+                    {{ trade_request.matched_with.offered_allocation.activityRealization.activity.name }}<br>
+                    {{ trade_request.matched_with.offered_allocation.get_day_display }} {{ trade_request.matched_with.offered_allocation.start }}
+                </div>
+                <div class="col-md-6">
+                    <a href="{% url 'trade_request_detail' trade_request.matched_with.pk %}" class="btn btn-outline-primary">
+                        <i class="fas fa-eye"></i> View Their Request
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Reason -->
+        {% if trade_request.reason %}
+        <div class="meta-info">
+            <h4><i class="fas fa-comment"></i> Reason</h4>
+            <p>{{ trade_request.reason }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Potential Matches -->
+        {% if potential_matches %}
+        <div class="potential-matches">
+            <h4><i class="fas fa-search"></i> Potential Matches ({{ potential_matches|length }})</h4>
+            <p class="text-muted">Other trade requests that could be compatible with this one:</p>
+            
+            {% for match in potential_matches %}
+            <div class="match-card">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong>{{ match.requesting_teacher }}</strong>
+                        <div class="text-muted small">
+                            Offering: {{ match.offered_allocation.activityRealization.activity.name }} 
+                            ({{ match.offered_allocation.get_day_display }} {{ match.offered_allocation.start }})
+                        </div>
+                    </div>
+                    <div>
+                        <a href="{% url 'trade_request_detail' match.pk %}" class="btn btn-sm btn-outline-primary">
+                            View Request
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Timeline -->
+        <div class="meta-info">
+            <h4><i class="fas fa-history"></i> Timeline</h4>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div>
+                        <strong>Request Created</strong><br>
+                        <small class="text-muted">{{ trade_request.created_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                </div>
+                
+                {% if trade_request.matched_with %}
+                <div class="timeline-item">
+                    <div>
+                        <strong>Matched with {{ trade_request.matched_with.requesting_teacher }}</strong><br>
+                        <small class="text-muted">Automatic matching system</small>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if trade_request.approval_date %}
+                <div class="timeline-item">
+                    <div>
+                        <strong>{{ trade_request.get_status_display }}</strong><br>
+                        <small class="text-muted">
+                            By {{ trade_request.approved_by }} on {{ trade_request.approval_date|date:"M d, Y H:i" }}
+                            {% if trade_request.approval_notes %}
+                            <br>Note: {{ trade_request.approval_notes }}
+                            {% endif %}
+                        </small>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions-panel">
+            <div class="d-flex justify-content-between">
+                <div>
+                    {% if timetable_slug %}
+                    <a href="{% url 'my_trade_requests' timetable_slug %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to My Requests
+                    </a>
+                    <a href="{% url 'trade_request_list' timetable_slug %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-list"></i> All Requests
+                    </a>
+                    {% else %}
+                    <a href="{% url 'my_trade_requests' trade_request.offered_allocation.timetable.slug %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to My Requests
+                    </a>
+                    <a href="{% url 'trade_request_list' trade_request.offered_allocation.timetable.slug %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-list"></i> All Requests
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    {% if user.teacher == trade_request.requesting_teacher and trade_request.status in 'OPEN,MATCHED' %}
+                    {% if timetable_slug %}
+                    <a href="{% url 'cancel_trade_request' timetable_slug trade_request.pk %}" class="btn btn-danger">
+                        <i class="fas fa-times"></i> Cancel Request
+                    </a>
+                    {% else %}
+                    <a href="{% url 'cancel_trade_request' trade_request.offered_allocation.timetable.slug trade_request.pk %}" class="btn btn-danger">
+                        <i class="fas fa-times"></i> Cancel Request
+                    </a>
+                    {% endif %}
+                    {% endif %}
+                    
+                    {% if timetable_slug %}
+                    <a href="{% url 'create_trade_request' timetable_slug %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create New Request
+                    </a>
+                    {% else %}
+                    <a href="{% url 'create_trade_request' trade_request.offered_allocation.timetable.slug %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create New Request
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

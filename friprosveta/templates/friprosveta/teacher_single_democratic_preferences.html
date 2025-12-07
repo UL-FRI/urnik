@@ -2,12 +2,114 @@
 {% load l10n %}
 {% load i18n %}
 {% load timetable_extras %}
+{% load resource_tags %}
 {% block title %}URNIK - {% trans "settings" %}{% endblock %}
 
 {% block media %}
 {{own_activity_formset.media}}
 {{others_activity_formset.media}}
 {{preference_form.media}}
+<style type="text/css">
+    /* Time preferences table styling */
+    table.time_preferences {
+        border-collapse: separate;
+        border-spacing: 0;
+        width: 100%;
+        max-width: 1200px;
+        margin: 20px 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+        background: white;
+    }
+    
+    table.time_preferences th {
+        background: #f8f9fa;
+        color: #495057;
+        font-weight: 600;
+        padding: 12px 8px;
+        text-align: center;
+        border-bottom: 2px solid #dee2e6;
+        font-size: 14px;
+    }
+    
+    table.time_preferences td {
+        padding: 8px;
+        text-align: center;
+        border: 1px solid #e9ecef;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        min-width: 60px;
+        height: 40px;
+    }
+    
+    table.time_preferences td:hover {
+        box-shadow: inset 0 0 0 2px #007bff;
+        transform: scale(1.05);
+        z-index: 10;
+        position: relative;
+    }
+    
+    table.time_preferences tr:first-child th {
+        background: #343a40;
+        color: white;
+        font-weight: 600;
+        padding: 14px 8px;
+    }
+    
+    table.time_preferences tr:first-child th:first-child {
+        background: #343a40;
+        color: white;
+    }
+    
+    table.time_preferences tr th:first-child,
+    table.time_preferences tr td:first-child {
+        background: #f8f9fa;
+        font-weight: 600;
+        text-align: left;
+        padding-left: 12px;
+        position: sticky;
+        left: 0;
+        z-index: 5;
+        color: #212529;
+    }
+    
+    table.time_preferences input[type="text"] {
+        width: 50px;
+        padding: 4px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        text-align: center;
+        font-size: 13px;
+    }
+    
+    table.time_preferences select {
+        padding: 4px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 13px;
+    }
+    
+    /* Color states for preferences */
+    table.time_preferences td[bgcolor="#FFFFFF"] {
+        background-color: #ffffff !important;
+    }
+    
+    table.time_preferences td[bgcolor="#FFFF00"] {
+        background-color: #fff3cd !important;
+        border-color: #ffc107 !important;
+    }
+    
+    table.time_preferences td[bgcolor="#FF0000"] {
+        background-color: #f8d7da !important;
+        border-color: #dc3545 !important;
+    }
+    
+    table.time_preferences td[bgcolor="#00FF00"] {
+        background-color: #d4edda !important;
+        border-color: #28a745 !important;
+    }
+</style>
 {% endblock %}
 
 {% block body %}
@@ -69,9 +171,14 @@
     {% blocktrans %}
     <h2>Zahteve predmetov</h2>
     <p>
-        V primeru, da za izvajanje predmetov potrebujete posebno opremo, ki je praviloma
-        ni v učilnicah, jo izberite spodaj.
-
+        Izberite opremo, ki jo potrebujete za izvajanje predmetov. 
+        Zahteve so organizirane po skupinah - <strong>skupine označene z rdečo zvezdico (*) so obvezne</strong>:
+    </p>
+    <ul>
+        <li><strong>* (vsaj 1)</strong> - morate izbrati vsaj eno možnost iz skupine</li>
+        <li><strong>* (natančno 1)</strong> - morate izbrati natančno eno možnost iz skupine</li>
+    </ul>
+    <p>
         Če vaše opreme še ni na seznamu, to <a href="mailto:urnik@fri.uni-lj.si">sporočite urničarjema</a>
     </p>
     {% endblocktrans %}
@@ -85,10 +192,14 @@
             Priporočamo, da se vsaj
             30% izvaja v živo na FRI.
         </h4>
-        {%trans Zahteve %}
+        <strong>{%trans Zahteve %}</strong>
         <div class="requirements">
             {% for f in activity %}
-            {{f}}
+                {% if f.name == 'requirements' %}
+                    {% render_resource_groups f activity.instance.id %}
+                {% else %}
+                    {{f}}
+                {% endif %}
             {% endfor %}
         </div>
     </div>
@@ -100,10 +211,14 @@
         <h3>{{activity.instance.name}}</h3>
         <h4>{{ activity.instance.locations.all|join:", " }}</h4>
         <h4>{{ activity.instance.groups.all|join:", " }}</h4>
-        {%trans Zahteve %}:
+        <strong>{%trans Zahteve %}</strong>:
         <div class="requirements">
             {% for f in activity %}
-            {{f}}
+                {% if f.name == 'requirements' %}
+                    {% render_resource_groups f activity.instance.id %}
+                {% else %}
+                    {{f}}
+                {% endif %}
             {% endfor %}
         </div>
     </div>

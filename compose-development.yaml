@@ -1,14 +1,12 @@
 services:
   web:
-    image: ulfri/timetable
-    # Rewrite github repository with the code in the current directory
+    build:
+      context: .
+      dockerfile: Dockerfile
     volumes:
       - type: bind
         source: .
-        target: /home/timetable/urnik
-
-    ports:
-      - "8080:8080"
+        target: /workspace
     links:
       - db
     environment:
@@ -24,13 +22,13 @@ services:
       - UWSGI_GID=timetable
       - UWSGI_HTTP_SOCKET=:8080
       - UWSGI_PLUGINS=python3
-      - UWSGI_STATIC_MAP=/static=/home/timetable/static
+      - UWSGI_STATIC_MAP=/static=/home/timetable/urnik_local/static
       - UWSGI_PY_AUTORELOAD=1
     restart: always
 
 
   db:
-    image: postgres
+    image: postgres:15
     volumes:
       - timetable-data:/var/lib/postgresql/data
     restart: always
@@ -38,8 +36,5 @@ services:
       - POSTGRES_USER=timetable
       - POSTGRES_DB=timetable
       - POSTGRES_PASSWORD=database_password
-    ports:
-     - "5432:5432"
-
 volumes:
   timetable-data:

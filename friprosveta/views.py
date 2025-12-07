@@ -39,6 +39,16 @@ import friprosveta.forms
 import friprosveta.models
 import timetable.forms
 import timetable.views
+from timetable.views import (
+    trade_request_list,
+    my_trade_requests,
+    create_trade_request,
+    trade_request_detail,
+    cancel_trade_request,
+    respond_to_trade_request,
+    reject_trade_request,
+    trade_match_queue,
+)
 from friprosveta.forms import AssignmentForm, NajavePercentageForm
 from timetable.models import (
     WEEKDAYS,
@@ -683,6 +693,25 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
     filtered_allocations = _allocation_set(
         param_ids, tt.allocations, request.user.is_staff
     )
+    
+    # Add trade-related context for authenticated teachers
+    user_is_teacher = False
+    teacher_allocations = set()
+    user_trade_requests = []
+    if request.user.is_authenticated and hasattr(request.user, 'teacher'):
+        user_is_teacher = True
+        teacher = request.user.teacher
+        # Get allocations taught by this teacher
+        teacher_allocations = set(
+            filtered_allocations.filter(activityRealization__teachers=teacher)
+        )
+        # Get user's active trade requests for this timetable
+        from timetable.models.timetables import TradeRequest
+        user_trade_requests = TradeRequest.objects.filter(
+            requesting_teacher=teacher,
+            offered_allocation__timetable=tt,
+            status__in=['OPEN', 'MATCHED', 'PENDING_APPROVAL']
+        ).select_related('offered_allocation', 'desired_allocation')
 
     groups_listed = sorted(
         set(
@@ -795,6 +824,10 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
             "hour_strings": [wh[1] for wh in WORKHOURS],
             "allocations_by_day": allocations_by_day,
             "is_internet_explorer": is_internet_explorer,
+            # Trade-related context
+            "user_is_teacher": user_is_teacher,
+            "teacher_allocations": teacher_allocations,
+            "user_trade_requests": user_trade_requests,
         },
     )
 

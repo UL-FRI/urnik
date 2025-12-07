@@ -103,6 +103,45 @@ class ActivityMinimalForm(forms.ModelForm):
         min_value=0, error_messages={"min_value": "Vnesite nenegativno celo število"}
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Set up the requirements field but don't make it globally required
+        # We'll validate per resource group instead
+        self.fields['requirements'].required = False
+    
+    def clean_requirements(self):
+        """Validate that at least one resource is selected from each required group."""
+        selected_resources = self.cleaned_data.get('requirements')
+        
+        # Get all resource groups with constraints
+        required_groups = timetable.models.ResourceGroup.objects.filter(required=True)
+        exactly_one_groups = timetable.models.ResourceGroup.objects.filter(exactly_one=True)
+        
+        errors = []
+        
+        # Check required groups (at least one)
+        for group in required_groups:
+            group_resources = group.resources.all()
+            selected_count = sum(1 for resource in selected_resources if resource in group_resources)
+            
+            if selected_count == 0:
+                errors.append(f"Prosimo, izberite vsaj eno zahtevo iz skupine '{group.name}'")
+        
+        # Check exactly_one groups (exactly one)
+        for group in exactly_one_groups:
+            group_resources = group.resources.all()
+            selected_count = sum(1 for resource in selected_resources if resource in group_resources)
+            
+            if selected_count == 0:
+                errors.append(f"Prosimo, izberite natančno eno zahtevo iz skupine '{group.name}'")
+            elif selected_count > 1:
+                errors.append(f"Iz skupine '{group.name}' lahko izberete samo eno zahtevo (trenutno izbranih: {selected_count})")
+        
+        if errors:
+            raise forms.ValidationError(errors)
+        
+        return selected_resources
+
     class Meta(ActivityLongRequirementsForm.Meta):
         model = friprosveta.models.Activity
         exclude = (
