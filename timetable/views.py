@@ -1157,7 +1157,7 @@ def trade_match_queue(request, timetable_slug=None):
                     trade_match = TradeMatch.objects.get(pk=match_id)
                     timetable_slug = trade_match.request_1.offered_allocation.timetable.slug
                 except TradeMatch.DoesNotExist:
-                    # If trade match doesn't exist, timetable_slug remains None and redirect to home
+                    # If trade match doesn't exist, timetable_slug remains None and fallback redirect logic applies
                     pass
         
         if timetable_slug:
