@@ -73,4 +73,4 @@ RUN python3 -c "from jupyter_server.auth.security import set_password; set_passw
 
 # UWSGI options are read from environmental variables.
 # They are specified in docker-compose file.
-CMD ["uwsgi"]
+CMD ["uv", "run", "uwsgi"]
