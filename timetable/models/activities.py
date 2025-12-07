@@ -185,9 +185,3 @@ class ActivityRealization(models.Model):
 
     def id_string(self):
         self.activity.name + "-" + self.id
-
-
-# class ActivityPercentage(models.Model):
-#    teacher = models.ForeignKey('Teacher')
-#    activity = models.ForeignKey('Activity')
-# value = models.FloatField(default=1.0)
