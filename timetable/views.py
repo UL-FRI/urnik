@@ -1120,7 +1120,7 @@ def trade_match_queue(request, timetable_slug=None):
                 try:
                     trade_request = TradeRequest.objects.get(pk=request_id)
                     timetable_slug = trade_request.offered_allocation.timetable.slug
-                except:
+                except Exception:
                     pass
         
         # Handle trade match (swap)
@@ -1155,7 +1155,7 @@ def trade_match_queue(request, timetable_slug=None):
                 try:
                     trade_match = TradeMatch.objects.get(pk=match_id)
                     timetable_slug = trade_match.request_1.offered_allocation.timetable.slug
-                except:
+                except Exception:
                     pass
         
         if timetable_slug:
