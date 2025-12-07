@@ -475,9 +475,6 @@ h1 i {
                 <h1><i class="fas fa-exchange-alt"></i> Trade Requests</h1>
                 
                 <div class="action-buttons">
-                    <a href="{% url 'create_trade_request' timetable_slug %}" class="btn btn-success">
-                        <i class="fas fa-plus"></i> Create New Trade Request
-                    </a>
                     <a href="{% url 'my_trade_requests' timetable_slug %}" class="btn btn-outline-primary">
                         <i class="fas fa-user"></i> My Requests
                     </a>
@@ -667,9 +664,6 @@ h1 i {
                     <i class="fas fa-inbox"></i>
                     <h4>No Trade Requests Found</h4>
                     <p>No trade requests match your current filters. Try adjusting your search criteria.</p>
-                    <a href="{% url 'create_trade_request' timetable_slug %}" class="btn btn-success">
-                        <i class="fas fa-plus"></i> Create Your First Trade Request
-                    </a>
                 </div>
             {% endif %}
         </div>

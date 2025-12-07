@@ -14,11 +14,22 @@
             {% for resource in group_data.resources %}
             <div class="resource-item">
                 <label>
+                    {% if group_data.group.exactly_one %}
+                    <input type="radio" 
+                           name="{{ form_field.html_name }}_group_{{ group_data.group.id }}_{{ activity_id }}" 
+                           value="{{ resource.id }}"
+                           class="resource-radio-exactly-one"
+                           data-field-name="{{ form_field.html_name }}"
+                           data-resource-id="{{ resource.id }}"
+                           id="id_{{ form_field.html_name }}_{{ activity_id }}_{{ resource.id }}"
+                           {% if resource.selected %}checked{% endif %}>
+                    {% else %}
                     <input type="checkbox" 
                            name="{{ form_field.html_name }}" 
                            value="{{ resource.id }}"
                            id="id_{{ form_field.html_name }}_{{ activity_id }}_{{ resource.id }}"
                            {% if resource.selected %}checked{% endif %}>
+                    {% endif %}
                     {{ resource.name }}
                 </label>
             </div>
@@ -111,4 +122,115 @@
     border: 1px solid #ef5350;
     border-radius: 4px;
 }
+
+.resource-item input[type="radio"] {
+    margin-right: 8px;
+    width: 18px;
+    height: 18px;
+}
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle radio buttons for exactly_one groups
+    const radioButtons = document.querySelectorAll('.resource-radio-exactly-one');
+    
+    // Create a map to track which groups need exactly one selection
+    const exactlyOneGroups = new Map();
+    
+    radioButtons.forEach(function(radio) {
+        const fieldName = radio.getAttribute('data-field-name');
+        const radioName = radio.name; // This includes the group ID
+        
+        if (!exactlyOneGroups.has(radioName)) {
+            exactlyOneGroups.set(radioName, {
+                fieldName: fieldName,
+                radios: []
+            });
+        }
+        exactlyOneGroups.get(radioName).radios.push(radio);
+        
+        // Add change listener
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                const groupInfo = exactlyOneGroups.get(radioName);
+                const selectedResourceId = this.getAttribute('data-resource-id');
+                
+                // First, uncheck ALL hidden checkboxes for this field that belong to this group
+                groupInfo.radios.forEach(function(r) {
+                    const rid = r.getAttribute('data-resource-id');
+                    const hiddenCheckbox = document.querySelector(
+                        'input[type="checkbox"][name="' + fieldName + '"][value="' + rid + '"][data-radio-controlled="true"]'
+                    );
+                    if (hiddenCheckbox) {
+                        hiddenCheckbox.checked = false;
+                    }
+                });
+                
+                // Then, check the hidden checkbox for the selected radio
+                let hiddenCheckbox = document.querySelector(
+                    'input[type="checkbox"][name="' + fieldName + '"][value="' + selectedResourceId + '"][data-radio-controlled="true"]'
+                );
+                
+                if (!hiddenCheckbox) {
+                    // Create hidden checkbox for form submission
+                    hiddenCheckbox = document.createElement('input');
+                    hiddenCheckbox.type = 'checkbox';
+                    hiddenCheckbox.name = fieldName;
+                    hiddenCheckbox.value = selectedResourceId;
+                    hiddenCheckbox.style.display = 'none';
+                    hiddenCheckbox.setAttribute('data-radio-controlled', 'true');
+                    this.parentElement.appendChild(hiddenCheckbox);
+                }
+                hiddenCheckbox.checked = true;
+            }
+        });
+    });
+    
+    // Initialize: for each exactly_one group, ensure only one hidden checkbox is checked
+    exactlyOneGroups.forEach(function(groupInfo, radioName) {
+        let checkedRadio = null;
+        
+        // Find which radio is checked
+        groupInfo.radios.forEach(function(radio) {
+            if (radio.checked) {
+                checkedRadio = radio;
+            }
+        });
+        
+        if (checkedRadio) {
+            const fieldName = groupInfo.fieldName;
+            const selectedResourceId = checkedRadio.getAttribute('data-resource-id');
+            
+            // Uncheck all hidden checkboxes in this group
+            groupInfo.radios.forEach(function(r) {
+                const rid = r.getAttribute('data-resource-id');
+                const hiddenCheckbox = document.querySelector(
+                    'input[type="checkbox"][name="' + fieldName + '"][value="' + rid + '"][data-radio-controlled="true"]'
+                );
+                if (hiddenCheckbox) {
+                    hiddenCheckbox.checked = false;
+                }
+            });
+            
+            // Create/check only the selected one
+            let hiddenCheckbox = document.querySelector(
+                'input[type="checkbox"][name="' + fieldName + '"][value="' + selectedResourceId + '"][data-radio-controlled="true"]'
+            );
+            
+            if (!hiddenCheckbox) {
+                hiddenCheckbox = document.createElement('input');
+                hiddenCheckbox.type = 'checkbox';
+                hiddenCheckbox.name = fieldName;
+                hiddenCheckbox.value = selectedResourceId;
+                hiddenCheckbox.style.display = 'none';
+                hiddenCheckbox.checked = true;
+                hiddenCheckbox.setAttribute('data-radio-controlled', 'true');
+                checkedRadio.parentElement.appendChild(hiddenCheckbox);
+            } else {
+                hiddenCheckbox.checked = true;
+            }
+        }
+    });
+});
+</script>
