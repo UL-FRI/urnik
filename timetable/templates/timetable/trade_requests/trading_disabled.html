@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Trading Disabled" %}{% endblock %}
+
+{% block media %}
+<style>
+    .disabled-container {
+        max-width: 800px;
+        margin: 60px auto;
+        padding: 0 20px;
+    }
+    
+    .disabled-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .disabled-header {
+        background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+        color: white;
+        padding: 40px 30px;
+        text-align: center;
+    }
+    
+    .disabled-header i {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.9;
+    }
+    
+    .disabled-header h1 {
+        margin: 0 0 10px 0;
+        font-size: 28px;
+        font-weight: 600;
+    }
+    
+    .disabled-header p {
+        margin: 0;
+        font-size: 16px;
+        opacity: 0.9;
+    }
+    
+    .disabled-body {
+        padding: 40px 30px;
+        text-align: center;
+    }
+    
+    .disabled-body h2 {
+        color: #2c3e50;
+        font-size: 20px;
+        font-weight: 600;
+        margin: 0 0 15px 0;
+    }
+    
+    .disabled-body p {
+        color: #6c757d;
+        font-size: 16px;
+        line-height: 1.6;
+        margin-bottom: 30px;
+    }
+    
+    .info-box {
+        background: #f8f9fa;
+        border-left: 4px solid #6c757d;
+        padding: 20px;
+        border-radius: 4px;
+        text-align: left;
+        margin-bottom: 30px;
+    }
+    
+    .info-box h3 {
+        margin: 0 0 10px 0;
+        color: #495057;
+        font-size: 16px;
+        font-weight: 600;
+    }
+    
+    .info-box ul {
+        margin: 0;
+        padding-left: 20px;
+        color: #6c757d;
+    }
+    
+    .info-box li {
+        margin-bottom: 8px;
+    }
+    
+    .btn {
+        display: inline-block;
+        padding: 12px 28px;
+        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 600;
+        transition: all 0.2s;
+        box-shadow: 0 4px 6px rgba(52, 152, 219, 0.3);
+    }
+    
+    .btn:hover {
+        background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(52, 152, 219, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn i {
+        margin-right: 8px;
+    }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
+
+{% block body %}
+<div class="disabled-container">
+    <div class="disabled-card">
+        <div class="disabled-header">
+            <i class="fas fa-ban"></i>
+            <h1>{% trans "Trading Disabled" %}</h1>
+            <p>{% trans "Trade requests are currently not available for this timetable" %}</p>
+        </div>
+        
+        <div class="disabled-body">
+            <h2>{% trans "Why is trading disabled?" %}</h2>
+            <div>
+                {% trans "The administrator has temporarily disabled the ability to create and manage trade requests for this timetable." %}
+                {% trans "If you have questions about when trading will be re-enabled, please contact your timetable administrator." %}
+            </div>
+            
+            <a href="{% url 'results' timetable_slug %}" class="btn">
+                <i class="fas fa-calendar-alt"></i>
+                {% trans "Back to Timetable" %}
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

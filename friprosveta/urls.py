@@ -3,6 +3,7 @@ from django.views.generic import TemplateView
 from django.views.generic.list import ListView
 
 from timetable.models import TimetableSet
+from timetable import views as timetable_views
 
 from . import views
 
@@ -86,42 +87,42 @@ urlpatterns = [
     # Trade Request URLs
     re_path(
         r"^timetable/(?P<timetable_slug>[\w-]+)/trades/$",
-        views.trade_request_list,
+        timetable_views.trade_request_list,
         name="trade_request_list",
     ),
     re_path(
         r"^timetable/(?P<timetable_slug>[\w-]+)/trades/my/$",
-        views.my_trade_requests,
+        timetable_views.my_trade_requests,
         name="my_trade_requests",
     ),
     re_path(
         r"^timetable/(?P<timetable_slug>[\w-]+)/trades/create/$",
-        views.create_trade_request,
+        timetable_views.create_trade_request,
         name="create_trade_request",
     ),
     re_path(
         r"^timetable/(?P<timetable_slug>[\w-]+)/trades/(?P<pk>\d+)/$",
-        views.trade_request_detail,
+        timetable_views.trade_request_detail,
         name="trade_request_detail",
     ),
     re_path(
         r"^timetable/(?P<timetable_slug>[\w-]+)/trades/(?P<pk>\d+)/cancel/$",
-        views.cancel_trade_request,
+        timetable_views.cancel_trade_request,
         name="cancel_trade_request",
     ),
     re_path(
         r"^timetable/(?P<timetable_slug>[\w-]+)/trades/(?P<pk>\d+)/respond/$",
-        views.respond_to_trade_request,
+        timetable_views.respond_to_trade_request,
         name="respond_to_trade_request",
     ),
     re_path(
         r"^timetable/(?P<timetable_slug>[\w-]+)/trades/(?P<pk>\d+)/reject/$",
-        views.reject_trade_request,
+        timetable_views.reject_trade_request,
         name="reject_trade_request",
     ),
     re_path(
         r"^timetable/(?P<timetable_slug>[\w-]+)/trades/queue/$",
-        views.trade_match_queue,
+        timetable_views.trade_match_queue,
         name="trade_match_queue",
     ),
     

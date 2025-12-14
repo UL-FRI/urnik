@@ -8,7 +8,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, gettext_lazy
 
 from .constants import WEEKDAYS, WEEKDAYSSLO, WORKHOURS, AFTERHOURS
 
@@ -144,6 +144,7 @@ class Timetable(models.Model):
     start = models.DateField(default=datetime.date.today)
     end = models.DateField(default=datetime.date.today)
     preference_deadline = models.DateField(default=datetime.date.today)
+    trading_enabled = models.BooleanField(default=True, help_text="Allow teachers to create and manage trade requests")
 
     @property
     def activities(self):
@@ -300,13 +301,13 @@ class TradeRequest(models.Model):
     """
     
     STATUS_CHOICES = [
-        ('OPEN', 'Open'),
-        ('MATCHED', 'Matched'),
-        ('PENDING_APPROVAL', 'Pending Approval'),
-        ('APPROVED', 'Approved'),
-        ('REJECTED', 'Rejected'),
-        ('CANCELLED', 'Cancelled'),
-        ('EXPIRED', 'Expired'),
+        ('OPEN', gettext_lazy('Open')),
+        ('MATCHED', gettext_lazy('Matched')),
+        ('PENDING_APPROVAL', gettext_lazy('Pending Approval')),
+        ('APPROVED', gettext_lazy('Approved')),
+        ('REJECTED', gettext_lazy('Rejected')),
+        ('CANCELLED', gettext_lazy('Cancelled')),
+        ('EXPIRED', gettext_lazy('Expired')),
     ]
     
     # The teacher making the request

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load timetable_extras %}
+{% load i18n %}
 
 {% block media %}
 <style>
@@ -216,20 +217,20 @@
 {% block body %}
 <div class="reject-container">
     <div class="reject-header">
-        <h2>Reject Trade Request</h2>
+        <h2>{% trans "Reject Trade Request" %}</h2>
     </div>
     
     <div class="reject-body">
         <div class="warning-banner">
-            <strong>Are you sure you want to reject this trade request?</strong>
-            <br>This action will notify <span class="teacher-name">{{ trade_request.requesting_teacher }}</span> that you've declined their offer.
+            <strong>{% trans "Are you sure you want to reject this trade request?" %}</strong>
+            <br>{% blocktrans with teacher=trade_request.requesting_teacher %}This action will notify <span class="teacher-name">{{ teacher }}</span> that you've declined their offer.{% endblocktrans %}
         </div>
         
-        <div class="section-title">Trade Request Details</div>
+        <div class="section-title">{% trans "Trade Request Details" %}</div>
         
         <div class="trade-comparison">
             <div class="allocation-card">
-                <h3>They're Offering</h3>
+                <h3>{% trans "They're Offering" %}</h3>
                 <div class="allocation-content">
                     <span class="activity-name">{{ trade_request.offered_allocation.activityRealization.activity.name }}</span>
                     <div class="detail-line">
@@ -249,7 +250,7 @@
             <div class="arrow-separator">→</div>
             
             <div class="allocation-card">
-                <h3>They Want (Your Slot)</h3>
+                <h3>{% trans "They Want (Your Slot)" %}</h3>
                 <div class="allocation-content">
                     {% if trade_request.desired_allocation %}
                         <span class="activity-name">{{ trade_request.desired_allocation.activityRealization.activity.name }}</span>
@@ -265,15 +266,15 @@
                         </div>
                         {% endif %}
                     {% else %}
-                        <span class="activity-name" style="font-style: italic; color: #6c757d;">Flexible - any suitable time slot</span>
+                        <span class="activity-name" style="font-style: italic; color: #6c757d;">{% trans "Flexible - any suitable time slot" %}</span>
                         {% if trade_request.desired_day %}
                         <div class="detail-line">
-                            Preferred day: {{ trade_request.get_desired_day_display }}
+                            {% trans "Preferred day" %}: {{ trade_request.get_desired_day_display }}
                         </div>
                         {% endif %}
                         {% if trade_request.desired_start_time %}
                         <div class="detail-line">
-                            Preferred time: {{ trade_request.desired_start_time|format_time }}
+                            {% trans "Preferred time" %}: {{ trade_request.desired_start_time|format_time }}
                         </div>
                         {% endif %}
                     {% endif %}
@@ -283,7 +284,7 @@
         
         {% if trade_request.reason %}
         <div class="reason-box">
-            <h3>Their Reason</h3>
+            <h3>{% trans "Their Reason" %}</h3>
             <p>{{ trade_request.reason }}</p>
         </div>
         {% endif %}
@@ -292,20 +293,20 @@
             {% csrf_token %}
             
             <div class="form-section">
-                <label for="reason">Reason for Rejection (Optional)</label>
+                <label for="reason">{% trans "Reason for Rejection (Optional)" %}</label>
                 <textarea name="reason" id="reason" rows="4" 
-                          placeholder="Let {{ trade_request.requesting_teacher }} know why you're declining..."></textarea>
+                          placeholder="{% blocktrans with teacher=trade_request.requesting_teacher %}Let {{ teacher }} know why you're declining...{% endblocktrans %}"></textarea>
                 <div class="help-text">
-                    This message will be visible to {{ trade_request.requesting_teacher }}.
+                    {% blocktrans with teacher=trade_request.requesting_teacher %}This message will be visible to {{ teacher }}.{% endblocktrans %}
                 </div>
             </div>
             
             <div class="button-row">
                 <a href="{% url 'my_trade_requests' timetable_slug %}" class="btn btn-cancel">
-                    Cancel
+                    {% trans "Cancel" %}
                 </a>
                 <button type="submit" class="btn btn-reject">
-                    Confirm Rejection
+                    {% trans "Confirm Rejection" %}
                 </button>
             </div>
         </form>

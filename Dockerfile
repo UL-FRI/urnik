@@ -18,8 +18,6 @@ ENV LC_ALL sl_SI.UTF-8
 # Install required packages
 RUN apt update \
   && apt-get install -y \
-  uwsgi \
-  uwsgi-plugin-python3 \
   python3 \
   python3-pip \
   git \
@@ -32,6 +30,7 @@ RUN apt update \
   libpq-dev gcc \
   pwgen \
   fish \
+  gettext \
   && rm -rf /var/lib/apt/lists/*
 
 
@@ -53,9 +52,10 @@ RUN ls && uv sync
 
 # Collect Django static files
 RUN uv run python3 manage.py collectstatic --noinput --settings=urnik_fri.settings_example
+RUN uv pip install uwsgi
 
 # Chown everything to the user timetable
-RUN chown timetable.timetable -R /home/timetable
+RUN chown timetable:timetable -R /home/timetable
 
 # Make wait-for-it.sh as executable. It is used by testing image to wait
 # for the database container to be online before the tests are ran.
@@ -73,4 +73,4 @@ RUN python3 -c "from jupyter_server.auth.security import set_password; set_passw
 
 # UWSGI options are read from environmental variables.
 # They are specified in docker-compose file.
-CMD ["uwsgi"]
+CMD ["uv", "run", "uwsgi"]

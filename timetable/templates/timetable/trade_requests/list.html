@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% load static %}
 {% load timetable_extras %}
+{% load i18n %}
 
-{% block title %}Trade Requests{% endblock %}
+{% block title %}{% trans "Trade Requests" %}{% endblock %}
 
 {% block media %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -472,18 +473,15 @@ h1 i {
         <div class="col-md-12">
             <!-- Page Header -->
             <div class="page-header">
-                <h1><i class="fas fa-exchange-alt"></i> Trade Requests</h1>
+                <h1><i class="fas fa-exchange-alt"></i> {% trans "Trade Requests" %}</h1>
                 
                 <div class="action-buttons">
-                    <a href="{% url 'create_trade_request' timetable_slug %}" class="btn btn-success">
-                        <i class="fas fa-plus"></i> Create New Trade Request
-                    </a>
                     <a href="{% url 'my_trade_requests' timetable_slug %}" class="btn btn-outline-primary">
-                        <i class="fas fa-user"></i> My Requests
+                        <i class="fas fa-user"></i> {% trans "My Requests" %}
                     </a>
                     {% if user.is_staff %}
                     <a href="{% url 'trade_match_queue' timetable_slug %}" class="btn btn-outline-warning">
-                        <i class="fas fa-clock"></i> Approval Queue
+                        <i class="fas fa-clock"></i> {% trans "Approval Queue" %}
                     </a>
                     {% endif %}
                 </div>
@@ -491,7 +489,7 @@ h1 i {
 
             <!-- Filters -->
             <div class="filters-section">
-                <h4><i class="fas fa-filter"></i> Filter Requests</h4>
+                <h4><i class="fas fa-filter"></i> {% trans "Filter Requests" %}</h4>
                 <form method="GET">
                     <div class="row">
                         <div class="col-md-3">
@@ -553,7 +551,7 @@ h1 i {
                             <!-- Offered Slot -->
                             <div class="trade-slot">
                                 <div class="trade-slot-label">
-                                    <i class="fas fa-hand-holding"></i> Offering to Trade
+                                    <i class="fas fa-hand-holding"></i> {% trans "Offering to Trade" %}
                                 </div>
                                 <div class="allocation-card">
                                     <strong class="allocation-title" title="{{ request.offered_allocation.activityRealization.activity.name }}">
@@ -577,7 +575,7 @@ h1 i {
                             <!-- Desired Slot -->
                             <div class="trade-slot">
                                 <div class="trade-slot-label">
-                                    <i class="fas fa-bullseye"></i> Looking For
+                                    <i class="fas fa-bullseye"></i> {% trans "Looking For" %}
                                 </div>
                                 {% if request.desired_allocation %}
                                     <div class="allocation-card">
@@ -599,29 +597,29 @@ h1 i {
                                     </div>
                                 {% else %}
                                     <div class="allocation-card flexible-requirements">
-                                        <em><i class="fas fa-magic"></i> Flexible Requirements</em>
+                                        <em><i class="fas fa-magic"></i> {% trans "Flexible Requirements" %}</em>
                                         {% if request.desired_day %}
                                             <div class="allocation-detail">
                                                 <i class="fas fa-calendar-day"></i>
-                                                <span>Preferred day: {{ request.get_desired_day_display }}</span>
+                                                <span>{% trans "Preferred day" %}: {{ request.get_desired_day_display }}</span>
                                             </div>
                                         {% endif %}
                                         {% if request.desired_start_time %}
                                             <div class="allocation-detail">
                                                 <i class="fas fa-clock"></i>
-                                                <span>Preferred time: {{ request.desired_start_time|format_time }}</span>
+                                                <span>{% trans "Preferred time" %}: {{ request.desired_start_time|format_time }}</span>
                                             </div>
                                         {% endif %}
                                         {% if request.desired_duration %}
                                             <div class="allocation-detail">
                                                 <i class="fas fa-hourglass-half"></i>
-                                                <span>Duration: {{ request.desired_duration|format_duration }}</span>
+                                                <span>{% trans "Duration" %}: {{ request.desired_duration|format_duration }}</span>
                                             </div>
                                         {% endif %}
                                         {% if not request.desired_day and not request.desired_start_time and not request.desired_duration %}
                                             <div class="allocation-detail" style="color: #27ae60; font-weight: 600;">
                                                 <i class="fas fa-check-circle"></i>
-                                                <span>Any suitable time slot</span>
+                                                <span>{% trans "Any suitable time slot" %}</span>
                                             </div>
                                         {% endif %}
                                     </div>
@@ -631,7 +629,7 @@ h1 i {
                         
                         {% if request.reason %}
                         <div class="trade-reason">
-                            <strong><i class="fas fa-comment-dots"></i> Reason:</strong>
+                            <strong><i class="fas fa-comment-dots"></i> {% trans "Reason" %}:</strong>
                             <div>{{ request.reason }}</div>
                         </div>
                         {% endif %}
@@ -640,7 +638,7 @@ h1 i {
                         <div class="trade-matched">
                             <i class="fas fa-handshake"></i>
                             <div>
-                                <strong>Matched with:</strong>
+                                <strong>{% trans "Matched with" %}:</strong>
                                 <a href="{% url 'trade_request_detail' timetable_slug request.matched_with.pk %}">
                                     {{ request.matched_with.requesting_teacher }}
                                 </a>
@@ -651,12 +649,12 @@ h1 i {
                     
                     <div class="trade-card-actions">
                         <a href="{% url 'trade_request_detail' timetable_slug request.pk %}" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-eye"></i> View Details
+                            <i class="fas fa-eye"></i> {% trans "View Details" %}
                         </a>
                         
                         {% if user.teacher == request.requesting_teacher and request.status in 'OPEN,MATCHED' %}
                         <a href="{% url 'cancel_trade_request' timetable_slug request.pk %}" class="btn btn-sm btn-outline-danger">
-                            <i class="fas fa-times"></i> Cancel
+                            <i class="fas fa-times"></i> {% trans "Cancel" %}
                         </a>
                         {% endif %}
                     </div>
@@ -665,11 +663,8 @@ h1 i {
             {% else %}
                 <div class="empty-state">
                     <i class="fas fa-inbox"></i>
-                    <h4>No Trade Requests Found</h4>
-                    <p>No trade requests match your current filters. Try adjusting your search criteria.</p>
-                    <a href="{% url 'create_trade_request' timetable_slug %}" class="btn btn-success">
-                        <i class="fas fa-plus"></i> Create Your First Trade Request
-                    </a>
+                    <h4>{% trans "No Trade Requests Found" %}</h4>
+                    <p>{% trans "No trade requests match your current filters. Try adjusting your search criteria." %}</p>
                 </div>
             {% endif %}
         </div>

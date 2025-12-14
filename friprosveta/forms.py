@@ -99,9 +99,6 @@ class ActivityLongRequirementsForm(forms.ModelForm):
 
 
 class ActivityMinimalForm(forms.ModelForm):
-    cycles_on_site = forms.IntegerField(
-        min_value=0, error_messages={"min_value": "Vnesite nenegativno celo število"}
-    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -157,6 +154,7 @@ class ActivityMinimalForm(forms.ModelForm):
             "lecture_type",
             "subject",
             "required_rooms",
+            "cycles_on_site",
         )
         widgets = {
             "requirements": FilteredSelectMultiple("Zahteve", is_stacked=False),

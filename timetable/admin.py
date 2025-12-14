@@ -106,7 +106,9 @@ class TimetableSetAdmin(ImportExportActionModelAdmin):
 
 
 class TimetableAdmin(ImportExportActionModelAdmin):
-    pass
+    list_display = ('name', 'slug', 'public', 'trading_enabled', 'start', 'end')
+    list_editable = ('public', 'trading_enabled')
+    list_filter = ('public', 'trading_enabled', 'start', 'end')
 
 
 class PreferenceAdmin(ImportExportActionModelAdmin):
