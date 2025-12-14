@@ -6,7 +6,7 @@ from django.forms import widgets
 from django.forms.boundfield import BoundField
 from django.forms.utils import ErrorList
 from django.utils.safestring import mark_safe
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, gettext_lazy
 
 from timetable.models import (
     PREFERENCELEVELS,
@@ -1375,46 +1375,50 @@ class TradeRequestSearchForm(forms.Form):
     """Form for searching and filtering trade requests."""
     
     STATUS_CHOICES = [
-        ('', '--- Any Status ---'),
-        ('OPEN', 'Open'),
-        ('MATCHED', 'Matched'),
-        ('PENDING_APPROVAL', 'Pending Approval'),
-        ('APPROVED', 'Approved'),
-        ('REJECTED', 'Rejected'),
-        ('CANCELLED', 'Cancelled'),
-        ('EXPIRED', 'Expired'),
+        ('', gettext_lazy('--- Any Status ---')),
+        ('OPEN', gettext_lazy('Open')),
+        ('MATCHED', gettext_lazy('Matched')),
+        ('PENDING_APPROVAL', gettext_lazy('Pending Approval')),
+        ('APPROVED', gettext_lazy('Approved')),
+        ('REJECTED', gettext_lazy('Rejected')),
+        ('CANCELLED', gettext_lazy('Cancelled')),
+        ('EXPIRED', gettext_lazy('Expired')),
     ]
     
     status = forms.ChoiceField(
         choices=STATUS_CHOICES,
         required=False,
+        label=gettext_lazy('Status'),
         widget=forms.Select(attrs={'class': 'form-control'})
     )
     
     teacher = forms.ModelChoiceField(
         queryset=Teacher.objects.all(),
         required=False,
-        empty_label="--- Any Teacher ---",
+        label=gettext_lazy('Teacher'),
+        empty_label=gettext_lazy("--- Any Teacher ---"),
         widget=forms.Select(attrs={'class': 'form-control'})
     )
     
     day = forms.ChoiceField(
-        choices=[('', '--- Any Day ---')] + list(WEEKDAYS),
+        choices=[('', gettext_lazy('--- Any Day ---'))] + list(WEEKDAYS),
         required=False,
+        label=gettext_lazy('Day'),
         widget=forms.Select(attrs={'class': 'form-control'})
     )
     
     search = forms.CharField(
         required=False,
+        label=gettext_lazy('Search'),
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Search in activity names, reasons...'
+            'placeholder': gettext_lazy('Search in activity names, reasons...')
         })
     )
     
     relevant_to_me = forms.BooleanField(
         required=False,
-        label='Show requests I can fulfill',
-        help_text='Show only requests where I teach the desired time slot',
+        label=gettext_lazy('Show requests I can fulfill'),
+        help_text=gettext_lazy('Show only requests where I teach the desired time slot'),
         widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
     )

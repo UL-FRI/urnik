@@ -494,6 +494,13 @@ def trade_request_list(request, timetable_slug=None):
     if timetable_slug:
         timetable = get_object_or_404(Timetable, slug=timetable_slug)
     
+    # Check if trading is disabled
+    if timetable and not timetable.trading_enabled:
+        return render(request, 'timetable/trade_requests/trading_disabled.html', {
+            'timetable': timetable,
+            'timetable_slug': timetable_slug,
+        })
+    
     form = TradeRequestSearchForm(request.GET)
     trade_requests = TradeRequest.objects.select_related(
         'requesting_teacher__user',
@@ -574,6 +581,13 @@ def my_trade_requests(request, timetable_slug=None):
     timetable = None
     if timetable_slug:
         timetable = get_object_or_404(Timetable, slug=timetable_slug)
+    
+    # Check if trading is disabled
+    if timetable and not timetable.trading_enabled:
+        return render(request, 'timetable/trade_requests/trading_disabled.html', {
+            'timetable': timetable,
+            'timetable_slug': timetable_slug,
+        })
     
     # My requests (requests I created)
     my_requests = TradeRequest.objects.filter(

@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% load static %}
 {% load timetable_extras %}
+{% load i18n %}
 
-{% block title %}Trade Request Details{% endblock %}
+{% block title %}{% trans "Trade Request Details" %}{% endblock %}
 
 {% block media %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -314,10 +315,10 @@
     <div class="detail-container">
         <!-- Header -->
         <div class="detail-header status-{{ trade_request.status|lower }}">
-            <h2>Trade Request #{{ trade_request.pk }}</h2>
+            <h2>{% trans "Trade Request" %} #{{ trade_request.pk }}</h2>
             <div class="request-meta">
-                Requested by <strong>{{ trade_request.requesting_teacher }}</strong> • 
-                Created {{ trade_request.created_at|date:"M d, Y H:i" }}
+                {% trans "Requested by" %} <strong>{{ trade_request.requesting_teacher }}</strong> • 
+                {% trans "Created" %} {{ trade_request.created_at|date:"M d, Y H:i" }}
                 {% if trade_request.expires_at %} • Expires {{ trade_request.expires_at|date:"M d, Y" }}{% endif %}
             </div>
             <span class="status-badge status-{{ trade_request.status|lower }}">
@@ -327,11 +328,11 @@
 
         <div class="detail-body">
             <!-- Trade Comparison -->
-            <div class="section-title">Trade Details</div>
+            <div class="section-title">{% trans "Trade Details" %}</div>
             
             <div class="trade-comparison">
                 <div class="allocation-card">
-                    <h3><i class="fas fa-gift"></i> They're Offering</h3>
+                    <h3><i class="fas fa-gift"></i> {% trans "They're Offering" %}</h3>
                     <div class="allocation-content">
                         <span class="activity-name">{{ trade_request.offered_allocation.activityRealization.activity.name }}</span>
                         <div class="detail-line">
@@ -354,7 +355,7 @@
                 <div class="arrow-separator">→</div>
                 
                 <div class="allocation-card">
-                    <h3><i class="fas fa-star"></i> They Want</h3>
+                    <h3><i class="fas fa-star"></i> {% trans "They Want" %}</h3>
                     <div class="allocation-content">
                         {% if trade_request.desired_allocation %}
                             <span class="activity-name">{{ trade_request.desired_allocation.activityRealization.activity.name }}</span>
@@ -407,8 +408,8 @@
             <div class="match-info">
                 <h3><i class="fas fa-handshake"></i> Matched Trade</h3>
                 <p>
-                    This request has been matched with <span class="matched-teacher">{{ trade_request.matched_with.requesting_teacher }}</span>.
-                    <a href="{% url 'trade_request_detail' timetable_slug=timetable_slug pk=trade_request.matched_with.pk %}">View their request</a>
+                    {% trans "This request has been matched with" %} <span class="matched-teacher">{{ trade_request.matched_with.requesting_teacher }}</span>.
+                    <a href="{% url 'trade_request_detail' timetable_slug=timetable_slug pk=trade_request.matched_with.pk %}">{% trans "View their request" %}</a>
                 </p>
             </div>
             {% endif %}
@@ -472,14 +473,14 @@
 
             <!-- Timeline -->
             <div class="section-title">
-                <i class="fas fa-history"></i> Timeline
+                <i class="fas fa-history"></i> {% trans "Timeline" %}
             </div>
             
             <div class="allocation-card" style="margin-bottom: 20px;">
                 <div class="detail-line">
                     <i class="fas fa-plus-circle" style="color: #667eea;"></i>
                     <div>
-                        <strong>Request Created</strong><br>
+                        <strong>{% trans "Request Created" %}</strong><br>
                         <small class="text-muted">{{ trade_request.created_at|date:"M d, Y H:i" }}</small>
                     </div>
                 </div>
@@ -488,8 +489,8 @@
                 <div class="detail-line">
                     <i class="fas fa-link" style="color: #ffc107;"></i>
                     <div>
-                        <strong>Matched with {{ trade_request.matched_with.requesting_teacher }}</strong><br>
-                        <small class="text-muted">Automatic matching system</small>
+                        <strong>{% trans "Matched with" %} {{ trade_request.matched_with.requesting_teacher }}</strong><br>
+                        <small class="text-muted">{% trans "Automatic matching system" %}</small>
                     </div>
                 </div>
                 {% endif %}
@@ -500,9 +501,9 @@
                     <div>
                         <strong>{{ trade_request.get_status_display }}</strong><br>
                         <small class="text-muted">
-                            By {{ trade_request.approved_by }} on {{ trade_request.approval_date|date:"M d, Y H:i" }}
+                            By {{ trade_request.approved_by }} {% trans "on" %} {{ trade_request.approval_date|date:"M d, Y H:i" }}
                             {% if trade_request.approval_notes %}
-                            <br>Note: {{ trade_request.approval_notes }}
+                            <br>{% trans "Note" %}: {{ trade_request.approval_notes }}
                             {% endif %}
                         </small>
                     </div>
@@ -514,22 +515,22 @@
             <div class="button-row">
                 {% if timetable_slug %}
                 <a href="{% url 'my_trade_requests' timetable_slug %}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Back to My Requests
+                    <i class="fas fa-arrow-left"></i> {% trans "Back to My Requests" %}
                 </a>
                 {% else %}
                 <a href="{% url 'my_trade_requests' trade_request.offered_allocation.timetable.slug %}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Back to My Requests
+                    <i class="fas fa-arrow-left"></i> {% trans "Back to My Requests" %}
                 </a>
                 {% endif %}
                 
                 {% if user.teacher == trade_request.requesting_teacher and trade_request.status in 'OPEN,MATCHED' %}
                     {% if timetable_slug %}
-                    <a href="{% url 'cancel_trade_request' timetable_slug trade_request.pk %}" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel this trade request?');">
-                        <i class="fas fa-times"></i> Cancel Request
+                    <a href="{% url 'cancel_trade_request' timetable_slug trade_request.pk %}" class="btn btn-danger" onclick="return confirm('{% trans "Are you sure you want to cancel this trade request?" %}');">
+                        <i class="fas fa-times"></i> {% trans "Cancel Request" %}
                     </a>
                     {% else %}
-                    <a href="{% url 'cancel_trade_request' trade_request.offered_allocation.timetable.slug trade_request.pk %}" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel this trade request?');">
-                        <i class="fas fa-times"></i> Cancel Request
+                    <a href="{% url 'cancel_trade_request' trade_request.offered_allocation.timetable.slug trade_request.pk %}" class="btn btn-danger" onclick="return confirm('{% trans "Are you sure you want to cancel this trade request?" %}');">
+                        <i class="fas fa-times"></i> {% trans "Cancel Request" %}
                     </a>
                     {% endif %}
                 {% endif %}

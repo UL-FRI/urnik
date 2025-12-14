@@ -30,6 +30,7 @@ RUN apt update \
   libpq-dev gcc \
   pwgen \
   fish \
+  gettext \
   && rm -rf /var/lib/apt/lists/*
 
 

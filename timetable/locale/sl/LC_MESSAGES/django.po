@@ -1,0 +1,566 @@
+# Slovenian translations for timetable app.
+# Copyright (C) 2025
+# This file is distributed under the same license as the timetable package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-12-14 12:00+0100\n"
+"PO-Revision-Date: 2025-12-14 12:00+0100\n"
+"Last-Translator: \n"
+"Language-Team: Slovenian\n"
+"Language: sl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n%100==4 ? 2 : 3);\n"
+
+# Trade Request Status
+msgid "OPEN"
+msgstr "Odprta"
+
+msgid "MATCHED"
+msgstr "Ujemanje"
+
+msgid "PENDING_APPROVAL"
+msgstr "Čaka na odobritev"
+
+msgid "APPROVED"
+msgstr "Odobrena"
+
+msgid "REJECTED"
+msgstr "Zavrnjena"
+
+msgid "CANCELLED"
+msgstr "Preklicana"
+
+msgid "EXPIRED"
+msgstr "Potekla"
+
+# Trade Requests Page
+msgid "My Trade Requests"
+msgstr "Moje zahteve za menjavo"
+
+msgid "Trade Requests"
+msgstr "Zahteve za menjavo"
+
+msgid "All Requests"
+msgstr "Vse zahteve"
+
+msgid "Filter by Status"
+msgstr "Filtriraj po statusu"
+
+msgid "All Statuses"
+msgstr "Vsi statusi"
+
+msgid "Total Requests"
+msgstr "Zahtev"
+
+msgid "Open Requests"
+msgstr "Odprtih zahtev"
+
+msgid "Matched"
+msgstr "Ujemanj"
+
+msgid "Pending Approval"
+msgstr "Čaka na odobritev"
+
+msgid "Approved"
+msgstr "Odobreno"
+
+msgid "Rejected"
+msgstr "Zavrnjeno"
+
+msgid "Requests You Can Fulfill"
+msgstr "Zahteve, ki jih lahko izpolnite"
+
+msgid "Awaiting Admin Approval"
+msgstr "Čaka na odobritev administratorja"
+
+msgid "You're offering"
+msgstr "Ponujate"
+
+msgid "You want"
+msgstr "Želite"
+
+msgid "Accept Trade"
+msgstr "Sprejmi menjavo"
+
+msgid "Reject"
+msgstr "Zavrni"
+
+msgid "You accepted this trade!"
+msgstr "Sprejeli ste to menjavo!"
+
+msgid "Another teacher accepted this"
+msgstr "Drug učitelj je sprejel to"
+
+msgid "Trade Rejected by Administrator"
+msgstr "Menjavo je zavrnil administrator"
+
+msgid "Rejected on"
+msgstr "Zavrnjeno dne"
+
+msgid "Rejected Trade Requests"
+msgstr "Zavrnjene zahteve za menjavo"
+
+msgid "Approved Trade Requests"
+msgstr "Odobrene zahteve za menjavo"
+
+msgid "Other"
+msgstr "Drugo"
+
+msgid "View Request"
+msgstr "Poglej zahtevo"
+
+msgid "Create a counter-request to trade your time slot for theirs?"
+msgstr "Ustvari protizahtevo za menjavo vašega termina za njihovega?"
+
+msgid "Manage your allocation trade requests"
+msgstr "Upravljajte vaše zahteve za menjavo terminov"
+
+msgid "Browse All Requests"
+msgstr "Prebrskaj vse zahteve"
+
+msgid "My Requests"
+msgstr "Moje zahteve"
+
+msgid "These teachers want time slots that you currently teach. You can help them!"
+msgstr "Ti učitelji želijo termine, ki jih trenutno poučujete. Lahko jim pomagate!"
+
+msgid "wants your time slot"
+msgstr "želi vaš termin"
+
+msgid "Open"
+msgstr "Odprta"
+
+msgid "They're offering"
+msgstr "Ponuja"
+
+msgid "They want (you teach this!)"
+msgstr "Želij (vi to poučujete!)"
+
+msgid "Awaiting Colleague Response"
+msgstr "Čaka na odgovor kolega"
+
+msgid "Offered"
+msgstr "Ponudil"
+
+msgid "Got"
+msgstr "Dobil"
+
+msgid "Wanted"
+msgstr "Želel"
+
+msgid "Details"
+msgstr "Podrobnosti"
+
+msgid "Rejected by"
+msgstr "Zavrnil"
+
+msgid "Admin Rejection"
+msgstr "Zavrnitev administratorja"
+
+msgid "Flexible"
+msgstr "Prilagodljivo"
+
+msgid "Create New Request"
+msgstr "Ustvari novo zahtevo"
+
+msgid "No trade requests found."
+msgstr "Ni najdenih zahtev za menjavo."
+
+msgid "Requested by"
+msgstr "Zahteval"
+
+msgid "Created"
+msgstr "Ustvarjeno"
+
+msgid "Expires"
+msgstr "Poteče"
+
+msgid "Status"
+msgstr "Stanje"
+
+msgid "They're Offering"
+msgstr "Ponuja"
+
+msgid "They Want"
+msgstr "Želi"
+
+msgid "View Details"
+msgstr "Poglej podrobnosti"
+
+msgid "Cancel Request"
+msgstr "Prekliči zahtevo"
+
+msgid "Cancel"
+msgstr "Prekliči"
+
+msgid "Filter Requests"
+msgstr "Filtriraj zahteve"
+
+msgid "Approval Queue"
+msgstr "Čakalna vrsta za odobritev"
+
+msgid "Offering to Trade"
+msgstr "Ponuja za menjavo"
+
+msgid "Looking For"
+msgstr "Išče"
+
+msgid "Flexible Requirements"
+msgstr "Prilagodljive zahteve"
+
+msgid "Preferred day"
+msgstr "Prednostni dan"
+
+msgid "Preferred time"
+msgstr "Prednostni čas"
+
+msgid "Any suitable time slot"
+msgstr "Katerikoli primeren termin"
+
+msgid "Matched with"
+msgstr "Ujemanje z"
+
+msgid "No Trade Requests Found"
+msgstr "Ni najdenih zahtev za menjavo"
+
+msgid "No trade requests match your current filters. Try adjusting your search criteria."
+msgstr "Nobena zahteva za menjavo ne ustreza vašim filtrom. Poskusite prilagoditi iskalna merila."
+
+# Trade Request Detail Page
+msgid "Trade Request Details"
+msgstr "Podrobnosti zahteve za menjavo"
+
+msgid "Trade Request"
+msgstr "Zahteva za menjavo"
+
+msgid "Trade Details"
+msgstr "Podrobnosti menjave"
+
+msgid "Their Reason"
+msgstr "Njihov razlog"
+
+msgid "Matched Trade"
+msgstr "Ujeta menjava"
+
+msgid "This request has been matched with"
+msgstr "Ta zahteva je usklajena z"
+
+msgid "View their request"
+msgstr "Poglej njihovo zahtevo"
+
+msgid "This trade was approved by"
+msgstr "To menjavo je odobril"
+
+msgid "on"
+msgstr "dne"
+
+msgid "Note"
+msgstr "Opomba"
+
+msgid "This trade was rejected by"
+msgstr "To menjavo je zavrnil"
+
+msgid "Reason"
+msgstr "Razlog"
+
+msgid "Timeline"
+msgstr "Časovnica"
+
+msgid "Request Created"
+msgstr "Zahteva ustvarjena"
+
+msgid "Automatic matching system"
+msgstr "Avtomatski sistem ujemanja"
+
+msgid "Back to My Requests"
+msgstr "Nazaj na moje zahteve"
+
+msgid "Are you sure you want to cancel this trade request?"
+msgstr "Ali ste prepričani, da želite preklicati to zahtevo za menjavo?"
+
+# Potential Matches
+msgid "Potential Matches"
+msgstr "Možna ujemanja"
+
+msgid "We found compatible trade requests that might work for you:"
+msgstr "Našli smo združljive zahteve za menjavo, ki bi vam lahko ustrezale:"
+
+msgid "wants your"
+msgstr "želi vaš"
+
+msgid "and offers"
+msgstr "in ponuja"
+
+msgid "Compatible"
+msgstr "Združljivo"
+
+# Allocation Details
+msgid "Duration"
+msgstr "Trajanje"
+
+msgid "hours"
+msgstr "ur"
+
+msgid "hour"
+msgstr "ura"
+
+msgid "Room"
+msgstr "Prostor"
+
+msgid "Day"
+msgstr "Dan"
+
+msgid "Time"
+msgstr "Čas"
+
+# Days of week
+msgid "Monday"
+msgstr "Ponedeljek"
+
+msgid "Tuesday"
+msgstr "Torek"
+
+msgid "Wednesday"
+msgstr "Sreda"
+
+msgid "Thursday"
+msgstr "Četrtek"
+
+msgid "Friday"
+msgstr "Petek"
+
+msgid "Saturday"
+msgstr "Sobota"
+
+msgid "Sunday"
+msgstr "Nedelja"
+
+# Create Trade Request
+msgid "Create Trade Request"
+msgstr "Ustvari zahtevo za menjavo"
+
+msgid "Select Allocation to Offer"
+msgstr "Izberi termin za ponudbo"
+
+msgid "What you want in exchange"
+msgstr "Kaj želite v zameno"
+
+msgid "Specific Allocation"
+msgstr "Določen termin"
+
+msgid "Choose from your allocations"
+msgstr "Izberi med svojimi termini"
+
+msgid "Specify what you're looking for"
+msgstr "Opišite, kaj iščete"
+
+msgid "Select the allocation you want to offer"
+msgstr "Izberite termin, ki ga želite ponuditi"
+
+msgid "Choose allocation"
+msgstr "Izberi termin"
+
+msgid "No allocations available"
+msgstr "Ni razpoložljivih terminov"
+
+msgid "Select the allocation you want"
+msgstr "Izberite termin, ki ga želite"
+
+msgid "Select day of week"
+msgstr "Izberi dan v tednu"
+
+msgid "Any day"
+msgstr "Katerikoli dan"
+
+msgid "Start time (optional)"
+msgstr "Začetni čas (neobvezno)"
+
+msgid "End time (optional)"
+msgstr "Končni čas (neobvezno)"
+
+msgid "Select classroom (optional)"
+msgstr "Izberi prostor (neobvezno)"
+
+msgid "Any classroom"
+msgstr "Katerikoli prostor"
+
+msgid "Why do you want this trade?"
+msgstr "Zakaj želite to menjavo?"
+
+msgid "Optional: explain your reason"
+msgstr "Neobvezno: pojasnite vaš razlog"
+
+msgid "Submit Trade Request"
+msgstr "Oddaj zahtevo za menjavo"
+
+msgid "Response to trade request"
+msgstr "Odgovor na zahtevo za menjavo"
+
+# Messages
+msgid "Trade request created successfully!"
+msgstr "Zahteva za menjavo uspešno ustvarjena!"
+
+msgid "Trade request cancelled."
+msgstr "Zahteva za menjavo preklicana."
+
+msgid "Trade request approved successfully!"
+msgstr "Zahteva za menjavo uspešno odobrena!"
+
+msgid "Trade request rejected."
+msgstr "Zahteva za menjavo zavrnjena."
+
+msgid "You don't have permission to perform this action."
+msgstr "Nimate dovoljenja za izvedbo tega dejanja."
+
+msgid "Trade request not found."
+msgstr "Zahteva za menjavo ni najdena."
+
+# Confirmation Pages
+msgid "Approve Trade Request"
+msgstr "Odobri zahtevo za menjavo"
+
+msgid "You are about to approve this trade request:"
+msgstr "Nameravate odobriti to zahtevo za menjavo:"
+
+msgid "You will give"
+msgstr "Boste dali"
+
+msgid "You will receive"
+msgstr "Boste prejeli"
+
+msgid "This action will:"
+msgstr "To dejanje bo:"
+
+msgid "Create new allocations for both parties"
+msgstr "Ustvarilo nove termine za obe strani"
+
+msgid "Mark both trade requests as approved"
+msgstr "Označilo obe zahtevi za menjavo kot odobreni"
+
+msgid "Approval notes (optional)"
+msgstr "Opombe odobritve (neobvezno)"
+
+msgid "Add any notes about this approval"
+msgstr "Dodajte morebitne opombe o odobritvi"
+
+msgid "Confirm Approval"
+msgstr "Potrdi odobritev"
+
+msgid "Reject Trade Request"
+msgstr "Zavrni zahtevo za menjavo"
+
+msgid "You are about to reject this trade request:"
+msgstr "Nameravate zavrniti to zahtevo za menjavo:"
+
+msgid "Your colleague"
+msgstr "Vaš kolega"
+
+msgid "wants to trade"
+msgstr "želi zamenjati"
+
+msgid "with you for your"
+msgstr "z vami za vaš"
+
+msgid "Please provide a reason for rejection"
+msgstr "Prosimo, navedite razlog za zavrnitev"
+
+msgid "Explain why you're rejecting this trade"
+msgstr "Pojasnite, zakaj zavračate to menjavo"
+
+msgid "Confirm Rejection"
+msgstr "Potrdi zavrnitev"
+
+msgid "Approved via web interface"
+msgstr "Odobreno prek spletnega vmesnika"
+
+msgid "--- Any Status ---"
+msgstr "--- Katerikoli status ---"
+
+msgid "--- Any Teacher ---"
+msgstr "--- Katerikoli učitelj ---"
+
+msgid "--- Any Day ---"
+msgstr "--- Katerikoli dan ---"
+
+msgid "Search in activity names, reasons..."
+msgstr "Išči v imenih aktivnosti, razlogih..."
+
+msgid "Show requests I can fulfill"
+msgstr "Prikaži zahteve, ki jih lahko izpolnim"
+
+msgid "Show only requests where I teach the desired time slot"
+msgstr "Prikaži samo zahteve, kjer poučujem želeni termin"
+
+msgid "Teacher"
+msgstr "Učitelj"
+
+msgid "Search"
+msgstr "Iskanje"
+
+# Reject confirmation page
+msgid "Are you sure you want to reject this trade request?"
+msgstr "Ali ste prepričani, da želite zavrniti to zahtevo za menjavo?"
+
+#, python-format
+msgid ""
+"This action will notify <span class=\"teacher-name\">%(teacher)s</span> that "
+"you've declined their offer."
+msgstr ""
+"To dejanje bo obvestilo <span class=\"teacher-name\">%(teacher)s</span>, da "
+"ste zavrnili njihovo ponudbo."
+
+msgid "They Want (Your Slot)"
+msgstr "Želi (vaš termin)"
+
+msgid "Flexible - any suitable time slot"
+msgstr "Prilagodljivo - katerikoli primeren termin"
+
+msgid "Reason for Rejection (Optional)"
+msgstr "Razlog za zavrnitev (neobvezno)"
+
+#, python-format
+msgid "Let %(teacher)s know why you're declining..."
+msgstr "Sporočite %(teacher)s, zakaj zavračate..."
+
+#, python-format
+msgid "This message will be visible to %(teacher)s."
+msgstr "To sporočilo bo vidno %(teacher)s."
+
+# Trading disabled page
+msgid "Trading Disabled"
+msgstr "Menjava onemogočena"
+
+msgid "Trade requests are currently not available for this timetable"
+msgstr "Zahteve za menjavo trenutno niso na voljo za ta urnik"
+
+msgid "Why is trading disabled?"
+msgstr "Zakaj je menjava onemogočena?"
+
+msgid "The administrator has temporarily disabled the ability to create and manage trade requests for this timetable."
+msgstr "Skrbnik je začasno onemogočil možnost ustvarjanja in upravljanja zahtev za menjavo za ta urnik."
+
+msgid "What you can still do:"
+msgstr "Kaj še lahko počnete:"
+
+msgid "View your current timetable"
+msgstr "Oglejte si svoj trenutni urnik"
+
+msgid "Check room availability"
+msgstr "Preverite razpoložljivost prostorov"
+
+msgid "Access your preferences"
+msgstr "Dostopajte do svojih nastavitev"
+
+msgid "Contact your colleagues directly"
+msgstr "Obrnite se neposredno na kolege"
+
+msgid "If you have questions about when trading will be re-enabled, please contact your timetable administrator."
+msgstr "Če imate vprašanja o tem, kdaj bo menjava ponovno omogočena, se obrnite na skrbnika urnika."
+
+msgid "Back to Timetable"
+msgstr "Nazaj na urnik"
