@@ -366,7 +366,7 @@ class TradeRequest(models.Model):
     # Request details
     reason = models.TextField(
         blank=True,
-        help_text="Optional reason for the trade request"
+        help_text=gettext_lazy("Optional reason for the trade request")
     )
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(

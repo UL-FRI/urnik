@@ -18,44 +18,72 @@
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
+.stats-bar {
+    display: flex;
+    gap: 20px;
+    justify-content: space-between;
+    margin-bottom: 25px;
+}
+.stat-card {
+    flex: 1;
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 18px 0 12px 0;
+    text-align: center;
+    margin: 0 8px;
+}
+.stat-number {
+    font-size: 2.2em;
+    font-weight: bold;
+    margin-bottom: 4px;
+    color: #007bff;
+}
+.stat-label {
+    color: #6c757d;
+    font-size: 0.95em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
 .match-card {
     background: #fff;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 25px;
-    margin-bottom: 25px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: 1.5px solid #b3c6e0;
+    border-radius: 14px;
+    padding: 32px 28px 28px 28px;
+    margin-bottom: 32px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08);
 }
 
 .trade-summary {
     background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
     border-radius: 8px;
-    padding: 20px;
+    padding: 20px 24px;
     margin-bottom: 20px;
+    font-size: 1.1em;
+    font-weight: 500;
 }
 
 .teacher-section {
-    border: 1px solid #e9ecef;
-    border-radius: 5px;
-    padding: 15px;
-    margin-bottom: 15px;
-}
-
-.teacher-section.teacher-1 {
-    border-left: 4px solid #007bff;
-}
-
-.teacher-section.teacher-2 {
-    border-left: 4px solid #28a745;
-}
-
-.allocation-details {
+    border: 1.5px solid #e9ecef;
+    border-radius: 7px;
+    padding: 18px 18px 12px 18px;
+    margin-bottom: 18px;
     background: #f8f9fa;
-    padding: 12px;
-    border-radius: 4px;
-    margin-top: 10px;
 }
-
+.teacher-section.teacher-1 {
+    border-left: 5px solid #007bff;
+}
+.teacher-section.teacher-2 {
+    border-left: 5px solid #28a745;
+}
+.allocation-details {
+    background: #e3f2fd;
+    padding: 14px;
+    border-radius: 5px;
+    margin-top: 10px;
+    font-size: 1em;
+}
 .teacher-info {
     display: flex;
     align-items: center;
@@ -160,6 +188,251 @@
     background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
     color: white;
 }
+/* End of original style block */
+</style>
+{% block final_head %}
+<!-- Add Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</style>
+</style>
+<style>
+/* Balanced Spacing: Reduced margins/paddings for less bloat */
+.queue-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 18px 0 24px 0 !important;
+}
+.queue-header {
+    background: #f8fafc !important;
+    border-radius: 10px !important;
+    padding: 22px 22px 16px 22px !important;
+    margin-bottom: 22px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+}
+.queue-container .stats-bar {
+    display: flex !important;
+    gap: 18px !important;
+    justify-content: space-between !important;
+    margin-bottom: 22px !important;
+    background: #f4f8fb !important;
+    border-radius: 10px !important;
+    padding: 14px 8px !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03) !important;
+}
+.queue-container .stat-card {
+    flex: 1 1 0 !important;
+    background: linear-gradient(135deg, #e3f2fd 0%, #f8fafc 100%) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03) !important;
+    padding: 14px 0 10px 0 !important;
+    text-align: center !important;
+    margin: 0 6px !important;
+}
+.queue-container .stat-number {
+    font-size: 2.1em !important;
+    font-weight: bold !important;
+    margin-bottom: 4px !important;
+    color: #007bff !important;
+}
+.queue-container .stat-label {
+    color: #6c757d !important;
+    font-size: 0.98em !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+}
+.queue-container h3 {
+    margin-top: 28px !important;
+    margin-bottom: 14px !important;
+    font-size: 1.22em !important;
+    color: #2c3e50 !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5px !important;
+}
+.queue-container .match-card {
+    background: #fff !important;
+    border: 1.5px solid #e3eaf3 !important;
+    border-radius: 14px !important;
+    padding: 22px 18px 18px 18px !important;
+    margin-bottom: 22px !important;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.04) !important;
+    transition: box-shadow 0.2s;
+}
+.queue-container .match-card:hover {
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08) !important;
+}
+.queue-container .trade-summary {
+    background: #f4f8fb !important;
+    border-radius: 8px !important;
+    padding: 14px 14px !important;
+    margin-bottom: 14px !important;
+    font-size: 1.08em !important;
+    font-weight: 500 !important;
+}
+.queue-container .teacher-section {
+    border: 1.5px solid #e9ecef !important;
+    border-radius: 8px !important;
+    padding: 12px 10px 8px 10px !important;
+    margin-bottom: 10px !important;
+    background: #f8f9fa !important;
+}
+.queue-container .allocation-details {
+    background: #e3f2fd !important;
+    padding: 10px !important;
+    border-radius: 5px !important;
+    margin-top: 7px !important;
+    font-size: 1em !important;
+}
+.queue-container .approval-actions {
+    background: #f8f9fa !important;
+    border-radius: 6px !important;
+    padding: 14px 10px !important;
+    margin-top: 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    flex-wrap: wrap !important;
+}
+.queue-container .btn {
+    min-width: 120px !important;
+    font-size: 1em !important;
+    padding: 8px 18px !important;
+    border-radius: 6px !important;
+    margin-right: 6px !important;
+}
+.queue-container .btn:last-child {
+    margin-right: 0 !important;
+}
+.queue-container .btn-approve {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    color: white !important;
+    border: none !important;
+}
+.queue-container .btn-reject {
+    background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%) !important;
+    color: white !important;
+    border: none !important;
+}
+.queue-container .btn-outline-primary {
+    border: 1.5px solid #007bff !important;
+    color: #007bff !important;
+    background: #fff !important;
+}
+.queue-container .btn-outline-primary:hover {
+    background: #e3f2fd !important;
+}
+.queue-container .alert-success {
+    margin-top: 8px !important;
+    margin-bottom: 0 !important;
+    font-size: 1.03em !important;
+    border-radius: 6px !important;
+    padding: 8px 10px !important;
+}
+.queue-container .row {
+    margin-left: -6px !important;
+    margin-right: -6px !important;
+    margin-bottom: 0 !important;
+}
+.queue-container .col-md-5, .queue-container .col-md-2 {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+}
+.queue-container .teacher-info {
+    margin-bottom: 8px !important;
+}
+.queue-container .teacher-avatar {
+    width: 44px !important;
+    height: 44px !important;
+    font-size: 1em !important;
+    margin-right: 8px !important;
+}
+.queue-container .empty-queue {
+    text-align: center !important;
+    padding: 36px 10px !important;
+    color: #6c757d !important;
+    background: #f8fafc !important;
+    border-radius: 10px !important;
+    margin-top: 22px !important;
+}
+</style>
+</style>
+</style>
+{% endblock %}
+}
+.queue-container .trade-summary {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%) !important;
+    border-radius: 8px !important;
+    padding: 20px 24px !important;
+    margin-bottom: 20px !important;
+    font-size: 1.1em !important;
+    font-weight: 500 !important;
+}
+.queue-container .teacher-section {
+    border: 1.5px solid #e9ecef !important;
+    border-radius: 7px !important;
+    padding: 18px 18px 12px 18px !important;
+    margin-bottom: 18px !important;
+    background: #f8f9fa !important;
+}
+.queue-container .teacher-section.teacher-1 {
+    border-left: 5px solid #007bff !important;
+}
+.queue-container .teacher-section.teacher-2 {
+    border-left: 5px solid #28a745 !important;
+}
+.queue-container .allocation-details {
+    background: #e3f2fd !important;
+    padding: 14px !important;
+    border-radius: 5px !important;
+    margin-top: 10px !important;
+    font-size: 1em !important;
+}
+.queue-container .alert-success {
+    font-size: 1em !important;
+    border: 2px solid #28a745 !important;
+    background: #e8f5e9 !important;
+    color: #218838 !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+}
+.queue-container .btn-approve, .queue-container .btn-reject {
+    font-size: 1.1em !important;
+    padding: 12px 28px !important;
+}
+.queue-container .btn-approve {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    border: none !important;
+    color: white !important;
+    border-radius: 5px !important;
+    font-weight: bold !important;
+}
+.queue-container .btn-approve:hover {
+    background: linear-gradient(135deg, #218838 0%, #1e7e34 100%) !important;
+    color: white !important;
+}
+.queue-container .btn-reject {
+    background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%) !important;
+    border: none !important;
+    color: white !important;
+    border-radius: 5px !important;
+    font-weight: bold !important;
+}
+.queue-container .btn-reject:hover {
+    background: linear-gradient(135deg, #c82333 0%, #bd2130 100%) !important;
+    color: white !important;
+}
+.queue-container .approval-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 18px !important;
+    flex-wrap: wrap !important;
+}
+.queue-container input[type="text"][name="rejection_reason"] {
+    padding: 10px !important;
+    border: 1.5px solid #dc3545 !important;
+    border-radius: 5px !important;
+    width: 260px !important;
+    margin-right: 8px !important;
+}
 </style>
 {% endblock %}
 
@@ -174,25 +447,17 @@
 
         <!-- Statistics -->
         <div class="stats-bar">
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="stat-item">
-                        <div class="stat-number">{{ pending_matches|length|add:pending_requests|length }}</div>
-                        <div class="stat-label">Pending Approval</div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="stat-item">
-                        <div class="stat-number">{{ pending_matches|length }}</div>
-                        <div class="stat-label">Trade Swaps</div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="stat-item">
-                        <div class="stat-number">{{ pending_requests|length }}</div>
-                        <div class="stat-label">Free Slot Moves</div>
-                    </div>
-                </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ pending_matches|length|add:pending_requests|length }}</div>
+                <div class="stat-label"><i class="fas fa-clock"></i> Pending Approval</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ pending_matches|length }}</div>
+                <div class="stat-label"><i class="fas fa-handshake"></i> Trade Swaps</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ pending_requests|length }}</div>
+                <div class="stat-label"><i class="fas fa-arrow-right"></i> Free Slot Moves</div>
             </div>
         </div>
 
@@ -200,13 +465,11 @@
             <!-- Pending Individual Requests (Free Slot Moves) -->
             <h3 class="mt-4 mb-3"><i class="fas fa-arrow-right"></i> Free Slot Moves</h3>
             {% for req in pending_requests %}
-            <div class="match-card">
+            <div class="match-card" style="border-left: 7px solid #28a745;">
                 <div class="trade-summary" style="background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h4><i class="fas fa-arrow-right"></i> Free Slot Move Request #{{ req.pk }}</h4>
-                        <small class="text-muted">
-                            <i class="fas fa-clock"></i> Requested {{ req.created_at|date:"M d, Y H:i" }}
-                        </small>
+                        <h4 style="margin-bottom:0;"><i class="fas fa-arrow-right"></i> Free Slot Move Request #{{ req.pk }}</h4>
+                        <small class="text-muted"><i class="fas fa-clock"></i> Requested {{ req.created_at|date:"M d, Y H:i" }}</small>
                     </div>
                 </div>
 
@@ -258,14 +521,14 @@
                             <h5 style="color: #28a745;"><i class="fas fa-check-circle"></i> Desired Slot (Free)</h5>
                             
                             {% if req.desired_allocation %}
-                                <div class="allocation-details" style="background: #e8f5e9;">
+                                <div class="allocation-details" style="background: #e8f5e9; border-left: 4px solid #28a745;">
                                     <strong>{{ req.desired_allocation.activityRealization.activity.name }}</strong><br>
                                     <i class="fas fa-calendar"></i> {{ req.desired_allocation.get_day_display }} {{ req.desired_allocation.start }}<br>
                                     <i class="fas fa-door-open"></i> {{ req.desired_allocation.classroom }}<br>
                                     <i class="fas fa-clock"></i> {{ req.desired_allocation.duration }}h
                                 </div>
                             {% else %}
-                                <div class="allocation-details" style="background: #e8f5e9;">
+                                <div class="allocation-details" style="background: #e8f5e9; border-left: 4px solid #28a745;">
                                     <em>Time preferences:</em><br>
                                     {% if req.desired_day %}
                                         <i class="fas fa-calendar"></i> Day: {{ req.get_desired_day_display }}<br>
@@ -282,7 +545,7 @@
                                 </div>
                             {% endif %}
                             
-                            <div class="alert alert-success mt-3 mb-0" style="font-size: 0.9em;">
+                            <div class="alert alert-success mt-3 mb-0" style="font-size: 1em; border: 2px solid #28a745; background: #e8f5e9; color: #218838; border-radius: 6px; font-weight: 500;">
                                 <i class="fas fa-info-circle"></i> This slot is free - no swap needed
                             </div>
                         </div>
@@ -290,34 +553,28 @@
                 </div>
 
                 <!-- Approval Actions -->
-                <div class="approval-actions">
+                <div class="approval-actions" style="display: flex; align-items: center; gap: 18px; flex-wrap: wrap;">
                     <form method="POST" style="display: inline;" onsubmit="return confirm('Approve this move? The teacher will be notified.');">
                         {% csrf_token %}
                         <input type="hidden" name="request_id" value="{{ req.pk }}">
                         <input type="hidden" name="action" value="approve">
-                        <button type="submit" class="btn btn-approve">
+                        <button type="submit" class="btn btn-approve" style="font-size: 1.1em; padding: 12px 28px;">
                             <i class="fas fa-check"></i> Approve Move
                         </button>
                     </form>
-                    
-                    <form method="POST" style="display: inline-block; margin-left: 10px;" onsubmit="return confirm('Reject this move request?');">
+                    <form method="POST" style="display: inline-block;" onsubmit="return confirm('Reject this move request?');">
                         {% csrf_token %}
                         <input type="hidden" name="request_id" value="{{ req.pk }}">
                         <input type="hidden" name="action" value="reject">
-                        <div style="display: inline-block; vertical-align: middle;">
-                            <input type="text" name="rejection_reason" placeholder="Reason for rejection (optional)" 
-                                   style="padding: 8px; border: 1px solid #dc3545; border-radius: 4px; width: 300px; margin-right: 5px;">
-                        </div>
-                        <button type="submit" class="btn btn-reject">
+                        <input type="text" name="rejection_reason" placeholder="Reason for rejection (optional)" 
+                               style="padding: 10px; border: 1.5px solid #dc3545; border-radius: 5px; width: 260px; margin-right: 8px;">
+                        <button type="submit" class="btn btn-reject" style="font-size: 1.1em; padding: 12px 28px;">
                             <i class="fas fa-times"></i> Reject Move
                         </button>
                     </form>
-                    
-                    <div class="float-right">
-                        <a href="{% url 'trade_request_detail' timetable_slug req.pk %}" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-eye"></i> View Details
-                        </a>
-                    </div>
+                    <a href="{% url 'trade_request_detail' timetable_slug req.pk %}" class="btn btn-outline-primary btn-sm" style="margin-left:auto;">
+                        <i class="fas fa-eye"></i> View Details
+                    </a>
                 </div>
             </div>
             {% endfor %}

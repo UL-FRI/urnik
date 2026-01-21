@@ -165,6 +165,7 @@ Year is the first part in current studijsko leto 2014/2015 -> 2014."""
             student_id = student["vpisna_stevilka"].strip()
             student_name = student["ime"]
             student_surname = student["priimek"]
+            student_upn = student.get("upn")
             source = student.get("source", None)
             database_student = Student.objects.get_or_create(studentId=student_id)[0]
             # Update name and surname if changed
@@ -175,6 +176,11 @@ Year is the first part in current studijsko leto 2014/2015 -> 2014."""
                 database_student.name = student_name
                 database_student.surname = student_surname
                 database_student.save()
+            if student_upn:
+                student_upn = student_upn.strip()
+                if database_student.upn != student_upn:
+                    database_student.upn = student_upn
+                    database_student.save(update_fields=["upn"])
             subjects_to_enroll = []
             for entry in student["predmetnik"]:
                 if (not entry["opravlja_vaje"]) and (not entry["opravlja_predavanja"]):

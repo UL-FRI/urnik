@@ -113,16 +113,6 @@
         <a href="?type=LV&type=AV&type=LAB{{ context_links.type }}">Show only lab work</a><br/>
         <a href="?{{ context_links.type }}">Show lectures and lab work</a><br/>
         <a href="{% url "allocations_ical" timetable_slug %}{{ get_args }}" style="font-weight: bold;">Export to calendar</a><br/>
-        
-        {% if user_is_teacher %}
-        <div style="border-top: 1px solid #ccc; margin-top: 10px; padding-top: 10px;">
-            <strong>🔄 Trading</strong><br/>
-            <a href="{% url 'my_trade_requests' timetable_slug %}" style="color: #007bff;">My Requests ({{ user_trade_requests|length }})</a><br/>
-            <a href="{% url 'trade_request_list' timetable_slug %}" style="color: #28a745;">Browse All</a><br/>
-            <a href="{% url 'create_trade_request' timetable_slug %}" style="color: #dc3545; font-weight: bold;">+ New Request</a><br/>
-            <small style="color: #666;">Click your allocations to trade</small>
-        </div>
-        {% endif %}
     </div>
 </div>
 

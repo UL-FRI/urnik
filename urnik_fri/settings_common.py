@@ -5,6 +5,7 @@ DEBUG = False
 ALLOWED_HOSTS = ["*"]
 
 AUTHENTICATION_BACKENDS = (
+    "friprosveta.auth.URNIKOIDCAuthenticationBackend",
     # 'guardian.backends.ObjectPermissionBackend',
     "django_auth_ldap.backend.LDAPBackend",
     "django.contrib.auth.backends.ModelBackend",
@@ -127,6 +128,7 @@ INSTALLED_APPS = [
     "django.contrib.sites",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "mozilla_django_oidc",  # OIDC authentication
     "timetable",
     "friprosveta",
     "frinajave",
@@ -154,3 +156,28 @@ REST_FRAMEWORK = {
         # 'rest_framework.filters.DjangoFilterBackend',
     ),
 }
+# OIDC Configuration
+# These settings should be overridden in your environment-specific settings file
+OIDC_RP_CLIENT_ID = ""  # Set in environment-specific settings
+OIDC_RP_CLIENT_SECRET = ""  # Set in environment-specific settings
+OIDC_OP_AUTHORIZATION_ENDPOINT = ""  # Set in environment-specific settings
+OIDC_OP_TOKEN_ENDPOINT = ""  # Set in environment-specific settings
+OIDC_OP_USER_ENDPOINT = ""  # Set in environment-specific settings
+OIDC_OP_JWKS_ENDPOINT = ""  # Set in environment-specific settings (optional)
+OIDC_RP_SIGN_ALGO = "RS256"  # Algorithm the IdP uses to sign ID tokens
+
+# Optional: Specify the OIDC claim that will be used as the username
+OIDC_USERNAME_ALGO = "friprosveta.auth.oidc_username_from_claims"
+
+# Optional: Create users if they don't exist in the database
+OIDC_CREATE_USER = True
+
+# Optional: Update user attributes on each login
+OIDC_UPDATE_USER = True
+
+# Optional: Redirect URLs
+OIDC_AUTHENTICATION_CALLBACK_URL = "oidc_authentication_callback"
+OIDC_RP_SCOPES = "openid email profile"
+
+# Optional: Session refresh
+OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS = 3600

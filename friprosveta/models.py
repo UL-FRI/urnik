@@ -671,6 +671,7 @@ class Student(models.Model):
     name = models.CharField(max_length=128)
     surname = models.CharField(max_length=128)
     studentId = models.CharField(max_length=8, unique=True)
+    upn = models.CharField(max_length=128, unique=True, null=True, blank=True)
     groups = models.ManyToManyField(timetable.models.Group, related_name="students")
     follows = models.ManyToManyField(
         timetable.models.ActivityRealization, related_name="followers"
@@ -779,35 +780,19 @@ class Student(models.Model):
         """
         # email is more correct than username, so use that
         email = user.username
+        identifiers = [email]
+        if getattr(user, "email", None):
+            identifiers.insert(0, user.email)
 
-        # this isn't really testable, but let's avoid overengineering for now
-        if settings.STUDENT_MAPPER_PRODUCTION:
-            # initialise if no cached values
-            print("REAL")
-            mapping = cache.get("cached_user_student_map")
-            if mapping is None:
-                s = Studenti()
-                data = s.get_confirmed_enrollments(
-                    datetime.datetime.utcnow().isoformat()[:10], unfinished=True
-                )
-                if not data:
-                    raise IOError("Error getting api data.")
-                mapping = {
-                    a["upn"].strip(): a["vpisna_stevilka"].strip()
-                    for a in data
-                    if a["upn"] is not None
-                }
-                cache.set("cached_user_student_map", mapping)
+        for identifier in [i for i in identifiers if i]:
+            try:
+                return Student.objects.get(upn__iexact=identifier)
+            except Student.DoesNotExist:
+                pass
 
-            student_id = mapping.get(
-                email, "this string is definitely not a student id"
-            )
-
-            return Student.objects.get(studentId=student_id)
-        else:
-            return Student.objects.get(
-                name__iexact=user.first_name, surname__iexact=user.last_name
-            )
+        return Student.objects.get(
+            name__iexact=user.first_name, surname__iexact=user.last_name
+        )
 
 
 class StudentEnrollment(models.Model):

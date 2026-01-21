@@ -10,7 +10,10 @@ ENV URNIK_GIT_BRANCH=master
 ENV SECRET_KEY=very_secret_key
 
 # Add timetable user and group first to make sure their IDs get assigned consistently
-RUN groupadd -r timetable && useradd -r -g timetable timetable
+RUN groupadd -r timetable \
+  && useradd -r -g timetable -m -d /home/timetable timetable \
+  && mkdir -p /home/timetable \
+  && chown -R timetable:timetable /home/timetable
     
 ENV LANG sl_SI.UTF-8
 ENV LC_ALL sl_SI.UTF-8 
@@ -31,12 +34,16 @@ RUN apt update \
   pwgen \
   fish \
   gettext \
+  vim \
+  nano \
   && rm -rf /var/lib/apt/lists/*
 
 
+  
+RUN pip3 install uv --break-system-packages 
+
 WORKDIR /home/timetable
-
-
+USER timetable
 # When inside urnik repository just copy everything into 
 # the appropriate subfolder.
 COPY --chown=timetable:timetable . urnik/
@@ -44,10 +51,7 @@ COPY --chown=timetable:timetable wait-for-it.sh /
 
 
 WORKDIR /home/timetable/urnik
-# Install dependencies
-# the CYTHON<3.0.0 is needed because pyyaml is broken building at the moment. Please if you are updating this, check if this is still the case. 
-#RUN pip install "cython<3.0.0" --break-system-packages && 
-RUN pip3 install uv --break-system-packages 
+
 RUN ls && uv sync
 
 # Collect Django static files
@@ -63,13 +67,15 @@ RUN chmod +x /wait-for-it.sh
 
 # Install jupyterlab for interactive work with the system.
 # Make sure to not expose it to the public
-RUN pip install --break-system-packages jupyterlab jupyter_collaboration 
+RUN uv pip install jupyterlab jupyter_collaboration 
 
-
-USER timetable
 
 # Set JupyterLab password using jupyter_server.auth.security.set_password
-RUN python3 -c "from jupyter_server.auth.security import set_password; set_password('$(pwgen 32 1)');"
+#RUN uv run python3 -c "from jupyter_server.auth.security import set_password; set_password('$(pwgen 32 1)');"
+
+RUN uv run --with jupyter jupyter lab --help
+
+
 
 # UWSGI options are read from environmental variables.
 # They are specified in docker-compose file.

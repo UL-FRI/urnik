@@ -12,6 +12,7 @@ urlpatterns = [
     re_path(r"^admin/doc/", include("django.contrib.admindocs.urls")),
     re_path(r"^admin/", admin.site.urls),
     re_path(r"^impersonate/", include("impersonate.urls")),
+    re_path(r"^oidc/", include("mozilla_django_oidc.urls")),  # OIDC authentication URLs
     re_path(
         r"^accounts/login/$",
         LoginView.as_view(),

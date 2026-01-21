@@ -1,27 +1,42 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Prijava{% endblock %}
+{% block title %}{% trans "Prijava" %}{% endblock %}
 {% block body %}
 
 {% if form.errors %}
-<p>Napačno ime in/ali geslo</p>
+<p>{% trans "Napačno ime in/ali geslo" %}</p>
 {% endif %}
-Vnesite uporabniško ime, kakršno uporabljate na učilnici (npr. janezn@fri1.uni-lj.si) in geslo.
-<form method="post" action="{% url 'django.contrib.auth.views.login' %}">
-{% csrf_token %}
-<table>
-<tr>
-    <td>Uporabniško ime:</td>
-    <td>{{ form.username }}</td>
-</tr>
-<tr>
-    <td>Geslo:</td>
-    <td>{{ form.password }}</td>
-</tr>
-</table>
 
-<input type="submit" value="login" />
-<input type="hidden" name="next" value="{{ next }}" />
-</form>
+<div style="margin-bottom: 30px;">
+    <h3>{% trans "Prijava z UNI-LJ identiteto" %}</h3>
+    <p>{% trans "Prijavite se z vašim institucionalnim računom:" %}</p>
+    <a href="{% url 'oidc_authentication_init' %}?next={{ next|urlencode }}" class="btn btn-primary" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px;">
+        {% trans "Prijava z UNI-LJ identiteto" %}
+    </a>
+</div>
+
+<hr style="margin: 30px 0;">
+
+<div>
+    <h3>{% trans "Standardna prijava" %}</h3>
+    <p>{% trans "Vnesite uporabniško ime, kakršno uporabljate na učilnici (npr. janezn@fri1.uni-lj.si) in geslo." %}</p>
+    <form method="post" action="{% url 'django.contrib.auth.views.login' %}">
+    {% csrf_token %}
+    <table>
+    <tr>
+        <td>{% trans "Uporabniško ime:" %}</td>
+        <td>{{ form.username }}</td>
+    </tr>
+    <tr>
+        <td>{% trans "Geslo:" %}</td>
+        <td>{{ form.password }}</td>
+    </tr>
+    </table>
+
+    <input type="submit" value="login" />
+    <input type="hidden" name="next" value="{{ next }}" />
+    </form>
+</div>
 
 {% endblock %}

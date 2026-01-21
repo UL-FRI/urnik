@@ -13,6 +13,7 @@ import pytz
 
 # from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.core import serializers
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db import transaction
@@ -754,7 +755,7 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
         # colors are in HSL for easier manipulation
         hls_color = colorsys.rgb_to_hls(*(c / 256.0 for c in color))
         final_color = ColorVM(
-            h=hls_color[0] * 360,
+            h=int(round(hls_color[0] * 360)),
             l="{:.2f}%".format(100 * hls_color[1]),
             # emphasise lectures and slightly de-emphasise labs for more clarity
             s="{:.2f}%".format(
@@ -1759,6 +1760,12 @@ def subject(request, timetable_slug, subject_code):
         teachers_formset = najave_percentage_formset(
             request.POST, request.FILES, queryset=najave_percentages, prefix="prc-"
         )
+        teachers_formset_valid = True
+        teachers_formset_errors = ""
+        teachers_formset.full_clean()
+        if not teachers_formset.is_valid():
+            teachers_formset_errors = str(teachers_formset.errors)
+            teachers_formset_valid = False
         realization_formsets = []
         for activity in activities:
             Formset = timetable.forms.realization_formset(activity, tt)
@@ -1776,15 +1783,20 @@ def subject(request, timetable_slug, subject_code):
             if not formset.is_valid():
                 realization_formsets_errors += str(formset.errors)
                 realization_formsets_valid = False
-        if realization_formsets_valid:
+        if teachers_formset_valid and realization_formsets_valid:
             try:
+                teachers_formset.save()
                 for i in realization_formsets:
                     i.save()
             except ValueError as e:
                 problem_msg = "  Problem saving realizations" + str(e)
                 problems = True
         else:
-            if not realization_formsets_valid:
+            if not teachers_formset_valid:
+                problem_msg = "Problem v obrazcu za učitelje:" + str(
+                    teachers_formset_errors
+                )
+            elif not realization_formsets_valid:
                 problem_msg = "Problem v enem od obrazcev za cikle:" + str(
                     realization_formsets_errors
                 )
@@ -1807,7 +1819,7 @@ def subject(request, timetable_slug, subject_code):
                 id_hack -= 1
             except Exception:
                 # If no teacher is found, add unknown teacher (but do not save it to database
-                user = timetable.models.User(
+                user = User(
                     first_name="Unknown", last_name=str(i.teacher_code), id=-id_hack
                 )
                 teacher = friprosveta.models.Teacher(
