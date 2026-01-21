@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% load static %}
+{% load i18n %}
 
-{% block title %}Create Trade Request{% endblock %}
+{% block title %}{% trans "Create Trade Request" %}{% endblock %}
 
 {% block media %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -537,7 +538,9 @@ h1 {
 .wizard-allocation-list {
     max-height: 550px;
     overflow-y: auto;
+    overflow-x: visible;
     padding: 5px;
+    padding-right: 15px;
 }
 
 .wizard-allocation-item {
@@ -552,7 +555,8 @@ h1 {
     justify-content: space-between;
     align-items: center;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
+    z-index: 1;
 }
 
 .wizard-allocation-item::before {
@@ -570,8 +574,9 @@ h1 {
 .wizard-allocation-item:hover {
     border-color: #3498db;
     box-shadow: 0 6px 20px rgba(52, 152, 219, 0.2);
-    transform: translateX(8px);
+    transform: scale(1.02);
     background: linear-gradient(90deg, #f8f9fa 0%, white 100%);
+    z-index: 10;
 }
 
 .wizard-allocation-item:hover::before {
@@ -582,7 +587,8 @@ h1 {
     background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
     border: 3px solid #2196f3;
     box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
-    transform: translateX(8px);
+    transform: scale(1.02);
+    z-index: 10;
 }
 
 .wizard-allocation-item.selected::before {
@@ -901,25 +907,56 @@ h1 {
     margin-right: 15px;
 }
 
+/* Options Grid Layout */
+.options-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 30px;
+    align-items: stretch;
+    margin-bottom: 30px;
+}
+
+@media (max-width: 992px) {
+    .options-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        align-items: start;
+    }
+    
+    .options-or-divider {
+        display: none;
+    }
+}
+
 /* Option styling */
 .option-container {
     background: white;
-    border: 2px solid #d5dde5;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
+    border: 3px solid #d5dde5;
+    border-radius: 12px;
+    padding: 25px;
     transition: all 0.3s ease;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
 }
 
-.option-container:hover {
+.option-container:hover:not(.disabled) {
     border-color: #3498db;
-    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+    box-shadow: 0 6px 16px rgba(52, 152, 219, 0.2);
+    transform: translateY(-2px);
 }
 
 .option-container.active {
-    border-color: #3498db;
-    background: linear-gradient(135deg, #f8fbff 0%, #f0f8ff 100%);
-    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
+    border-color: #27ae60;
+    background: linear-gradient(135deg, #f0fff4 0%, #e8f8f0 100%);
+    box-shadow: 0 6px 20px rgba(39, 174, 96, 0.25);
+}
+
+.option-container.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+    background: #f8f9fa;
+    border-color: #e9ecef;
 }
 
 .option-header {
@@ -932,18 +969,27 @@ h1 {
 }
 
 .option-number {
-    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-    color: white;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+    display: none;
+}
+
+.options-or-divider {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 20px 10px;
     font-weight: 700;
-    font-size: 1.2em;
-    flex-shrink: 0;
-    box-shadow: 0 2px 6px rgba(52, 152, 219, 0.3);
+    font-size: 1.1em;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    min-height: 100%;
+}
+
+.option-container.active .option-number {
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    box-shadow: 0 3px 8px rgba(39, 174, 96, 0.4);
+    transform: scale(1.1);
 }
 
 .option-title {
@@ -963,34 +1009,16 @@ h1 {
     border-radius: 4px;
 }
 
-.options-divider {
+.section-subtitle {
     text-align: center;
-    margin: 30px 0;
-    position: relative;
-}
-
-.options-divider:before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(to right, transparent, #bdc3c7 15%, #bdc3c7 85%, transparent);
-    z-index: 1;
-}
-
-.options-divider span {
-    background: #f5f7fa;
-    padding: 10px 25px;
-    position: relative;
-    z-index: 2;
-    font-weight: 700;
-    color: #7f8c8d;
     font-size: 1.1em;
-    border: 2px solid #bdc3c7;
-    border-radius: 25px;
-    display: inline-block;
+    color: #7f8c8d;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+.section-subtitle strong {
+    color: #2c3e50;
 }
 </style>
 {% endblock %}
@@ -999,7 +1027,7 @@ h1 {
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-12">
-            <h1>Create Trade Request</h1>
+            <h1>{% trans "Create Trade Request" %}</h1>
             
             <div class="form-container">
                 <form method="POST" id="trade-form">
@@ -1009,51 +1037,57 @@ h1 {
                     <!-- Hidden form field for offered allocation -->
                     {{ form.offered_allocation }}
                     
-                    <!-- Teacher and Subject Selection -->
-                    <div class="form-section">
-                        <h4><i class="fas fa-exchange-alt"></i> Find a Time Slot to Trade</h4>
-                        
-                        <div class="form-group">
-                            <label for="teacher-select"><strong>Select Teacher:</strong></label>
-                            <select id="teacher-select" class="form-control">
-                                <option value="">-- Select a teacher --</option>
-                            </select>
-                            <div class="help-text">Choose the teacher whose time slots you want to see</div>
-                        </div>
-                        
-                        <div class="form-group" id="subject-select-group" style="display:none;">
-                            <label for="subject-select"><strong>Select Subject:</strong></label>
-                            <select id="subject-select" class="form-control">
-                                <option value="">-- Select a subject --</option>
-                            </select>
-                            <div class="help-text">Choose the subject/activity</div>
-                        </div>
-                    </div>
-                    
                     <!-- Select desired allocation -->
                     <div class="form-section" id="desired-section">
-                        <h4><i class="fas fa-clock"></i> When Would You Like to Move Your Class?</h4>
-                        <p class="help-text" style="margin-bottom: 25px;">Choose one of the following options:</p>
+                        <h4><i class="fas fa-clock"></i> {% trans "When Would You Like to Move Your Class?" %}</h4>
+                        <p class="section-subtitle">{% blocktrans %}Choose ONE of the following options. Selecting one will disable the other.{% endblocktrans %}</p>
                         
                         <!-- Hidden form field -->
                         {{ form.desired_allocation }}
                         
-                        <!-- Option 1: Select specific timeslot -->
-                        <div class="option-container" id="option-1-container" style="display:none;">
-                            <div class="option-header">
-                                <div class="option-number">1</div>
-                                <h5 class="option-title">Select a Specific Time Slot to Swap With</h5>
-                            </div>
-                            <div class="option-description">
-                                <i class="fas fa-info-circle"></i> Browse available time slots from a teacher's schedule and select one to swap with. This creates a direct swap offer.
-                            </div>
+                        <div class="options-grid">
+                            <!-- Option 1: Select specific timeslot -->
+                            <div class="option-container" id="option-1-container">
+                                <div class="option-header">
+                                    <div class="option-number">1</div>
+                                    <h5 class="option-title">{% trans "Find & Select Specific Slot" %}</h5>
+                                </div>
+                                <div class="option-description">
+                                    <i class="fas fa-info-circle"></i> {% trans "Browse a teacher's schedule and pick an exact slot to swap with." %}
+                                </div>
+                                
+                                <!-- Teacher and Subject Selection inside card -->
+                                <div style="margin-bottom: 20px;">
+                                    <div class="form-group">
+                                        <label for="teacher-select"><strong>{% trans "Select Teacher:" %}</strong></label>
+                                        <select id="teacher-select" class="form-control">
+                                            <option value="">{% trans "-- Select a teacher --" %}</option>
+                                        </select>
+                                        <div class="help-text">{% trans "Choose the teacher whose time slots you want to see" %}</div>
+                                    </div>
+                                    
+                                    <div class="form-group" id="subject-select-group" style="display:none;">
+                                        <label for="subject-select"><strong>{% trans "Select Subject:" %}</strong></label>
+                                        <select id="subject-select" class="form-control">
+                                            <option value="">{% trans "-- Select a subject --" %}</option>
+                                        </select>
+                                        <div class="help-text">{% trans "Choose the subject/activity" %}</div>
+                                    </div>
+                                </div>
+                                
+                                <div id="option-1-placeholder" style="display:none; text-align: center; padding: 40px 20px; color: #95a5a6;">
+                                    <i class="fas fa-search" style="font-size: 2em; margin-bottom: 10px; display: block;"></i>
+                                    <p style="margin: 0;">{% trans "Select a teacher and subject to see available time slots" %}</p>
+                                </div>
+                                
+                                <div id="option-1-content" style="display:none;">
                             
                             <!-- Wizard selector -->
                             <div id="desired-wizard">
                                 <!-- Available Time Slots -->
                                 <div id="wizard-step-3" class="wizard-content active">
                                     <div class="wizard-header">
-                                        <h5 id="step3-title">Available Time Slots</h5>
+                                        <h5 id="step3-title">{% trans "Available Time Slots" %}</h5>
                                     </div>
                                     <div id="allocation-final-list" class="wizard-allocation-list"></div>
                                 </div>
@@ -1064,28 +1098,27 @@ h1 {
                             {% for error in form.desired_allocation.errors %}
                             <div class="text-danger">{{ error }}</div>
                             {% endfor %}
-                        </div>
-                        
-                        <div class="options-divider" id="options-divider" style="display:none;">
-                            <span>OR</span>
-                        </div>
-                        
-                        <!-- Option 2: Specify preferences -->
-                        <div class="option-container" id="option-2-container">
-                            <div class="option-header">
-                                <div class="option-number">2</div>
-                                <h5 class="option-title">Specify Your Time Preferences (No Specific Swap)</h5>
+                                </div>
                             </div>
-                            <div class="option-description">
-                                <i class="fas fa-info-circle"></i> Tell others when you'd prefer to have your class. Anyone can offer to swap their time slot with you.
-                            </div>
+                            
+                            <div class="options-or-divider">{% trans "OR" %}</div>
+                            
+                            <!-- Option 2: Specify preferences -->
+                            <div class="option-container" id="option-2-container">
+                                <div class="option-header">
+                                    <div class="option-number">2</div>
+                                    <h5 class="option-title">{% trans "Specify Time Preferences" %}</h5>
+                                </div>
+                                <div class="option-description">
+                                    <i class="fas fa-info-circle"></i> {% trans "Set your preferred time. Anyone can offer to swap with you." %}
+                                </div>
                             
                         <div class="row" id="time-preferences">
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="id_desired_day"><strong>Preferred Day:</strong></label>
+                                    <label for="id_desired_day"><strong>{% trans "Preferred Day:" %}</strong></label>
                                     {{ form.desired_day }}
-                                    <div class="help-text">Which day would you prefer?</div>
+                                    <div class="help-text">{% trans "Which day would you prefer?" %}</div>
                                     {% for error in form.desired_day.errors %}
                                     <div class="text-danger">{{ error }}</div>
                                     {% endfor %}
@@ -1093,9 +1126,9 @@ h1 {
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="id_desired_start_time"><strong>Preferred Start Time:</strong></label>
+                                    <label for="id_desired_start_time"><strong>{% trans "Preferred Start Time:" %}</strong></label>
                                     {{ form.desired_start_time }}
-                                    <div class="help-text">What time would you like to start?</div>
+                                    <div class="help-text">{% trans "What time would you like to start?" %}</div>
                                     {% for error in form.desired_start_time.errors %}
                                     <div class="text-danger">{{ error }}</div>
                                     {% endfor %}
@@ -1103,21 +1136,22 @@ h1 {
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label for="id_desired_classroom"><strong>Preferred Classroom:</strong></label>
+                                    <label for="id_desired_classroom"><strong>{% trans "Preferred Classroom:" %}</strong></label>
                                     {{ form.desired_classroom }}
-                                    <div class="help-text">Which classroom would you prefer?</div>
+                                    <div class="help-text">{% trans "Which classroom would you prefer?" %}</div>
                                     {% for error in form.desired_classroom.errors %}
                                     <div class="text-danger">{{ error }}</div>
                                     {% endfor %}
                                 </div>
                             </div>
                         </div>
+                            </div>
                         </div>
                     </div>
                     
                     <!-- Additional details -->
                     <div class="form-section">
-                        <h4><i class="fas fa-info-circle"></i> Additional Details</h4>
+                        <h4><i class="fas fa-info-circle"></i> {% trans "Additional Details" %}</h4>
                         
                         <div class="form-group">
                             {{ form.reason.label_tag }}
@@ -1143,10 +1177,10 @@ h1 {
                     <!-- Submit buttons -->
                     <div class="text-center">
                         <a href="{% url 'my_trade_requests' timetable_slug %}" class="btn btn-secondary btn-back">
-                            <i class="fas fa-arrow-left"></i> Back
+                            <i class="fas fa-arrow-left"></i> {% trans "Back" %}
                         </a>
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Create Trade Request
+                            <i class="fas fa-save"></i> {% trans "Create Trade Request" %}
                         </button>
                     </div>
                 </form>
@@ -1157,9 +1191,34 @@ h1 {
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const translations = {
+        selectTimeSlotPrefix: "{% trans 'Select Time Slot:' %}",
+        noTimeSlotsFound: "{% trans 'No time slots found' %}",
+        durationMismatch: "{% blocktrans %}Duration mismatch: Your class is %(offered_duration)s h, this is %(duration)s h{% endblocktrans %}",
+        selectedLabel: "{% trans 'Selected:' %}",
+        hour: "{% trans 'hour' %}",
+        hours: "{% trans 'hours' %}",
+        dayNames: {
+            MON: "{% trans 'Monday' %}",
+            TUE: "{% trans 'Tuesday' %}",
+            WED: "{% trans 'Wednesday' %}",
+            THU: "{% trans 'Thursday' %}",
+            FRI: "{% trans 'Friday' %}"
+        }
+    };
+
+    function formatTemplate(str, params) {
+        let result = str;
+        Object.keys(params).forEach(key => {
+            result = result.replace(`%(${key})s`, params[key]);
+        });
+        return result;
+    }
+
     // Parse allocation data from Django
     const teacherAllocations = {{ teacher_allocations_json|safe }};
     const otherAllocations = {{ other_allocations_json|safe }};
+    const teachersList = {{ teachers_json|safe }};
     
     // State
     let selectedTeacher = null;
@@ -1176,27 +1235,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const teacherSelect = document.getElementById('teacher-select');
     const subjectSelect = document.getElementById('subject-select');
     
-    // Extract unique teachers
-    const teacherMap = new Map();
-    otherAllocations.forEach(alloc => {
-        const teachers = alloc.teachers.split(',').map(t => t.trim());
-        teachers.forEach(teacher => {
-            if (!teacherMap.has(teacher)) {
-                teacherMap.set(teacher, []);
-            }
-            teacherMap.get(teacher).push(alloc);
-        });
-    });
-    
-    // Sort teachers alphabetically and populate dropdown
-    const teachers = Array.from(teacherMap.entries())
-        .map(([name, allocations]) => ({
-            name,
-            count: allocations.length
-        }))
-        .sort((a, b) => a.name.localeCompare(b.name));
-    
-    teachers.forEach(teacher => {
+    // Populate teacher dropdown from pre-computed list
+    teachersList.forEach(teacher => {
         const option = document.createElement('option');
         option.value = teacher.name;
         option.textContent = `${teacher.name} (${teacher.count} slots)`;
@@ -1222,16 +1262,18 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('subject-select-group').style.display = 'block';
             populateSubjectDropdown();
             
-            // Hide option 1 until subject is selected, show option 2
-            document.getElementById('option-1-container').style.display = 'none';
-            document.getElementById('option-2-container').style.display = 'block';
-            document.getElementById('options-divider').style.display = 'none';
+            // Keep placeholder visible until subject is selected
+            // Disable option 2 when a teacher is selected
+            updateOptionStates(true, false);
         } else {
-            // No teacher selected - hide subject dropdown and option 1, show only option 2
+            // No teacher selected - hide subject dropdown
             document.getElementById('subject-select-group').style.display = 'none';
-            document.getElementById('option-1-container').style.display = 'none';
-            document.getElementById('option-2-container').style.display = 'block';
-            document.getElementById('options-divider').style.display = 'none';
+            // Show placeholder
+            document.getElementById('option-1-placeholder').style.display = 'block';
+            document.getElementById('option-1-content').style.display = 'none';
+            
+            // Re-enable both options when going back
+            checkOptionStates();
         }
     });
     
@@ -1274,17 +1316,15 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedSubject = this.value;
         if (selectedSubject) {
             selectedActivity = selectedSubject;
-            // Show both options with divider
-            document.getElementById('option-1-container').style.display = 'block';
-            document.getElementById('option-2-container').style.display = 'block';
-            document.getElementById('options-divider').style.display = 'block';
+            // Hide placeholder, show option 1 content
+            document.getElementById('option-1-placeholder').style.display = 'none';
+            document.getElementById('option-1-content').style.display = 'block';
             // Start with final allocation list
             goToFinalList();
         } else {
-            // Subject cleared - hide option 1, show only option 2
-            document.getElementById('option-1-container').style.display = 'none';
-            document.getElementById('option-2-container').style.display = 'block';
-            document.getElementById('options-divider').style.display = 'none';
+            // Subject cleared - show placeholder, hide content
+            document.getElementById('option-1-placeholder').style.display = 'block';
+            document.getElementById('option-1-content').style.display = 'none';
         }
     });
     
@@ -1300,7 +1340,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function buildFinalAllocationList() {
-        document.getElementById('step3-title').textContent = `Select Time Slot: ${selectedSubject}`;
+        document.getElementById('step3-title').textContent = `${translations.selectTimeSlotPrefix} ${selectedSubject}`;
         
         // Filter allocations by teacher and subject
         const finalAllocations = otherAllocations.filter(alloc => 
@@ -1321,7 +1361,7 @@ document.addEventListener('DOMContentLoaded', function() {
         list.innerHTML = '';
         
         if (finalAllocations.length === 0) {
-            list.innerHTML = '<div class="wizard-no-results"><i class="fas fa-search"></i><br>No time slots found</div>';
+            list.innerHTML = `<div class="wizard-no-results"><i class="fas fa-search"></i><br>${translations.noTimeSlotsFound}</div>`;
             return;
         }
         
@@ -1347,7 +1387,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 warningHtml = `
                     <div class="duration-warning-text">
                         <i class="fas fa-exclamation-triangle"></i>
-                        Duration mismatch: Your class is ${offeredDuration}h, this is ${alloc.duration}h
+                        ${formatTemplate(translations.durationMismatch, {offered_duration: offeredDuration, duration: alloc.duration})}
                     </div>
                 `;
             }
@@ -1360,7 +1400,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                     <div class="wizard-allocation-details">
                         <i class="fas fa-door-open"></i> ${alloc.classroom}
-                        <i class="fas fa-clock" style="margin-left: 12px;"></i> ${alloc.duration} ${alloc.duration === 1 ? 'hour' : 'hours'}
+                        <i class="fas fa-clock" style="margin-left: 12px;"></i> ${alloc.duration} ${alloc.duration === 1 ? translations.hour : translations.hours}
                     </div>
                     ${warningHtml}
                 </div>
@@ -1392,14 +1432,13 @@ document.addEventListener('DOMContentLoaded', function() {
         info.style.display = 'block';
         info.innerHTML = `
             <i class="fas fa-check-circle" style="color: #27ae60; margin-right: 8px;"></i>
-            <strong>Selected:</strong>
+            <strong>${translations.selectedLabel}</strong>
             ${alloc.activity} • ${alloc.teachers} • ${alloc.classroom} • ${getDayName(alloc.day)} ${alloc.start} (+${alloc.duration}h)
         `;
     }
     
     function getDayName(code) {
-        const dayMap = {MON: 'Monday', TUE: 'Tuesday', WED: 'Wednesday', THU: 'Thursday', FRI: 'Friday'};
-        return dayMap[code] || code;
+        return translations.dayNames[code] || code;
     }
     
     // Clear desired allocation if criteria are used
@@ -1415,13 +1454,121 @@ document.addEventListener('DOMContentLoaded', function() {
                     item.classList.remove('selected');
                 });
                 document.getElementById('desired-info').style.display = 'none';
+                
+                // Mark option 2 as active, disable option 1
+                updateOptionStates(false, true);
             }
         });
     });
     
+    // Handle mutual exclusivity between options
+    function updateOptionStates(option1Active, option2Active) {
+        const option1 = document.getElementById('option-1-container');
+        const option2 = document.getElementById('option-2-container');
+        
+        if (option1Active) {
+            option1.classList.add('active');
+            option1.classList.remove('disabled');
+            option2.classList.remove('active');
+            option2.classList.add('disabled');
+        } else if (option2Active) {
+            option2.classList.add('active');
+            option2.classList.remove('disabled');
+            option1.classList.remove('active');
+            option1.classList.add('disabled');
+        } else {
+            // Neither active - both enabled
+            option1.classList.remove('active', 'disabled');
+            option2.classList.remove('active', 'disabled');
+        }
+    }
+    
+    // Override selectDesired to update option states
+    const originalSelectDesired = selectDesired;
+    selectDesired = function(alloc) {
+        // Clear criteria fields first
+        desiredDay.value = '';
+        desiredStartTime.value = '';
+        document.getElementById('id_desired_classroom').value = '';
+        
+        // Call original function
+        selectedDesired = alloc;
+        desiredField.value = alloc.id;
+        
+        // Update visual selection in wizard
+        document.querySelectorAll('.wizard-allocation-item').forEach(item => {
+            item.classList.toggle('selected', item.dataset.id == alloc.id);
+        });
+        
+        // Show selection info
+        const info = document.getElementById('desired-info');
+        info.style.display = 'block';
+        info.innerHTML = `
+            <i class="fas fa-check-circle" style="color: #27ae60; margin-right: 8px;"></i>
+            <strong>Selected:</strong>
+            ${alloc.activity} • ${alloc.teachers} • ${alloc.classroom} • ${getDayName(alloc.day)} ${alloc.start} (+${alloc.duration}h)
+        `;
+        
+        // Mark option 1 as active, disable option 2
+        updateOptionStates(true, false);
+    };
+    
+    // Monitor changes to detect when to clear option states
+    const desiredClassroom = document.getElementById('id_desired_classroom');
+    function checkOptionStates() {
+        const hasDesiredAlloc = desiredField.value !== '';
+        const hasCriteria = desiredDay.value !== '' || 
+                          desiredStartTime.value !== '' ||
+                          (desiredClassroom && desiredClassroom.value !== '');
+        
+        if (hasDesiredAlloc) {
+            updateOptionStates(true, false);
+        } else if (hasCriteria) {
+            updateOptionStates(false, true);
+        } else {
+            updateOptionStates(false, false);
+        }
+    }
+    
+    // Add listeners to time preference fields
+    desiredDay.addEventListener('change', function() {
+        if (this.value !== '') {
+            updateOptionStates(false, true);
+        } else {
+            checkOptionStates();
+        }
+    });
+    
+    desiredStartTime.addEventListener('change', function() {
+        if (this.value !== '') {
+            updateOptionStates(false, true);
+        } else {
+            checkOptionStates();
+        }
+    });
+    
+    // Add classroom field to the monitoring
+    if (desiredClassroom) {
+        desiredClassroom.addEventListener('change', function() {
+            if (this.value !== '') {
+                desiredField.value = '';
+                selectedDesired = null;
+                document.querySelectorAll('.wizard-allocation-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                document.getElementById('desired-info').style.display = 'none';
+                updateOptionStates(false, true);
+            } else {
+                checkOptionStates();
+            }
+        });
+    }
+    
+    // Check states on page load
+    checkOptionStates();
+    
     function getDayName(code) {
-        const dayMap = {MON: 'Monday', TUE: 'Tuesday', WED: 'Wednesday', THU: 'Thursday', FRI: 'Friday'};
-        return dayMap[code] || code;
+        return translations.dayNames[code] || code;
     }
     
     // Pre-select if form has initial value for desired allocation

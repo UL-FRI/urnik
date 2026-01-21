@@ -344,10 +344,12 @@ ul.secondary li {
   /* line 160, ../sass/style.scss */
   #site-name a {
     display: block;
-    width: 192px;
-    height: 76px;
-    margin: 8px 0 0 50px;
-    background: url('../images/fri_logo.png') no-repeat 0 0; }
+    width: 230px;
+    height: 176px;
+    margin: 8px 0 0 35px;
+    background: url('../images/fri_logo.png') no-repeat 0 0; 
+    background-size: contain;
+  }
 
 /* line 168, ../sass/style.scss */
 #header-primary {

@@ -1138,21 +1138,21 @@ class TradeRequestForm(forms.ModelForm):
             'expires_at'
         ]
         widgets = {
-            'reason': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Optional: Why do you want to make this trade?'}),
+            'reason': forms.Textarea(attrs={'rows': 3, 'placeholder': gettext_lazy('Optional: Why do you want to make this trade?')}),
             'expires_at': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
             'desired_day': forms.Select(choices=[('', '--- Any Day ---')] + list(WEEKDAYS)),
             'desired_start_time': forms.Select(choices=[('', '--- Any Time ---')] + list(WORKHOURS)),
             'desired_duration': forms.NumberInput(attrs={'min': 1, 'max': 8, 'placeholder': 'Hours'}),
         }
         labels = {
-            'offered_allocation': 'My time slot to trade away',
-            'desired_allocation': 'Specific time slot I want (optional)',
-            'desired_day': 'OR preferred day',
-            'desired_start_time': 'OR preferred start time',
-            'desired_duration': 'OR preferred duration (hours)',
-            'desired_classroom': 'OR preferred classroom',
-            'reason': 'Reason for time slot trade (optional)',
-            'expires_at': 'Request expires (optional)',
+            'offered_allocation': gettext_lazy('My time slot to trade away'),
+            'desired_allocation': gettext_lazy('Specific time slot I want (optional)'),
+            'desired_day': gettext_lazy('OR preferred day'),
+            'desired_start_time': gettext_lazy('OR preferred start time'),
+            'desired_duration': gettext_lazy('OR preferred duration (hours)'),
+            'desired_classroom': gettext_lazy('OR preferred classroom'),
+            'reason': gettext_lazy('Reason for time slot trade (optional)'),
+            'expires_at': gettext_lazy('Request expires (optional)'),
         }
         help_texts = {
             'offered_allocation': 'The time slot you want to exchange with another teacher',
@@ -1302,71 +1302,64 @@ class TradeRequestForm(forms.ModelForm):
                 )
             
             # Check for conflicts when specifying time preferences instead of specific allocation
-            if not desired_allocation and (desired_day or desired_start_time):
+            if not desired_allocation and (desired_day and desired_start_time and desired_duration):
                 desired_classroom = cleaned_data.get('desired_classroom')
-                
-                # Get the timetable from the offered allocation
                 timetable = offered_allocation.timetable
-                
-                # Check if day and time are both specified (required for conflict checking)
-                if desired_day and desired_start_time:
-                    # Check for teacher conflicts first
-                    teacher_conflicts = Allocation.objects.filter(
+                # Calculate requested slot start/end
+                req_start = desired_start_time
+                req_end = (datetime.combine(date.today(), desired_start_time) + timedelta(hours=desired_duration)).time()
+                # Teacher overlap check
+                teacher_conflicts = Allocation.objects.filter(
+                    timetable=timetable,
+                    day=desired_day,
+                    activityRealization__teachers__in=offered_allocation.activityRealization.teachers.all()
+                ).exclude(id=offered_allocation.id)
+                for alloc in teacher_conflicts:
+                    alloc_start = alloc.start
+                    alloc_end = (datetime.combine(date.today(), alloc.start) + timedelta(hours=alloc.duration)).time()
+                    if (req_start < alloc_end and req_end > alloc_start):
+                        self.add_error(None, forms.ValidationError(
+                            f"❌ Teacher conflict: One of your teachers already has a class overlapping {dict(WEEKDAYS).get(desired_day)} {desired_start_time}-{req_end} - "
+                            f"{alloc.activityRealization.activity.name} in {alloc.classroom}."
+                        ))
+                        break
+                # Classroom overlap check
+                if desired_classroom:
+                    classroom_conflicts = Allocation.objects.filter(
                         timetable=timetable,
                         day=desired_day,
-                        start=desired_start_time,
-                        activityRealization__teachers__in=offered_allocation.activityRealization.teachers.all()
+                        classroom=desired_classroom
                     ).exclude(id=offered_allocation.id)
-                    
-                    if teacher_conflicts.exists():
-                        conflict = teacher_conflicts.first()
-                        self.add_error(None, forms.ValidationError(
-                            f"❌ Teacher conflict: One of your teachers already has a class at "
-                            f"{dict(WEEKDAYS).get(desired_day)} {desired_start_time} - "
-                            f"{conflict.activityRealization.activity.name} in {conflict.classroom}."
-                        ))
-                    
-                    # Check classroom availability if classroom is specified
-                    if desired_classroom:
-                        classroom_conflicts = Allocation.objects.filter(
-                            timetable=timetable,
-                            day=desired_day,
-                            start=desired_start_time,
-                            classroom=desired_classroom
-                        ).exclude(id=offered_allocation.id)
-                        
-                        if classroom_conflicts.exists():
-                            conflict = classroom_conflicts.first()
-                            teachers = ', '.join([str(t) for t in conflict.activityRealization.teachers.all()])
+                    for alloc in classroom_conflicts:
+                        alloc_start = alloc.start
+                        alloc_end = (datetime.combine(date.today(), alloc.start) + timedelta(hours=alloc.duration)).time()
+                        if (req_start < alloc_end and req_end > alloc_start):
+                            teachers = ', '.join([str(t) for t in alloc.activityRealization.teachers.all()])
                             self.add_error('desired_classroom', forms.ValidationError(
-                                f"❌ Classroom conflict: {desired_classroom} is already occupied at "
-                                f"{dict(WEEKDAYS).get(desired_day)} {desired_start_time} by "
-                                f"{conflict.activityRealization.activity.name} ({teachers})."
+                                f"❌ Classroom conflict: {desired_classroom} is already occupied (overlap) at "
+                                f"{dict(WEEKDAYS).get(desired_day)} {desired_start_time}-{req_end} by "
+                                f"{alloc.activityRealization.activity.name} ({teachers})."
                             ))
-                    
-                    # If no conflicts, check if slot is completely free
-                    if not teacher_conflicts.exists() and (not desired_classroom or not classroom_conflicts.exists()):
-                        # Check if there are ANY allocations at this time (regardless of classroom)
-                        any_allocations = Allocation.objects.filter(
-                            timetable=timetable,
-                            day=desired_day,
-                            start=desired_start_time
-                        ).exclude(id=offered_allocation.id)
-                        
-                        if not any_allocations.exists():
-                            # Completely free slot
-                            day_str = dict(WEEKDAYS).get(desired_day)
-                            classroom_str = f" in {desired_classroom}" if desired_classroom else ""
-                            cleaned_data['_slot_is_free'] = True
-                            cleaned_data['_free_slot_description'] = f"{day_str} at {desired_start_time}{classroom_str}"
-                        elif desired_classroom:
-                            # Classroom is free but other classes exist at this time
-                            day_str = dict(WEEKDAYS).get(desired_day)
-                            cleaned_data['_slot_is_free'] = True
-                            cleaned_data['_free_slot_description'] = f"{day_str} at {desired_start_time} in {desired_classroom}"
-                else:
-                    # Day or time not fully specified - can't check conflicts thoroughly
-                    pass
+                            break
+                # If no conflicts, check if slot is completely free
+                if not self._errors:
+                    any_allocations = Allocation.objects.filter(
+                        timetable=timetable,
+                        day=desired_day
+                    ).exclude(id=offered_allocation.id)
+                    overlap_found = False
+                    for alloc in any_allocations:
+                        alloc_start = alloc.start
+                        alloc_end = (datetime.combine(date.today(), alloc.start) + timedelta(hours=alloc.duration)).time()
+                        if (req_start < alloc_end and req_end > alloc_start):
+                            overlap_found = True
+                            break
+                    if not overlap_found:
+                        day_str = dict(WEEKDAYS).get(desired_day)
+                        classroom_str = f" in {desired_classroom}" if desired_classroom else ""
+                        cleaned_data['_slot_is_free'] = True
+                        cleaned_data['_free_slot_description'] = f"{day_str} at {desired_start_time}-{req_end}{classroom_str}"
+            # If day or time or duration not fully specified, can't check conflicts thoroughly
         
         return cleaned_data
 

@@ -14,7 +14,7 @@ def allocations_from_csv(f, timetable, name_filter=".*"):
     for i in WEEKDAYS:
         day_dict[i[1]] = i[0]
     l = []
-    with open(f, mode="r", encoding="utf-8") as f:
+    with open(f, mode="r", encoding="utf-8-sig") as f:
         reader = csv.DictReader(f)
         seen_aids = set([None])
         for d in reader:

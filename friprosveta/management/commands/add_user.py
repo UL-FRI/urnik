@@ -3,12 +3,14 @@ import sys
 import time
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django_auth_ldap.backend import LDAPBackend
 from ldap3 import ALL, Connection, Server
 
 from friprosveta.models import Teacher
-from timetable.models import User
+
+User = get_user_model()
 
 
 def create_single_user(

@@ -1,3 +1,6 @@
+#: timetable/models/timetables.py
+msgid "Optional reason for the trade request"
+msgstr "Neobvezen razlog za zahtevo po menjavi"
 # Slovenian translations for timetable app.
 # Copyright (C) 2025
 # This file is distributed under the same license as the timetable package.
@@ -344,6 +347,91 @@ msgstr "Nedelja"
 msgid "Create Trade Request"
 msgstr "Ustvari zahtevo za menjavo"
 
+msgid "When Would You Like to Move Your Class?"
+msgstr "Kdaj bi želeli premakniti svoj termin?"
+
+# New blocktrans with variable for bold ONE
+msgid "Choose %(one_bold)s of the following options. Selecting one will disable the other."
+msgstr "Izberite %(one_bold)s od naslednjih možnosti. Izbira ene onemogoči drugo."
+
+msgid "Choose ONE of the following options. Selecting one will disable the other."
+msgstr "Izberite ENO od naslednjih možnosti. Izbira ene možnosti onemogoči drugo."
+
+msgid "Find & Select Specific Slot"
+msgstr "Najdi in izberi obstoječ cikel"
+
+msgid "Browse a teacher's schedule and pick an exact slot to swap with."
+msgstr "Prebrskaj urnik predavatelja in izberi točen termin za menjavo."
+
+msgid "Select Teacher:"
+msgstr "Izberi predavatelja:"
+
+msgid "-- Select a teacher --"
+msgstr "-- Izberi predavatelja --"
+
+msgid "Choose the teacher whose time slots you want to see"
+msgstr "Izberite predavatelja, katerega termine želite videti"
+
+msgid "Select Subject:"
+msgstr "Izberi predmet:"
+
+msgid "-- Select a subject --"
+msgstr "-- Izberi predmet --"
+
+msgid "Choose the subject/activity"
+msgstr "Izberite predmet/dejavnost"
+
+msgid "Select a teacher and subject to see available time slots"
+msgstr "Izberite predavatelja in predmet za prikaz razpoložljivih terminov"
+
+msgid "Available Time Slots"
+msgstr "Razpoložljivi termini"
+
+msgid "Select Time Slot:"
+msgstr "Izberi termin:"
+
+msgid "No time slots found"
+msgstr "Ni najdenih terminov"
+
+msgid "OR"
+msgstr "ALI"
+
+msgid "Specify Time Preferences"
+msgstr "Določi časovne želje"
+
+msgid "Set your preferred time. Anyone can offer to swap with you."
+msgstr "Nastavite želeni čas. Kdor koli vam lahko ponudi menjavo."
+
+msgid "Preferred Day:"
+msgstr "Želeni dan:"
+
+msgid "Which day would you prefer?"
+msgstr "Kateri dan vam ustreza?"
+
+msgid "Preferred Start Time:"
+msgstr "Željen začetek:"
+
+msgid "What time would you like to start?"
+msgstr "Ob kateri uri želite začeti?"
+
+msgid "Preferred Classroom:"
+msgstr "Želena učilnica:"
+
+msgid "Which classroom would you prefer?"
+msgstr "Katera učilnica vam ustreza?"
+
+msgid "Selected:"
+msgstr "Izbrano:"
+
+msgid "Duration mismatch: Your class is %(offered_duration)s h, this is %(duration)s h"
+msgstr "Neskladje trajanja: vaš termin traja %(offered_duration)s h, ta pa %(duration)s h"
+
+msgid "Additional Details"
+msgstr "Dodatne podrobnosti"
+
+msgid "Back"
+msgstr "Nazaj"
+
 msgid "Select Allocation to Offer"
 msgstr "Izberi termin za ponudbo"
 
@@ -522,6 +610,12 @@ msgstr "Prilagodljivo - katerikoli primeren termin"
 
 msgid "Reason for Rejection (Optional)"
 msgstr "Razlog za zavrnitev (neobvezno)"
+
+msgid "Reason for time slot trade (optional)"
+msgstr "Razlog za menjavo termina (neobvezno)"
+
+msgid "Optional: Why do you want to make this trade?"
+msgstr "Neobvezno: zakaj želite to menjavo?"
 
 #, python-format
 msgid "Let %(teacher)s know why you're declining..."

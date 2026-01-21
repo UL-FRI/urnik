@@ -602,7 +602,7 @@ def my_trade_requests(request, timetable_slug=None):
     
     # Requests relevant to me (where I teach what they want)
     relevant_requests = TradeRequest.objects.filter(
-        models.Q(desired_allocation__activityRealization__teachers=teacher) |
+        models.Q(desired_allocation__activityRealization__teachers=teacher) |  # They want a specific slot I teach
         models.Q(desired_allocation__isnull=True)  # Include flexible requests
     ).exclude(
         requesting_teacher=teacher  # Exclude my own requests
@@ -617,14 +617,56 @@ def my_trade_requests(request, timetable_slug=None):
         'matched_with'
     ).order_by('-created_at')
     
+    # Requests directed at me (where I teach what they're offering)
+    directed_at_me = TradeRequest.objects.filter(
+        offered_allocation__activityRealization__teachers=teacher,
+        status='OPEN'
+    ).exclude(
+        requesting_teacher=teacher  # Exclude my own requests
+    ).select_related(
+        'offered_allocation__activityRealization__activity',
+        'offered_allocation__classroom',
+        'desired_allocation__activityRealization__activity',
+        'desired_allocation__classroom',
+        'requesting_teacher__user',
+        'matched_with'
+    ).order_by('-created_at')
+    
     # Filter by timetable if provided
     if timetable:
         my_requests = my_requests.filter(offered_allocation__timetable=timetable)
         relevant_requests = relevant_requests.filter(offered_allocation__timetable=timetable)
+        directed_at_me = directed_at_me.filter(offered_allocation__timetable=timetable)
     
+    # For each relevant flexible request, add a list of all overlapping allocations for this teacher
+    from datetime import datetime, timedelta, date
+    relevant_requests = list(relevant_requests)
+    for req in relevant_requests:
+        req.overlapping_allocations = []
+        if req.desired_allocation is None:
+            # Only show overlaps if flexible request has criteria
+            from timetable.models import Allocation
+            teacher_allocs = Allocation.objects.filter(activityRealization__teachers=teacher)
+            if req.desired_day and req.desired_start_time and req.desired_duration:
+                # Calculate request's time range as datetime objects
+                from datetime import datetime, timedelta
+                req_start_dt = datetime.combine(datetime.today(), datetime.strptime(req.desired_start_time, "%H:%M").time())
+                req_end_dt = req_start_dt + timedelta(hours=req.desired_duration)
+                for alloc in teacher_allocs:
+                    alloc_start_dt = datetime.combine(datetime.today(), datetime.strptime(alloc.start, "%H:%M").time())
+                    # Use Allocation's end property for correct end time
+                    if hasattr(alloc, 'end'):
+                        alloc_end_str = alloc.end
+                        alloc_end_dt = datetime.combine(datetime.today(), datetime.strptime(alloc_end_str, "%H:%M").time())
+                    else:
+                        alloc_end_dt = alloc_start_dt + timedelta(hours=alloc.duration)
+                    if alloc.day == req.desired_day and (req_start_dt < alloc_end_dt and req_end_dt > alloc_start_dt):
+                        req.overlapping_allocations.append(alloc)
+            # If no criteria, do not show any overlaps
     return render(request, 'timetable/trade_requests/my_requests.html', {
         'my_requests': my_requests,
         'relevant_requests': relevant_requests,
+        'directed_at_me': directed_at_me,
         'teacher': teacher,
         'timetable': timetable if timetable_slug else None,
         'timetable_slug': timetable_slug,
@@ -759,6 +801,15 @@ def create_trade_request(request, timetable_slug=None):
     
     # Convert to JSON-serializable format
     def allocation_to_dict(alloc):
+        # Get teacher names with full first and last name
+        teacher_names = []
+        for t in alloc.activityRealization.teachers.all():
+            if t.user:
+                full_name = f"{t.user.last_name}, {t.user.first_name}"
+                teacher_names.append(full_name)
+            else:
+                teacher_names.append(str(t))
+        
         return {
             'id': alloc.id,
             'day': alloc.day,
@@ -766,11 +817,28 @@ def create_trade_request(request, timetable_slug=None):
             'duration': alloc.duration,
             'activity': alloc.activityRealization.activity.name,
             'classroom': str(alloc.classroom),
-            'teachers': ', '.join([str(t) for t in alloc.activityRealization.teachers.all()]),
+            'teachers': ' | '.join(teacher_names),  # Use | as separator instead of comma
         }
     
     teacher_allocs_json = json.dumps([allocation_to_dict(a) for a in teacher_allocations])
     other_allocs_json = json.dumps([allocation_to_dict(a) for a in other_allocations])
+    
+    # Get unique teachers from other allocations with their allocation counts
+    teachers_dict = {}
+    for alloc in other_allocations:
+        for t in alloc.activityRealization.teachers.all():
+            if t.user:
+                full_name = f"{t.user.last_name}, {t.user.first_name}"
+            else:
+                full_name = str(t)
+            
+            if full_name not in teachers_dict:
+                teachers_dict[full_name] = 0
+            teachers_dict[full_name] += 1
+    
+    # Sort teachers alphabetically
+    teachers_list = [{'name': name, 'count': count} for name, count in sorted(teachers_dict.items())]
+    teachers_json = json.dumps(teachers_list)
     
     return render(request, 'timetable/trade_requests/create.html', {
         'form': form,
@@ -778,6 +846,7 @@ def create_trade_request(request, timetable_slug=None):
         'timetable_slug': timetable_slug,
         'teacher_allocations_json': teacher_allocs_json,
         'other_allocations_json': other_allocs_json,
+        'teachers_json': teachers_json,
     })
 
 

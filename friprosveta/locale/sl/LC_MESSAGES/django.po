@@ -261,6 +261,38 @@ msgstr "Izberi urnik za pregled nastavitev"
 msgid "URNIK - settings - choose timetable"
 msgstr "TIMETABLE - nastavitve - izberi urnik"
 
+#: templates/registration/login.html
+msgid "Prijava"
+msgstr "Prijava"
+
+#: templates/registration/login.html
+msgid "Napačno ime in/ali geslo"
+msgstr "Napačno ime in/ali geslo"
+
+#: templates/registration/login.html
+msgid "Prijava z UNI-LJ identiteto"
+msgstr "Prijava z UNI-LJ identiteto"
+
+#: templates/registration/login.html
+msgid "Prijavite se z vašim institucionalnim računom:"
+msgstr "Prijavite se z vašim institucionalnim računom:"
+
+#: templates/registration/login.html
+msgid "Standardna prijava"
+msgstr "Standardna prijava"
+
+#: templates/registration/login.html
+msgid "Vnesite uporabniško ime, kakršno uporabljate na učilnici (npr. janezn@fri1.uni-lj.si) in geslo."
+msgstr "Vnesite uporabniško ime, kakršno uporabljate na učilnici (npr. janezn@fri1.uni-lj.si) in geslo."
+
+#: templates/registration/login.html
+msgid "Uporabniško ime:"
+msgstr "Uporabniško ime:"
+
+#: templates/registration/login.html
+msgid "Geslo:"
+msgstr "Geslo:"
+
 #~ msgid "Slovenian"
 #~ msgstr "Slovensko"
 

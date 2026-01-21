@@ -423,7 +423,10 @@ class Osebe(Studis):
         """
         Is given person a teacher? (ali ima veljavno habilitacijo)
         """
-        return len(set(oseba.habilitacija) & self.teacher_titles_ids) > 0
+        habilitacija = getattr(oseba, "habilitacija", None)
+        if not habilitacija:
+            return False
+        return len(set(habilitacija) & self.teacher_titles_ids) > 0
 
     def get_teachers(self):
         """
