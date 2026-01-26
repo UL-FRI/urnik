@@ -1760,12 +1760,6 @@ def subject(request, timetable_slug, subject_code):
         teachers_formset = najave_percentage_formset(
             request.POST, request.FILES, queryset=najave_percentages, prefix="prc-"
         )
-        teachers_formset_valid = True
-        teachers_formset_errors = ""
-        teachers_formset.full_clean()
-        if not teachers_formset.is_valid():
-            teachers_formset_errors = str(teachers_formset.errors)
-            teachers_formset_valid = False
         realization_formsets = []
         for activity in activities:
             Formset = timetable.forms.realization_formset(activity, tt)
@@ -1783,20 +1777,15 @@ def subject(request, timetable_slug, subject_code):
             if not formset.is_valid():
                 realization_formsets_errors += str(formset.errors)
                 realization_formsets_valid = False
-        if teachers_formset_valid and realization_formsets_valid:
+        if realization_formsets_valid:
             try:
-                teachers_formset.save()
                 for i in realization_formsets:
                     i.save()
             except ValueError as e:
                 problem_msg = "  Problem saving realizations" + str(e)
                 problems = True
         else:
-            if not teachers_formset_valid:
-                problem_msg = "Problem v obrazcu za učitelje:" + str(
-                    teachers_formset_errors
-                )
-            elif not realization_formsets_valid:
+            if not realization_formsets_valid:
                 problem_msg = "Problem v enem od obrazcev za cikle:" + str(
                     realization_formsets_errors
                 )
