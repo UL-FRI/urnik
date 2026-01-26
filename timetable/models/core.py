@@ -64,6 +64,7 @@ class Teacher(models.Model):
     )
     # activities = models.ManyToManyField('Activity', blank=True, through='ActivityPercentage')
     code = models.CharField(max_length=32, default="", unique=True)
+    studis_id = models.BigIntegerField(unique=True, null=True, blank=True)
 
     @property
     def time_preferences(self):
