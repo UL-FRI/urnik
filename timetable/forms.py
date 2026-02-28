@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from datetime import date, datetime, timedelta
 
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
@@ -1302,12 +1303,28 @@ class TradeRequestForm(forms.ModelForm):
                 )
             
             # Check for conflicts when specifying time preferences instead of specific allocation
-            if not desired_allocation and (desired_day and desired_start_time and desired_duration):
+            effective_duration = desired_duration
+            if not effective_duration and offered_allocation:
+                effective_duration = offered_allocation.duration
+
+            if not desired_allocation and (desired_day and desired_start_time and effective_duration):
+                def to_time(value):
+                    if value is None:
+                        return None
+                    if hasattr(value, 'hour'):
+                        return value
+                    return datetime.strptime(value, "%H:%M").time()
+
                 desired_classroom = cleaned_data.get('desired_classroom')
                 timetable = offered_allocation.timetable
+                if not desired_duration:
+                    cleaned_data['desired_duration'] = effective_duration
                 # Calculate requested slot start/end
-                req_start = desired_start_time
-                req_end = (datetime.combine(date.today(), desired_start_time) + timedelta(hours=desired_duration)).time()
+                req_start = to_time(desired_start_time)
+                req_end = (datetime.combine(date.today(), req_start) + timedelta(hours=effective_duration)).time()
+                activity_realization = offered_allocation.activityRealization
+                activity_size = activity_realization.size
+                min_capacity = max(activity_size - 15, 0) if activity_size is not None else 0
                 # Teacher overlap check
                 teacher_conflicts = Allocation.objects.filter(
                     timetable=timetable,
@@ -1315,8 +1332,8 @@ class TradeRequestForm(forms.ModelForm):
                     activityRealization__teachers__in=offered_allocation.activityRealization.teachers.all()
                 ).exclude(id=offered_allocation.id)
                 for alloc in teacher_conflicts:
-                    alloc_start = alloc.start
-                    alloc_end = (datetime.combine(date.today(), alloc.start) + timedelta(hours=alloc.duration)).time()
+                    alloc_start = to_time(alloc.start)
+                    alloc_end = (datetime.combine(date.today(), alloc_start) + timedelta(hours=alloc.duration)).time()
                     if (req_start < alloc_end and req_end > alloc_start):
                         self.add_error(None, forms.ValidationError(
                             f"❌ Teacher conflict: One of your teachers already has a class overlapping {dict(WEEKDAYS).get(desired_day)} {desired_start_time}-{req_end} - "
@@ -1331,8 +1348,8 @@ class TradeRequestForm(forms.ModelForm):
                         classroom=desired_classroom
                     ).exclude(id=offered_allocation.id)
                     for alloc in classroom_conflicts:
-                        alloc_start = alloc.start
-                        alloc_end = (datetime.combine(date.today(), alloc.start) + timedelta(hours=alloc.duration)).time()
+                        alloc_start = to_time(alloc.start)
+                        alloc_end = (datetime.combine(date.today(), alloc_start) + timedelta(hours=alloc.duration)).time()
                         if (req_start < alloc_end and req_end > alloc_start):
                             teachers = ', '.join([str(t) for t in alloc.activityRealization.teachers.all()])
                             self.add_error('desired_classroom', forms.ValidationError(
@@ -1343,22 +1360,85 @@ class TradeRequestForm(forms.ModelForm):
                             break
                 # If no conflicts, check if slot is completely free
                 if not self._errors:
-                    any_allocations = Allocation.objects.filter(
-                        timetable=timetable,
-                        day=desired_day
-                    ).exclude(id=offered_allocation.id)
-                    overlap_found = False
-                    for alloc in any_allocations:
-                        alloc_start = alloc.start
-                        alloc_end = (datetime.combine(date.today(), alloc.start) + timedelta(hours=alloc.duration)).time()
-                        if (req_start < alloc_end and req_end > alloc_start):
-                            overlap_found = True
-                            break
-                    if not overlap_found:
-                        day_str = dict(WEEKDAYS).get(desired_day)
-                        classroom_str = f" in {desired_classroom}" if desired_classroom else ""
-                        cleaned_data['_slot_is_free'] = True
-                        cleaned_data['_free_slot_description'] = f"{day_str} at {desired_start_time}-{req_end}{classroom_str}"
+                    if desired_classroom:
+                        any_allocations = Allocation.objects.filter(
+                            timetable=timetable,
+                            day=desired_day,
+                            classroom=desired_classroom
+                        ).exclude(id=offered_allocation.id)
+                        overlap_found = False
+                        for alloc in any_allocations:
+                            alloc_start = to_time(alloc.start)
+                            alloc_end = (datetime.combine(date.today(), alloc_start) + timedelta(hours=alloc.duration)).time()
+                            if (req_start < alloc_end and req_end > alloc_start):
+                                overlap_found = True
+                                break
+                        if not overlap_found:
+                            day_str = dict(WEEKDAYS).get(desired_day)
+                            classroom_str = f" in {desired_classroom}" if desired_classroom else ""
+                            cleaned_data['_slot_is_free'] = True
+                            cleaned_data['_free_slot_description'] = f"{day_str} at {desired_start_time}-{req_end}{classroom_str}"
+                    else:
+                        suitable_classrooms = activity_realization.preferred_rooms(
+                            timetable=timetable
+                        )
+                        if not suitable_classrooms.exists():
+                            suitable_classrooms = activity_realization.preferred_rooms()
+                        suitable_classrooms = suitable_classrooms.order_by('name')
+                        if min_capacity:
+                            suitable_classrooms = suitable_classrooms.filter(
+                                capacity__gte=min_capacity
+                            )
+
+                        available_classroom = None
+                        for classroom in suitable_classrooms:
+                            any_allocations = Allocation.objects.filter(
+                                timetable=timetable,
+                                day=desired_day,
+                                classroom=classroom
+                            ).exclude(id=offered_allocation.id)
+                            overlap_found = False
+                            for alloc in any_allocations:
+                                alloc_start = to_time(alloc.start)
+                                alloc_end = (datetime.combine(date.today(), alloc_start) + timedelta(hours=alloc.duration)).time()
+                                if (req_start < alloc_end and req_end > alloc_start):
+                                    overlap_found = True
+                                    break
+                            if not overlap_found:
+                                available_classroom = classroom
+                                break
+
+                        if available_classroom:
+                            cleaned_data['desired_classroom'] = available_classroom
+                            day_str = dict(WEEKDAYS).get(desired_day)
+                            classroom_str = f" in {available_classroom}"
+                            cleaned_data['_slot_is_free'] = True
+                            cleaned_data['_free_slot_description'] = f"{day_str} at {desired_start_time}-{req_end}{classroom_str}"
+
+                if cleaned_data.get('_slot_is_free'):
+                    active_statuses = ['OPEN', 'PENDING_APPROVAL']
+                    existing_free_request = TradeRequest.objects.filter(
+                        status__in=active_statuses,
+                        desired_allocation__isnull=True,
+                        desired_day=desired_day,
+                        desired_start_time=desired_start_time,
+                        desired_duration=effective_duration,
+                        desired_classroom=cleaned_data.get('desired_classroom'),
+                        offered_allocation__timetable=timetable,
+                    )
+
+                    if self.instance and self.instance.pk:
+                        existing_free_request = existing_free_request.exclude(
+                            pk=self.instance.pk
+                        )
+
+                    if existing_free_request.exists():
+                        self.add_error(
+                            None,
+                            forms.ValidationError(
+                                "This empty slot has already been requested."
+                            ),
+                        )
             # If day or time or duration not fully specified, can't check conflicts thoroughly
         
         return cleaned_data

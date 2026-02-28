@@ -317,15 +317,34 @@ h1 {
     box-shadow: 0 3px 8px rgba(255, 152, 0, 0.2);
 }
 
+.selected-info.overlap-danger {
+    background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+    border-left-color: #e53935;
+    box-shadow: 0 3px 10px rgba(229, 57, 53, 0.35);
+}
+
 .selected-info strong {
     color: #2c3e50;
     font-size: 1em;
     margin-right: 8px;
 }
 
+.selected-info-icon {
+    color: #27ae60;
+    margin-right: 8px;
+}
+
+.selected-info.overlap-danger .selected-info-icon {
+    color: #e53935;
+}
+
 /* Hide original select fields */
 #id_offered_allocation,
-#id_desired_allocation {
+#id_desired_allocation,
+#id_desired_day,
+#id_desired_start_time,
+#id_desired_classroom,
+#id_desired_duration {
     display: none;
 }
 
@@ -581,6 +600,19 @@ h1 {
 
 .wizard-allocation-item:hover::before {
     transform: scaleY(1);
+}
+
+.wizard-allocation-item.requested {
+    opacity: 0.65;
+    cursor: not-allowed;
+    border-color: #dfe6e9;
+    background: #f6f7f9;
+    box-shadow: none;
+    transform: none;
+}
+
+.wizard-allocation-item.requested::before {
+    transform: scaleY(0);
 }
 
 .wizard-allocation-item.selected {
@@ -1044,6 +1076,12 @@ h1 {
                         
                         <!-- Hidden form field -->
                         {{ form.desired_allocation }}
+                        <div class="d-none">
+                            {{ form.desired_day }}
+                            {{ form.desired_start_time }}
+                            {{ form.desired_classroom }}
+                            {{ form.desired_duration }}
+                        </div>
                         
                         <div class="options-grid">
                             <!-- Option 1: Select specific timeslot -->
@@ -1103,48 +1141,21 @@ h1 {
                             
                             <div class="options-or-divider">{% trans "OR" %}</div>
                             
-                            <!-- Option 2: Specify preferences -->
+                            <!-- Option 2: Choose a free (empty) slot -->
                             <div class="option-container" id="option-2-container">
                                 <div class="option-header">
                                     <div class="option-number">2</div>
-                                    <h5 class="option-title">{% trans "Specify Time Preferences" %}</h5>
+                                    <h5 class="option-title">{% trans "Choose an Empty Slot" %}</h5>
                                 </div>
                                 <div class="option-description">
-                                    <i class="fas fa-info-circle"></i> {% trans "Set your preferred time. Anyone can offer to swap with you." %}
+                                    <i class="fas fa-info-circle"></i> {% trans "Pick from currently free time slots in the timetable." %}
                                 </div>
-                            
-                        <div class="row" id="time-preferences">
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="id_desired_day"><strong>{% trans "Preferred Day:" %}</strong></label>
-                                    {{ form.desired_day }}
-                                    <div class="help-text">{% trans "Which day would you prefer?" %}</div>
-                                    {% for error in form.desired_day.errors %}
-                                    <div class="text-danger">{{ error }}</div>
-                                    {% endfor %}
+                                <div id="free-slot-placeholder" style="display:block; text-align: center; padding: 30px 20px; color: #95a5a6;">
+                                    <i class="fas fa-hand-pointer" style="font-size: 2em; margin-bottom: 10px; display: block;"></i>
+                                    <p style="margin: 0;">{% trans "Select your own time slot first to see matching empty slots." %}</p>
                                 </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="id_desired_start_time"><strong>{% trans "Preferred Start Time:" %}</strong></label>
-                                    {{ form.desired_start_time }}
-                                    <div class="help-text">{% trans "What time would you like to start?" %}</div>
-                                    {% for error in form.desired_start_time.errors %}
-                                    <div class="text-danger">{{ error }}</div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="id_desired_classroom"><strong>{% trans "Preferred Classroom:" %}</strong></label>
-                                    {{ form.desired_classroom }}
-                                    <div class="help-text">{% trans "Which classroom would you prefer?" %}</div>
-                                    {% for error in form.desired_classroom.errors %}
-                                    <div class="text-danger">{{ error }}</div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        </div>
+                                <div id="free-slot-list" class="wizard-allocation-list" style="display:none;"></div>
+                                <div id="free-slot-info" class="selected-info" style="display:none;"></div>
                             </div>
                         </div>
                     </div>
@@ -1194,7 +1205,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const translations = {
         selectTimeSlotPrefix: "{% trans 'Select Time Slot:' %}",
         noTimeSlotsFound: "{% trans 'No time slots found' %}",
+        noFreeSlotsFound: "{% trans 'No empty slots found for the selected duration' %}",
+        selectYourSlotFirst: "{% trans 'Select your own time slot first to see matching empty slots.' %}",
         durationMismatch: "{% blocktrans %}Duration mismatch: Your class is %(offered_duration)s h, this is %(duration)s h{% endblocktrans %}",
+        alreadyRequested: "{% trans 'Already requested' %}",
         selectedLabel: "{% trans 'Selected:' %}",
         hour: "{% trans 'hour' %}",
         hours: "{% trans 'hours' %}",
@@ -1219,6 +1233,138 @@ document.addEventListener('DOMContentLoaded', function() {
     const teacherAllocations = {{ teacher_allocations_json|safe }};
     const otherAllocations = {{ other_allocations_json|safe }};
     const teachersList = {{ teachers_json|safe }};
+    const freeSlots = {{ free_slots_json|safe }};
+    const allocationStatsUrl = "{% url 'trade_request_allocation_stats' timetable_slug=timetable_slug %}";
+    const freeSlotStatsUrl = "{% url 'trade_request_free_slot_stats' timetable_slug=timetable_slug %}";
+    const allocationStats = new Map();
+    const freeSlotStats = new Map();
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function renderSelectedInfo(alloc) {
+        const info = document.getElementById('desired-info');
+        if (!info) return;
+        const stats = allocationStats.get(alloc.id);
+        const ratio = stats && stats.n_students ? (stats.total_overlaps ?? 0) / stats.n_students : 0;
+        info.classList.toggle('overlap-danger', ratio > 0.10);
+        const statsText = stats ? ` • Students: ${stats.n_students ?? 0} • Overlaps: ${stats.total_overlaps ?? 0}` : '';
+        info.style.display = 'block';
+        info.innerHTML = `
+            <i class="fas fa-check-circle selected-info-icon"></i>
+            <strong>${translations.selectedLabel}</strong>
+            ${alloc.activity} • ${alloc.teachers} • ${alloc.classroom} • ${getDayName(alloc.day)} ${alloc.start} (+${alloc.duration}h)${statsText}
+        `;
+    }
+
+    function updateAllocationStatsInList() {
+        document.querySelectorAll('[data-stats-for]').forEach(node => {
+            const allocationId = Number(node.dataset.statsFor);
+            const stats = allocationStats.get(allocationId);
+            if (!stats) return;
+            const studentsNode = node.querySelector('.stats-students');
+            const overlapsNode = node.querySelector('.stats-overlaps');
+            if (studentsNode) studentsNode.textContent = stats.n_students ?? 0;
+            if (overlapsNode) overlapsNode.textContent = stats.total_overlaps ?? 0;
+        });
+
+        if (selectedDesired) {
+            renderSelectedInfo(selectedDesired);
+        }
+    }
+
+    function loadAllocationStats(allocationIds) {
+        const uniqueIds = Array.from(new Set(allocationIds.map(id => Number(id))));
+        const missingIds = uniqueIds.filter(id => !allocationStats.has(id));
+        if (missingIds.length === 0) {
+            updateAllocationStatsInList();
+            return;
+        }
+
+        fetch(allocationStatsUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ allocation_ids: missingIds })
+        })
+            .then(response => response.ok ? response.json() : null)
+            .then(data => {
+                if (!data || !data.stats) return;
+                Object.keys(data.stats).forEach(id => {
+                    allocationStats.set(Number(id), data.stats[id]);
+                });
+                updateAllocationStatsInList();
+            })
+            .catch(() => {
+                // Silently ignore stats errors to avoid blocking UI.
+            });
+    }
+
+    function makeFreeSlotKey(slot) {
+        return `${slot.day}|${slot.start}|${slot.duration}|${slot.classroom_id}`;
+    }
+
+    function renderFreeSlotInfo(slot) {
+        const info = document.getElementById('free-slot-info');
+        if (!info) return;
+        const stats = freeSlotStats.get(makeFreeSlotKey(slot));
+        const ratio = stats && stats.n_students ? (stats.total_overlaps ?? 0) / stats.n_students : 0;
+        info.classList.toggle('overlap-danger', ratio > 0.10);
+        const statsText = stats ? ` • Students: ${stats.n_students ?? 0} • Overlaps: ${stats.total_overlaps ?? 0}` : '';
+        info.style.display = 'block';
+        info.innerHTML = `
+            <i class="fas fa-check-circle selected-info-icon"></i>
+            <strong>${translations.selectedLabel}</strong>
+            ${getDayName(slot.day)} ${slot.start} • ${slot.classroom} • ${slot.duration} ${slot.duration === 1 ? translations.hour : translations.hours}${statsText}
+        `;
+    }
+
+    function loadFreeSlotStats(offeredAllocationId, slot) {
+        const key = makeFreeSlotKey(slot);
+        if (freeSlotStats.has(key)) {
+            renderFreeSlotInfo(slot);
+            return;
+        }
+
+        fetch(freeSlotStatsUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                offered_allocation_id: offeredAllocationId,
+                slot: {
+                    day: slot.day,
+                    start: slot.start,
+                    duration: slot.duration
+                }
+            })
+        })
+            .then(response => response.ok ? response.json() : null)
+            .then(data => {
+                if (!data || !data.stats) return;
+                freeSlotStats.set(key, data.stats);
+                renderFreeSlotInfo(slot);
+            })
+            .catch(() => {
+                // Silently ignore stats errors to avoid blocking UI.
+            });
+    }
     
     // State
     let selectedTeacher = null;
@@ -1230,6 +1376,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const desiredField = document.getElementById('id_desired_allocation');
     const desiredDay = document.getElementById('id_desired_day');
     const desiredStartTime = document.getElementById('id_desired_start_time');
+    const desiredClassroom = document.getElementById('id_desired_classroom');
+    const desiredDuration = document.getElementById('id_desired_duration');
     
     // Populate teacher dropdown
     const teacherSelect = document.getElementById('teacher-select');
@@ -1402,6 +1550,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         <i class="fas fa-door-open"></i> ${alloc.classroom}
                         <i class="fas fa-clock" style="margin-left: 12px;"></i> ${alloc.duration} ${alloc.duration === 1 ? translations.hour : translations.hours}
                     </div>
+                    <div class="wizard-allocation-details" data-stats-for="${alloc.id}">
+                        <i class="fas fa-user-graduate"></i> Students: <span class="stats-students">...</span>
+                        <i class="fas fa-user-clock" style="margin-left: 12px;"></i> Overlaps: <span class="stats-overlaps">...</span>
+                    </div>
                     ${warningHtml}
                 </div>
                 <div class="wizard-allocation-badge">
@@ -1412,6 +1564,145 @@ document.addEventListener('DOMContentLoaded', function() {
             item.addEventListener('click', () => selectDesired(alloc));
             list.appendChild(item);
         });
+
+        loadAllocationStats(finalAllocations.map(alloc => alloc.id));
+    }
+
+    function getSelectedOfferedAllocation() {
+        const offeredSelect = document.getElementById('id_offered_allocation');
+        const offeredId = offeredSelect ? offeredSelect.value : null;
+        if (!offeredId) return null;
+        return teacherAllocations.find(a => a.id == offeredId) || null;
+    }
+
+    function buildFreeSlotList() {
+        const placeholder = document.getElementById('free-slot-placeholder');
+        const list = document.getElementById('free-slot-list');
+        const info = document.getElementById('free-slot-info');
+
+        const offeredAlloc = getSelectedOfferedAllocation();
+        if (!offeredAlloc) {
+            placeholder.style.display = 'block';
+            placeholder.innerHTML = `
+                <i class="fas fa-hand-pointer" style="font-size: 2em; margin-bottom: 10px; display: block;"></i>
+                <p style="margin: 0;">${translations.selectYourSlotFirst}</p>
+            `;
+            list.style.display = 'none';
+            list.innerHTML = '';
+            info.style.display = 'none';
+            return;
+        }
+
+        const preferredClassroomIds = Array.isArray(offeredAlloc.preferred_classroom_ids)
+            ? offeredAlloc.preferred_classroom_ids.map(id => Number(id))
+            : [];
+        const hasRoomLimit = preferredClassroomIds.length > 0;
+        const minCapacity = Number.isFinite(offeredAlloc.min_capacity)
+            ? offeredAlloc.min_capacity
+            : null;
+
+        const filteredSlots = freeSlots.filter(slot =>
+            slot.duration === offeredAlloc.duration &&
+            slot.timetable_id === offeredAlloc.timetable_id &&
+            (!hasRoomLimit || preferredClassroomIds.includes(Number(slot.classroom_id))) &&
+            (minCapacity === null || Number(slot.classroom_capacity) >= minCapacity)
+        );
+
+        placeholder.style.display = 'none';
+        list.style.display = 'block';
+        list.innerHTML = '';
+
+        if (filteredSlots.length === 0) {
+            list.innerHTML = `<div class="wizard-no-results"><i class="fas fa-search"></i><br>${translations.noFreeSlotsFound}</div>`;
+            info.style.display = 'none';
+            return;
+        }
+
+        const dayOrder = {MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5};
+        filteredSlots.sort((a, b) => {
+            if (dayOrder[a.day] !== dayOrder[b.day]) {
+                return dayOrder[a.day] - dayOrder[b.day];
+            }
+            if (a.start !== b.start) {
+                return a.start.localeCompare(b.start);
+            }
+            return a.classroom.localeCompare(b.classroom);
+        });
+
+        filteredSlots.forEach(slot => {
+            const item = document.createElement('div');
+            item.className = 'wizard-allocation-item';
+            item.dataset.day = slot.day;
+            item.dataset.start = slot.start;
+            item.dataset.classroomId = slot.classroom_id;
+
+            if (slot.is_requested) {
+                item.classList.add('requested');
+            }
+
+            item.innerHTML = `
+                <div class="wizard-allocation-main">
+                    <div class="wizard-allocation-day-time">
+                        <i class="fas fa-calendar-day"></i>
+                        ${getDayName(slot.day)}, ${slot.start}
+                    </div>
+                    <div class="wizard-allocation-details">
+                        <i class="fas fa-door-open"></i> ${slot.classroom}
+                        <i class="fas fa-clock" style="margin-left: 12px;"></i> ${slot.duration} ${slot.duration === 1 ? translations.hour : translations.hours}
+                    </div>
+                </div>
+                <div class="wizard-allocation-badge">
+                    <i class="fas fa-check" style="font-size: 0.85em; margin-right: 4px;"></i>
+                    ${slot.duration}h
+                </div>
+            `;
+
+            if (slot.is_requested) {
+                const details = item.querySelector('.wizard-allocation-details');
+                if (details) {
+                    details.insertAdjacentHTML(
+                        'beforeend',
+                        ` <span style="color: #c0392b; font-weight: 600;">${translations.alreadyRequested}</span>`
+                    );
+                }
+            } else {
+                item.addEventListener('click', () => selectFreeSlot(slot));
+            }
+            list.appendChild(item);
+        });
+    }
+
+    function selectFreeSlot(slot) {
+        desiredField.value = '';
+        selectedDesired = null;
+
+        document.querySelectorAll('#allocation-final-list .wizard-allocation-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+
+        if (desiredDay) desiredDay.value = slot.day;
+        if (desiredStartTime) desiredStartTime.value = slot.start;
+        if (desiredClassroom) desiredClassroom.value = slot.classroom_id;
+        if (desiredDuration) desiredDuration.value = slot.duration;
+
+        document.querySelectorAll('#free-slot-list .wizard-allocation-item').forEach(item => {
+            const isMatch = item.dataset.day === slot.day &&
+                item.dataset.start === slot.start &&
+                item.dataset.classroomId == slot.classroom_id;
+            item.classList.toggle('selected', isMatch);
+        });
+
+        renderFreeSlotInfo(slot);
+
+        const desiredInfo = document.getElementById('desired-info');
+        if (desiredInfo) desiredInfo.style.display = 'none';
+
+        const offeredAlloc = getSelectedOfferedAllocation();
+        if (offeredAlloc) {
+            loadFreeSlotStats(offeredAlloc.id, slot);
+        }
+
+        updateOptionStates(false, true);
     }
     
     function selectDesired(alloc) {
@@ -1427,14 +1718,7 @@ document.addEventListener('DOMContentLoaded', function() {
             item.classList.toggle('selected', item.dataset.id == alloc.id);
         });
         
-        // Show selection info
-        const info = document.getElementById('desired-info');
-        info.style.display = 'block';
-        info.innerHTML = `
-            <i class="fas fa-check-circle" style="color: #27ae60; margin-right: 8px;"></i>
-            <strong>${translations.selectedLabel}</strong>
-            ${alloc.activity} • ${alloc.teachers} • ${alloc.classroom} • ${getDayName(alloc.day)} ${alloc.start} (+${alloc.duration}h)
-        `;
+        renderSelectedInfo(alloc);
     }
     
     function getDayName(code) {
@@ -1489,7 +1773,20 @@ document.addEventListener('DOMContentLoaded', function() {
         // Clear criteria fields first
         desiredDay.value = '';
         desiredStartTime.value = '';
-        document.getElementById('id_desired_classroom').value = '';
+        if (desiredClassroom) {
+            desiredClassroom.value = '';
+        }
+        if (desiredDuration) {
+            desiredDuration.value = '';
+        }
+
+        const freeSlotInfo = document.getElementById('free-slot-info');
+        if (freeSlotInfo) {
+            freeSlotInfo.style.display = 'none';
+        }
+        document.querySelectorAll('#free-slot-list .wizard-allocation-item').forEach(item => {
+            item.classList.remove('selected');
+        });
         
         // Call original function
         selectedDesired = alloc;
@@ -1500,21 +1797,13 @@ document.addEventListener('DOMContentLoaded', function() {
             item.classList.toggle('selected', item.dataset.id == alloc.id);
         });
         
-        // Show selection info
-        const info = document.getElementById('desired-info');
-        info.style.display = 'block';
-        info.innerHTML = `
-            <i class="fas fa-check-circle" style="color: #27ae60; margin-right: 8px;"></i>
-            <strong>Selected:</strong>
-            ${alloc.activity} • ${alloc.teachers} • ${alloc.classroom} • ${getDayName(alloc.day)} ${alloc.start} (+${alloc.duration}h)
-        `;
+        renderSelectedInfo(alloc);
         
         // Mark option 1 as active, disable option 2
         updateOptionStates(true, false);
     };
     
     // Monitor changes to detect when to clear option states
-    const desiredClassroom = document.getElementById('id_desired_classroom');
     function checkOptionStates() {
         const hasDesiredAlloc = desiredField.value !== '';
         const hasCriteria = desiredDay.value !== '' || 
@@ -1563,9 +1852,25 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Rebuild free slot list when offered allocation changes
+    const offeredSelect = document.getElementById('id_offered_allocation');
+    if (offeredSelect) {
+        offeredSelect.addEventListener('change', function() {
+            if (desiredDay) desiredDay.value = '';
+            if (desiredStartTime) desiredStartTime.value = '';
+            if (desiredClassroom) desiredClassroom.value = '';
+            if (desiredDuration) desiredDuration.value = '';
+            const freeSlotInfo = document.getElementById('free-slot-info');
+            if (freeSlotInfo) freeSlotInfo.style.display = 'none';
+            buildFreeSlotList();
+            checkOptionStates();
+        });
+    }
     
     // Check states on page load
     checkOptionStates();
+    buildFreeSlotList();
     
     function getDayName(code) {
         return translations.dayNames[code] || code;

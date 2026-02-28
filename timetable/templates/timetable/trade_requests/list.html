@@ -559,11 +559,23 @@ h1 i {
                                     </strong>
                                     <div class="allocation-detail">
                                         <i class="fas fa-calendar-day"></i>
-                                        <span>{{ request.offered_allocation.get_day_display }}, {{ request.offered_allocation.start|format_time }}</span>
+                                        <span>
+                                            {% if request.original_offered_day %}
+                                                {{ request.get_original_offered_day_display }}{% if request.original_offered_start %}, {{ request.original_offered_start|format_time }}{% endif %}
+                                            {% else %}
+                                                {{ request.offered_allocation.get_day_display }}, {{ request.offered_allocation.start|format_time }}
+                                            {% endif %}
+                                        </span>
                                     </div>
                                     <div class="allocation-detail">
                                         <i class="fas fa-door-open"></i>
-                                        <span>{{ request.offered_allocation.classroom|default:"TBA" }}</span>
+                                        <span>
+                                            {% if request.original_offered_classroom %}
+                                                {{ request.original_offered_classroom }}
+                                            {% else %}
+                                                {{ request.offered_allocation.classroom|default:"TBA" }}
+                                            {% endif %}
+                                        </span>
                                     </div>
                                     <div class="allocation-detail">
                                         <i class="fas fa-hourglass-half"></i>
@@ -584,11 +596,23 @@ h1 i {
                                         </strong>
                                         <div class="allocation-detail">
                                             <i class="fas fa-calendar-day"></i>
-                                            <span>{{ request.desired_allocation.get_day_display }}, {{ request.desired_allocation.start|format_time }}</span>
+                                            <span>
+                                                {% if request.original_desired_day %}
+                                                    {{ request.get_original_desired_day_display }}{% if request.original_desired_start_time %}, {{ request.original_desired_start_time|format_time }}{% endif %}
+                                                {% else %}
+                                                    {{ request.desired_allocation.get_day_display }}, {{ request.desired_allocation.start|format_time }}
+                                                {% endif %}
+                                            </span>
                                         </div>
                                         <div class="allocation-detail">
                                             <i class="fas fa-door-open"></i>
-                                            <span>{{ request.desired_allocation.classroom|default:"TBA" }}</span>
+                                            <span>
+                                                {% if request.original_desired_classroom %}
+                                                    {{ request.original_desired_classroom }}
+                                                {% else %}
+                                                    {{ request.desired_allocation.classroom|default:"TBA" }}
+                                                {% endif %}
+                                            </span>
                                         </div>
                                         <div class="allocation-detail">
                                             <i class="fas fa-hourglass-half"></i>
@@ -601,19 +625,46 @@ h1 i {
                                         {% if request.desired_day %}
                                             <div class="allocation-detail">
                                                 <i class="fas fa-calendar-day"></i>
-                                                <span>{% trans "Preferred day" %}: {{ request.get_desired_day_display }}</span>
+                                                <span>
+                                                    {% trans "Preferred day" %}:
+                                                    {% if request.original_desired_day %}
+                                                        {{ request.get_original_desired_day_display }}
+                                                    {% else %}
+                                                        {{ request.get_desired_day_display }}
+                                                    {% endif %}
+                                                </span>
                                             </div>
                                         {% endif %}
                                         {% if request.desired_start_time %}
                                             <div class="allocation-detail">
                                                 <i class="fas fa-clock"></i>
-                                                <span>{% trans "Preferred time" %}: {{ request.desired_start_time|format_time }}</span>
+                                                <span>
+                                                    {% trans "Preferred time" %}:
+                                                    {% if request.original_desired_start_time %}
+                                                        {{ request.original_desired_start_time|format_time }}
+                                                    {% else %}
+                                                        {{ request.desired_start_time|format_time }}
+                                                    {% endif %}
+                                                </span>
                                             </div>
                                         {% endif %}
                                         {% if request.desired_duration %}
                                             <div class="allocation-detail">
                                                 <i class="fas fa-hourglass-half"></i>
-                                                <span>{% trans "Duration" %}: {{ request.desired_duration|format_duration }}</span>
+                                                <span>
+                                                    {% trans "Duration" %}:
+                                                    {% if request.original_desired_duration %}
+                                                        {{ request.original_desired_duration|format_duration }}
+                                                    {% else %}
+                                                        {{ request.desired_duration|format_duration }}
+                                                    {% endif %}
+                                                </span>
+                                            </div>
+                                        {% endif %}
+                                        {% if request.original_desired_classroom %}
+                                            <div class="allocation-detail">
+                                                <i class="fas fa-door-open"></i>
+                                                <span>{% trans "Preferred classroom" %}: {{ request.original_desired_classroom }}</span>
                                             </div>
                                         {% endif %}
                                         {% if not request.desired_day and not request.desired_start_time and not request.desired_duration %}

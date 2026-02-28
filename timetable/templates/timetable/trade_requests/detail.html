@@ -349,6 +349,14 @@
                         <div class="detail-line">
                             <i class="fas fa-hourglass-half"></i> {{ trade_request.offered_allocation.duration|format_duration }}
                         </div>
+                        {% if trade_request.original_offered_day or trade_request.original_offered_start or trade_request.original_offered_classroom %}
+                        <div class="detail-line">
+                            <i class="fas fa-history"></i> {% trans "Requested slot" %}:
+                            {% if trade_request.original_offered_day %}{{ trade_request.get_original_offered_day_display }}{% endif %}
+                            {% if trade_request.original_offered_start %} {{ trade_request.original_offered_start|format_time }}{% endif %}
+                            {% if trade_request.original_offered_classroom %} • {{ trade_request.original_offered_classroom }}{% endif %}
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
                 
@@ -373,21 +381,34 @@
                             <div class="detail-line">
                                 <i class="fas fa-hourglass-half"></i> {{ trade_request.desired_allocation.duration|format_duration }}
                             </div>
+                            {% if trade_request.original_desired_day or trade_request.original_desired_start_time or trade_request.original_desired_classroom %}
+                            <div class="detail-line">
+                                <i class="fas fa-history"></i> {% trans "Requested slot" %}:
+                                {% if trade_request.original_desired_day %}{{ trade_request.get_original_desired_day_display }}{% endif %}
+                                {% if trade_request.original_desired_start_time %} {{ trade_request.original_desired_start_time|format_time }}{% endif %}
+                                {% if trade_request.original_desired_classroom %} • {{ trade_request.original_desired_classroom }}{% endif %}
+                            </div>
+                            {% endif %}
                         {% else %}
                             <span class="activity-name" style="font-style: italic; color: #6c757d;">Flexible - any suitable time slot</span>
                             {% if trade_request.desired_day %}
                             <div class="detail-line">
-                                <i class="fas fa-calendar"></i> Preferred day: {{ trade_request.get_desired_day_display }}
+                                <i class="fas fa-calendar"></i> Preferred day: {% if trade_request.original_desired_day %}{{ trade_request.get_original_desired_day_display }}{% else %}{{ trade_request.get_desired_day_display }}{% endif %}
                             </div>
                             {% endif %}
                             {% if trade_request.desired_start_time %}
                             <div class="detail-line">
-                                <i class="fas fa-clock"></i> Preferred time: {{ trade_request.desired_start_time|format_time }}
+                                <i class="fas fa-clock"></i> Preferred time: {% if trade_request.original_desired_start_time %}{{ trade_request.original_desired_start_time|format_time }}{% else %}{{ trade_request.desired_start_time|format_time }}{% endif %}
                             </div>
                             {% endif %}
                             {% if trade_request.desired_duration %}
                             <div class="detail-line">
-                                <i class="fas fa-hourglass-half"></i> Duration: {{ trade_request.desired_duration|format_duration }}
+                                <i class="fas fa-hourglass-half"></i> Duration: {% if trade_request.original_desired_duration %}{{ trade_request.original_desired_duration|format_duration }}{% else %}{{ trade_request.desired_duration|format_duration }}{% endif %}
+                            </div>
+                            {% endif %}
+                            {% if trade_request.original_desired_classroom %}
+                            <div class="detail-line">
+                                <i class="fas fa-door-open"></i> Preferred classroom: {{ trade_request.original_desired_classroom }}
                             </div>
                             {% endif %}
                         {% endif %}

@@ -494,6 +494,13 @@
                                     <i class="fas fa-calendar"></i> {{ req.offered_allocation.get_day_display }} {{ req.offered_allocation.start }}<br>
                                     <i class="fas fa-door-open"></i> {{ req.offered_allocation.classroom }}<br>
                                     <i class="fas fa-clock"></i> {{ req.offered_allocation.duration }}h
+                                    {% if req.offered_student_stats %}
+                                    <div class="text-muted" style="margin-top: 6px; font-size: 0.9em;">
+                                        <i class="fas fa-user-graduate"></i> Students: {{ req.offered_student_stats.n_students }}
+                                        &nbsp;|&nbsp;
+                                        <i class="fas fa-user-clock"></i> Overlaps: {{ req.offered_student_stats.total_overlaps }}
+                                    </div>
+                                    {% endif %}
                                 </div>
                             </div>
                             
@@ -526,6 +533,13 @@
                                     <i class="fas fa-calendar"></i> {{ req.desired_allocation.get_day_display }} {{ req.desired_allocation.start }}<br>
                                     <i class="fas fa-door-open"></i> {{ req.desired_allocation.classroom }}<br>
                                     <i class="fas fa-clock"></i> {{ req.desired_allocation.duration }}h
+                                    {% if req.desired_student_stats %}
+                                    <div class="text-muted" style="margin-top: 6px; font-size: 0.9em;">
+                                        <i class="fas fa-user-graduate"></i> Students: {{ req.desired_student_stats.n_students }}
+                                        &nbsp;|&nbsp;
+                                        <i class="fas fa-user-clock"></i> Overlaps: {{ req.desired_student_stats.total_overlaps }}
+                                    </div>
+                                    {% endif %}
                                 </div>
                             {% else %}
                                 <div class="allocation-details" style="background: #e8f5e9; border-left: 4px solid #28a745;">
@@ -539,8 +553,18 @@
                                     {% if req.desired_duration %}
                                         <i class="fas fa-hourglass-half"></i> Duration: {{ req.desired_duration }}h<br>
                                     {% endif %}
+                                    {% if req.desired_classroom %}
+                                        <i class="fas fa-door-open"></i> Classroom: {{ req.desired_classroom }}<br>
+                                    {% endif %}
                                     {% if not req.desired_day and not req.desired_start_time and not req.desired_duration %}
                                         <span style="color: #28a745;">✨ Any free slot</span>
+                                    {% endif %}
+                                    {% if req.desired_slot_stats %}
+                                    <div class="text-muted" style="margin-top: 6px; font-size: 0.9em;">
+                                        <i class="fas fa-user-graduate"></i> Students: {{ req.desired_slot_stats.n_students }}
+                                        &nbsp;|&nbsp;
+                                        <i class="fas fa-user-clock"></i> Overlaps: {{ req.desired_slot_stats.total_overlaps }}
+                                    </div>
                                     {% endif %}
                                 </div>
                             {% endif %}
@@ -616,6 +640,13 @@
                                     <i class="fas fa-calendar"></i> {{ match.request_1.offered_allocation.get_day_display }} {{ match.request_1.offered_allocation.start }}<br>
                                     <i class="fas fa-door-open"></i> {{ match.request_1.offered_allocation.classroom }}<br>
                                     <i class="fas fa-clock"></i> {{ match.request_1.offered_allocation.duration }}h
+                                    {% if match.request_1.offered_student_stats %}
+                                    <div class="text-muted" style="margin-top: 6px; font-size: 0.9em;">
+                                        <i class="fas fa-user-graduate"></i> Students: {{ match.request_1.offered_student_stats.n_students }}
+                                        &nbsp;|&nbsp;
+                                        <i class="fas fa-user-clock"></i> Overlaps: {{ match.request_1.offered_student_stats.total_overlaps }}
+                                    </div>
+                                    {% endif %}
                                 </div>
                             </div>
                             
@@ -657,6 +688,13 @@
                                     <i class="fas fa-calendar"></i> {{ match.request_2.offered_allocation.get_day_display }} {{ match.request_2.offered_allocation.start }}<br>
                                     <i class="fas fa-door-open"></i> {{ match.request_2.offered_allocation.classroom }}<br>
                                     <i class="fas fa-clock"></i> {{ match.request_2.offered_allocation.duration }}h
+                                    {% if match.request_2.offered_student_stats %}
+                                    <div class="text-muted" style="margin-top: 6px; font-size: 0.9em;">
+                                        <i class="fas fa-user-graduate"></i> Students: {{ match.request_2.offered_student_stats.n_students }}
+                                        &nbsp;|&nbsp;
+                                        <i class="fas fa-user-clock"></i> Overlaps: {{ match.request_2.offered_student_stats.total_overlaps }}
+                                    </div>
+                                    {% endif %}
                                 </div>
                             </div>
                             

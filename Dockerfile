@@ -59,7 +59,7 @@ RUN uv run python3 manage.py collectstatic --noinput --settings=urnik_fri.settin
 RUN uv pip install uwsgi
 
 # Chown everything to the user timetable
-RUN chown timetable:timetable -R /home/timetable
+RUN chown -R timetable:timetable /home/timetable
 
 # Make wait-for-it.sh as executable. It is used by testing image to wait
 # for the database container to be online before the tests are ran.
