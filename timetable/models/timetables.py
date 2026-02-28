@@ -323,6 +323,30 @@ class TradeRequest(models.Model):
         related_name='trade_requests_offering',
         on_delete=models.CASCADE
     )
+
+    # Snapshot of the offered allocation at request time
+    original_offered_day = models.CharField(
+        max_length=3,
+        choices=WEEKDAYS,
+        null=True,
+        blank=True,
+        help_text="Offered allocation day at request time"
+    )
+    original_offered_start = models.CharField(
+        max_length=5,
+        choices=WORKHOURS,
+        null=True,
+        blank=True,
+        help_text="Offered allocation start time at request time"
+    )
+    original_offered_classroom = models.ForeignKey(
+        'Classroom',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='trade_requests_original_classroom',
+        help_text="Offered allocation classroom at request time"
+    )
     
     # The allocation the teacher wants to receive (optional - can be "any suitable")
     desired_allocation = models.ForeignKey(
@@ -333,6 +357,16 @@ class TradeRequest(models.Model):
         blank=True,
         help_text="Specific allocation desired, leave empty for 'any suitable'"
     )
+
+    # Snapshot of the desired selection at request time
+    original_desired_allocation = models.ForeignKey(
+        Allocation,
+        related_name='trade_requests_original_desired_allocation',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Desired allocation at request time"
+    )
     
     # Alternative criteria for desired allocation when desired_allocation is None
     desired_day = models.CharField(
@@ -342,6 +376,13 @@ class TradeRequest(models.Model):
         blank=True,
         help_text="Preferred day for the trade"
     )
+    original_desired_day = models.CharField(
+        max_length=3,
+        choices=WEEKDAYS,
+        null=True,
+        blank=True,
+        help_text="Preferred day at request time"
+    )
     desired_start_time = models.CharField(
         max_length=5, 
         choices=WORKHOURS, 
@@ -349,10 +390,22 @@ class TradeRequest(models.Model):
         blank=True,
         help_text="Preferred start time"
     )
+    original_desired_start_time = models.CharField(
+        max_length=5,
+        choices=WORKHOURS,
+        null=True,
+        blank=True,
+        help_text="Preferred start time at request time"
+    )
     desired_duration = models.IntegerField(
         null=True, 
         blank=True,
         help_text="Preferred duration in hours"
+    )
+    original_desired_duration = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Preferred duration in hours at request time"
     )
     desired_classroom = models.ForeignKey(
         'Classroom',
@@ -361,6 +414,14 @@ class TradeRequest(models.Model):
         on_delete=models.SET_NULL,
         related_name='trade_requests_desired_classroom',
         help_text="Preferred classroom for the new time slot"
+    )
+    original_desired_classroom = models.ForeignKey(
+        'Classroom',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='trade_requests_original_desired_classroom',
+        help_text="Preferred classroom at request time"
     )
     
     # Request details
@@ -446,6 +507,34 @@ class TradeRequest(models.Model):
     
     def save(self, *args, **kwargs):
         """Save the trade request without automatic matching to prevent admin hanging."""
+        if not self.pk:
+            if self.offered_allocation and not self.original_offered_day:
+                self.original_offered_day = self.offered_allocation.day
+                self.original_offered_start = self.offered_allocation.start
+                self.original_offered_classroom = self.offered_allocation.classroom
+
+            if self.desired_allocation and not self.original_desired_allocation:
+                self.original_desired_allocation = self.desired_allocation
+
+            if self.desired_allocation:
+                if self.original_desired_day is None:
+                    self.original_desired_day = self.desired_allocation.day
+                if self.original_desired_start_time is None:
+                    self.original_desired_start_time = self.desired_allocation.start
+                if self.original_desired_duration is None:
+                    self.original_desired_duration = self.desired_allocation.duration
+                if self.original_desired_classroom is None:
+                    self.original_desired_classroom = self.desired_allocation.classroom
+
+            if self.original_desired_day is None:
+                self.original_desired_day = self.desired_day
+            if self.original_desired_start_time is None:
+                self.original_desired_start_time = self.desired_start_time
+            if self.original_desired_duration is None:
+                self.original_desired_duration = self.desired_duration
+            if self.original_desired_classroom is None:
+                self.original_desired_classroom = self.desired_classroom
+
         # Clean the model before saving
         self.clean()
         
@@ -674,22 +763,25 @@ class TradeMatch(models.Model):
         from django.db import transaction
         
         with transaction.atomic():
-            # Swap the timeslots (day and start time only)
+            # Swap the timeslots and classrooms
             alloc1 = self.request_1.offered_allocation
             alloc2 = self.request_2.offered_allocation
             
             # Store original timeslot info
             temp_day = alloc1.day
             temp_start = alloc1.start
+            temp_classroom = alloc1.classroom
             
             # Swap allocation 1 to allocation 2's timeslot
             alloc1.day = alloc2.day
             alloc1.start = alloc2.start
+            alloc1.classroom = alloc2.classroom
             alloc1.save()
             
             # Swap allocation 2 to allocation 1's original timeslot
             alloc2.day = temp_day
             alloc2.start = temp_start
+            alloc2.classroom = temp_classroom
             alloc2.save()
             
             # Update the trade match status
@@ -761,9 +853,6 @@ class TradeMatch(models.Model):
         self.executed_by = executor
         self.save()
         
-        # Update request statuses
-        self.request_1.status = 'APPROVED'
-        self.request_1.save()
-        
-        self.request_2.status = 'APPROVED'
-        self.request_2.save()
+        # Update request statuses without re-validating teacher ownership
+        TradeRequest.objects.filter(pk=self.request_1.pk).update(status='APPROVED')
+        TradeRequest.objects.filter(pk=self.request_2.pk).update(status='APPROVED')

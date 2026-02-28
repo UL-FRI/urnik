@@ -190,7 +190,7 @@ class TradeRequestAdmin(ImportExportActionModelAdmin):
         'desired_day',
         'offered_allocation__timetable',
     )
-    raw_id_fields = ('requesting_teacher', 'offered_allocation', 'desired_allocation', 'matched_with', 'approved_by')
+    raw_id_fields = ('requesting_teacher', 'offered_allocation', 'desired_allocation', 'desired_classroom', 'matched_with', 'approved_by')
     list_per_page = 50  # Limit items per page for performance
     search_fields = (
         'requesting_teacher__user__first_name',
@@ -200,7 +200,18 @@ class TradeRequestAdmin(ImportExportActionModelAdmin):
         'desired_allocation__activityRealization__activity__name',
         'reason',
     )
-    readonly_fields = ('created_at', 'matched_with')
+    readonly_fields = (
+        'created_at',
+        'matched_with',
+        'original_offered_day',
+        'original_offered_start',
+        'original_offered_classroom',
+        'original_desired_allocation',
+        'original_desired_day',
+        'original_desired_start_time',
+        'original_desired_duration',
+        'original_desired_classroom',
+    )
     fieldsets = (
         ('Basic Information', {
             'fields': ('requesting_teacher', 'status', 'reason', 'created_at')
@@ -208,9 +219,23 @@ class TradeRequestAdmin(ImportExportActionModelAdmin):
         ('Offered Allocation', {
             'fields': ('offered_allocation',)
         }),
+        ('Original Offered Slot (Snapshot)', {
+            'fields': ('original_offered_day', 'original_offered_start', 'original_offered_classroom'),
+            'classes': ('collapse',)
+        }),
         ('Desired Allocation', {
-            'fields': ('desired_allocation', 'desired_day', 'desired_start_time', 'desired_duration'),
+            'fields': ('desired_allocation', 'desired_day', 'desired_start_time', 'desired_duration', 'desired_classroom'),
             'description': 'Either specify a specific allocation OR set criteria (day/time/duration)'
+        }),
+        ('Original Desired Selection (Snapshot)', {
+            'fields': (
+                'original_desired_allocation',
+                'original_desired_day',
+                'original_desired_start_time',
+                'original_desired_duration',
+                'original_desired_classroom',
+            ),
+            'classes': ('collapse',)
         }),
         ('Request Details', {
             'fields': ('expires_at', 'matched_with')

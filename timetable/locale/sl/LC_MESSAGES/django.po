@@ -213,9 +213,6 @@ msgstr "Ponuja za menjavo"
 msgid "Looking For"
 msgstr "Išče"
 
-msgid "Flexible Requirements"
-msgstr "Prilagodljive zahteve"
-
 msgid "Preferred day"
 msgstr "Prednostni dan"
 

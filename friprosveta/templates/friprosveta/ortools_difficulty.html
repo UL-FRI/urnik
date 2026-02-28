@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Solver diagnostics" %}{% endblock %}
+
+{% block body %}
+  <h1>{% trans "Solver diagnostics" %}</h1>
+  <p>
+    {% trans "Timetable" %}: {{ timetable.name }}
+  </p>
+
+  {% if message %}
+    <p>{{ message }}</p>
+  {% endif %}
+
+  <form method="get" style="margin-bottom: 1rem;">
+    <label>
+      <input type="checkbox" name="ready_only" value="1" {% if ready_only %}checked{% endif %}>
+      {% trans "Ready to schedule only" %}
+    </label>
+    <label style="margin-left: 1rem;">
+      {% trans "Limit" %}:
+      <input type="number" name="limit" value="{{ limit }}" min="1" max="500" style="width: 6rem;">
+    </label>
+    <button type="submit">{% trans "Refresh" %}</button>
+  </form>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>{% trans "Realization" %}</th>
+        <th>{% trans "Candidates" %}</th>
+        <th>{% trans "Duration" %}</th>
+        <th>{% trans "Rooms" %}</th>
+        <th>{% trans "Reason" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+        <tr>
+          <td>{{ row.realization }}</td>
+          <td>{{ row.candidates }}</td>
+          <td>{{ row.duration }}</td>
+          <td>{{ row.rooms }}</td>
+          <td>{{ row.reason }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="5">{% trans "No realizations found." %}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if total %}
+    <p>{% trans "Showing" %} {{ rows|length }} / {{ total }}</p>
+  {% endif %}
+{% endblock %}

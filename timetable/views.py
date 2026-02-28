@@ -1,4 +1,6 @@
+import json
 import logging
+from datetime import date, datetime, timedelta
 from collections import OrderedDict, namedtuple
 
 from django import forms
@@ -7,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, transaction
 from django.forms import formsets
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template import RequestContext
 from django.utils import timezone
@@ -488,6 +490,11 @@ class ActivityUpdateView(UpdateView):
 @login_required
 def trade_request_list(request, timetable_slug=None):
     """List all trade requests with optional filtering."""
+    if not request.user.is_staff:
+        messages.error(request, "You don't have permission to view all trade requests.")
+        if timetable_slug:
+            return redirect('my_trade_requests', timetable_slug=timetable_slug)
+        return redirect('my_trade_requests')
     
     # Get timetable if slug provided
     timetable = None
@@ -506,6 +513,9 @@ def trade_request_list(request, timetable_slug=None):
         'requesting_teacher__user',
         'offered_allocation__activityRealization__activity',
         'offered_allocation__classroom',
+        'original_offered_classroom',
+        'original_desired_allocation',
+        'original_desired_classroom',
         'desired_allocation__activityRealization__activity',
         'desired_allocation__classroom',
         'matched_with'
@@ -800,7 +810,23 @@ def create_trade_request(request, timetable_slug=None):
         other_allocations = other_allocations.filter(timetable=timetable)
     
     # Convert to JSON-serializable format
+    preferred_rooms_cache = {}
     def allocation_to_dict(alloc):
+        cache_key = (alloc.activityRealization_id, alloc.timetable_id)
+        if cache_key in preferred_rooms_cache:
+            preferred_classroom_ids = preferred_rooms_cache[cache_key]
+        else:
+            preferred_rooms = alloc.activityRealization.preferred_rooms(
+                timetable=alloc.timetable
+            )
+            preferred_classroom_ids = list(
+                preferred_rooms.values_list('id', flat=True)
+            )
+            preferred_rooms_cache[cache_key] = preferred_classroom_ids
+
+        size = alloc.activityRealization.size
+        min_capacity = max(size - 15, 0) if size is not None else 0
+
         # Get teacher names with full first and last name
         teacher_names = []
         for t in alloc.activityRealization.teachers.all():
@@ -818,6 +844,10 @@ def create_trade_request(request, timetable_slug=None):
             'activity': alloc.activityRealization.activity.name,
             'classroom': str(alloc.classroom),
             'teachers': ' | '.join(teacher_names),  # Use | as separator instead of comma
+            'timetable_id': alloc.timetable_id,
+            'timetable_slug': alloc.timetable.slug,
+            'preferred_classroom_ids': preferred_classroom_ids,
+            'min_capacity': min_capacity,
         }
     
     teacher_allocs_json = json.dumps([allocation_to_dict(a) for a in teacher_allocations])
@@ -839,6 +869,98 @@ def create_trade_request(request, timetable_slug=None):
     # Sort teachers alphabetically
     teachers_list = [{'name': name, 'count': count} for name, count in sorted(teachers_dict.items())]
     teachers_json = json.dumps(teachers_list)
+
+    # Build free (empty) slots for the teacher's timetables
+    from timetable.models.constants import WEEKDAYS, WORKHOURS
+
+    def build_free_slots_for_timetable(target_timetable, durations):
+        workhour_values = [hour[0] for hour in WORKHOURS]
+        allocations = Allocation.objects.filter(
+            timetable=target_timetable
+        ).select_related('classroom')
+
+        occupied = {}
+        for alloc in allocations:
+            if not alloc.classroom_id:
+                continue
+            key = (alloc.classroom_id, alloc.day)
+            if key not in occupied:
+                occupied[key] = set()
+            occupied[key].update(alloc.hours)
+
+        free_slots = []
+        from timetable.models import Classroom
+        classroom_ids = set(allocations.values_list('classroom_id', flat=True).distinct())
+        classroom_ids.discard(None)
+        if hasattr(target_timetable, 'classroomset') and target_timetable.classroomset_id:
+            classroom_ids.update(target_timetable.classroomset.classrooms.values_list('id', flat=True))
+        classrooms = Classroom.objects.filter(id__in=classroom_ids).order_by('name')
+
+        for classroom in classrooms:
+            for day_code, _day_label in WEEKDAYS:
+                occupied_hours = occupied.get((classroom.id, day_code), set())
+                for duration in durations:
+                    if not duration:
+                        continue
+                    max_start_index = len(workhour_values) - duration
+                    for i in range(0, max_start_index + 1):
+                        slot_hours = workhour_values[i : i + duration]
+                        if occupied_hours.intersection(slot_hours):
+                            continue
+                        free_slots.append(
+                            {
+                                'day': day_code,
+                                'start': workhour_values[i],
+                                'duration': duration,
+                                'classroom_id': classroom.id,
+                                'classroom': str(classroom),
+                                'classroom_capacity': classroom.capacity,
+                                'timetable_id': target_timetable.id,
+                                'timetable_slug': target_timetable.slug,
+                                'timetable_name': target_timetable.name,
+                            }
+                        )
+
+        return free_slots
+
+    timetables = [timetable] if timetable else list({alloc.timetable for alloc in teacher_allocations})
+    duration_set = sorted({alloc.duration for alloc in teacher_allocations if alloc.duration})
+    active_statuses = ['OPEN', 'PENDING_APPROVAL']
+    requested_free_slots = TradeRequest.objects.filter(
+        status__in=active_statuses,
+        desired_allocation__isnull=True,
+        desired_day__isnull=False,
+        desired_start_time__isnull=False,
+        desired_duration__isnull=False,
+        desired_classroom__isnull=False,
+        offered_allocation__timetable__in=timetables,
+    ).select_related('desired_classroom', 'offered_allocation__timetable')
+
+    requested_slot_keys = {
+        (
+            req.desired_day,
+            req.desired_start_time,
+            req.desired_duration,
+            req.desired_classroom_id,
+            req.offered_allocation.timetable_id,
+        )
+        for req in requested_free_slots
+    }
+
+    free_slots = []
+    for tt in timetables:
+        free_slots.extend(build_free_slots_for_timetable(tt, duration_set))
+
+    for slot in free_slots:
+        slot_key = (
+            slot['day'],
+            slot['start'],
+            slot['duration'],
+            slot['classroom_id'],
+            slot['timetable_id'],
+        )
+        slot['is_requested'] = slot_key in requested_slot_keys
+    free_slots_json = json.dumps(free_slots)
     
     return render(request, 'timetable/trade_requests/create.html', {
         'form': form,
@@ -847,6 +969,163 @@ def create_trade_request(request, timetable_slug=None):
         'teacher_allocations_json': teacher_allocs_json,
         'other_allocations_json': other_allocs_json,
         'teachers_json': teachers_json,
+        'free_slots_json': free_slots_json,
+    })
+
+
+@login_required
+def trade_request_allocation_stats(request, timetable_slug=None):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    allocation_ids = payload.get('allocation_ids', [])
+    if not isinstance(allocation_ids, list):
+        return JsonResponse({'error': 'Invalid allocation_ids'}, status=400)
+
+    ids = []
+    for allocation_id in allocation_ids:
+        try:
+            ids.append(int(allocation_id))
+        except (TypeError, ValueError):
+            continue
+
+    if not ids:
+        return JsonResponse({'stats': {}})
+
+    allocations = Allocation.objects.filter(id__in=ids).select_related(
+        'activityRealization',
+        'timetable'
+    )
+
+    from friprosveta import models as friprosveta_models
+
+    stats = {}
+    busy_cache = {}
+    for allocation in allocations:
+        realization = allocation.activityRealization
+        n_students = realization.size or 0
+
+        students = friprosveta_models.Student.objects.filter(
+            groups__realizations=realization
+        ).distinct()
+
+        overlap_count = 0
+        for student in students:
+            cache_key = (student.id, allocation.timetable_id)
+            busy_hours = busy_cache.get(cache_key)
+            if busy_hours is None:
+                busy_hours = student.busy_hours(allocation.timetable)
+                busy_cache[cache_key] = busy_hours
+
+            overlaps = student.overlaps(allocation.timetable, busy_hours)
+            has_overlap = any(
+                day == allocation.day
+                and hour in allocation.hours
+                and any(slot_alloc.id == allocation.id for slot_alloc in slot_allocs)
+                for day, hour, slot_allocs in overlaps
+            )
+
+            if has_overlap:
+                overlap_count += 1
+
+        stats[str(allocation.id)] = {
+            'n_students': n_students,
+            'total_overlaps': overlap_count,
+        }
+
+    return JsonResponse({'stats': stats})
+
+
+@login_required
+def trade_request_free_slot_stats(request, timetable_slug=None):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    offered_allocation_id = payload.get('offered_allocation_id')
+    slot = payload.get('slot')
+    if not offered_allocation_id or not isinstance(slot, dict):
+        return JsonResponse({'error': 'Invalid payload'}, status=400)
+
+    try:
+        offered_allocation_id = int(offered_allocation_id)
+    except (TypeError, ValueError):
+        return JsonResponse({'error': 'Invalid offered_allocation_id'}, status=400)
+
+    day = slot.get('day')
+    start = slot.get('start')
+    duration = slot.get('duration')
+    if not day or not start or not duration:
+        return JsonResponse({'error': 'Invalid slot'}, status=400)
+
+    try:
+        duration = int(duration)
+    except (TypeError, ValueError):
+        return JsonResponse({'error': 'Invalid slot duration'}, status=400)
+
+    offered_allocation = Allocation.objects.select_related(
+        'activityRealization',
+        'timetable'
+    ).filter(id=offered_allocation_id).first()
+
+    if not offered_allocation:
+        return JsonResponse({'error': 'Allocation not found'}, status=404)
+
+    if timetable_slug and offered_allocation.timetable.slug != timetable_slug:
+        return JsonResponse({'error': 'Allocation not in timetable'}, status=400)
+
+    from timetable.models.constants import WORKHOURS
+    workhour_values = [hour[0] for hour in WORKHOURS]
+    if start not in workhour_values:
+        return JsonResponse({'error': 'Invalid slot start'}, status=400)
+
+    start_index = workhour_values.index(start)
+    slot_hours = workhour_values[start_index : start_index + duration]
+    if len(slot_hours) != duration:
+        return JsonResponse({'error': 'Invalid slot range'}, status=400)
+
+    from friprosveta import models as friprosveta_models
+
+    realization = offered_allocation.activityRealization
+    n_students = realization.size or 0
+
+    students = friprosveta_models.Student.objects.filter(
+        groups__realizations=realization
+    ).distinct()
+
+    busy_cache = {}
+    overlap_count = 0
+    for student in students:
+        cache_key = (student.id, offered_allocation.timetable_id)
+        busy_hours = busy_cache.get(cache_key)
+        if busy_hours is None:
+            busy_hours = student.busy_hours(offered_allocation.timetable)
+            busy_cache[cache_key] = busy_hours
+
+        has_overlap = False
+        for hour in slot_hours:
+            allocations_in_slot = busy_hours.get((day, hour), [])
+            if any(slot_alloc.id != offered_allocation.id for slot_alloc in allocations_in_slot):
+                has_overlap = True
+                break
+
+        if has_overlap:
+            overlap_count += 1
+
+    return JsonResponse({
+        'stats': {
+            'n_students': n_students,
+            'total_overlaps': overlap_count,
+        }
     })
 
 
@@ -859,6 +1138,9 @@ def trade_request_detail(request, pk, timetable_slug=None):
             'requesting_teacher__user',
             'offered_allocation__activityRealization__activity',
             'offered_allocation__classroom',
+            'original_offered_classroom',
+            'original_desired_allocation',
+            'original_desired_classroom',
             'desired_allocation__activityRealization__activity',
             'desired_allocation__classroom',
             'matched_with',
@@ -1103,43 +1385,20 @@ def trade_match_queue(request, timetable_slug=None):
                             if trade_request.desired_classroom:
                                 new_classroom = trade_request.desired_classroom
                             else:
-                                # Find an available classroom for the new time slot
-                                # Check if the original classroom is available at the new time
                                 conflicting_in_original = Allocation.objects.filter(
                                     timetable=allocation.timetable,
                                     classroom=original_classroom,
                                     day=new_day,
                                     start=new_start
                                 ).exclude(id=allocation.id).exists()
-                                
+
                                 if conflicting_in_original:
-                                    # Original classroom is occupied, find an alternative
-                                    # Get all classrooms that could fit this activity
-                                    from timetable.models import Classroom
-                                    suitable_classrooms = Classroom.objects.filter(
-                                        timetable=allocation.timetable
+                                    messages.error(
+                                        request,
+                                        f"❌ Cannot approve: {original_classroom} is occupied at {dict(WEEKDAYS).get(new_day)} {new_start}. "
+                                        f"Please pick a different time or classroom."
                                     )
-                                    
-                                    # Try to find a free classroom
-                                    for classroom in suitable_classrooms:
-                                        occupied = Allocation.objects.filter(
-                                            timetable=allocation.timetable,
-                                            classroom=classroom,
-                                            day=new_day,
-                                            start=new_start
-                                        ).exclude(id=allocation.id).exists()
-                                        
-                                        if not occupied:
-                                            new_classroom = classroom
-                                            break
-                                    else:
-                                        # No classroom available
-                                        messages.error(
-                                            request,
-                                            f"❌ Cannot approve: No classroom is available at {dict(WEEKDAYS).get(new_day)} {new_start}. "
-                                            f"All classrooms are occupied at this time."
-                                        )
-                                        raise Exception("No available classroom")
+                                    raise Exception("Original classroom occupied")
                         
                         # Check one more time for any conflicts (teacher, classroom, etc.)
                         conflicts = Allocation.objects.filter(
@@ -1284,6 +1543,118 @@ def trade_match_queue(request, timetable_slug=None):
         )
     
     pending_requests = pending_requests.order_by('created_at')
+
+    allocation_stats = {}
+
+    def _build_student_stats(allocation):
+        if not allocation:
+            return None
+
+        cached = allocation_stats.get(allocation.id)
+        if cached is not None:
+            return cached
+
+        from friprosveta import models as friprosveta_models
+
+        realization = allocation.activityRealization
+        n_students = realization.size
+
+        students = friprosveta_models.Student.objects.filter(
+            groups__realizations=realization
+        ).distinct()
+
+        busy_cache = {}
+        overlap_count = 0
+        for student in students:
+            cache_key = (student.id, allocation.timetable_id)
+            busy_hours = busy_cache.get(cache_key)
+            if busy_hours is None:
+                busy_hours = student.busy_hours(allocation.timetable)
+                busy_cache[cache_key] = busy_hours
+
+            overlaps = student.overlaps(allocation.timetable, busy_hours)
+            has_overlap = any(
+                day == allocation.day
+                and hour in allocation.hours
+                and any(slot_alloc.id == allocation.id for slot_alloc in slot_allocs)
+                for day, hour, slot_allocs in overlaps
+            )
+
+            if has_overlap:
+                overlap_count += 1
+
+        stats = {
+            "n_students": n_students,
+            "total_overlaps": overlap_count,
+        }
+        allocation_stats[allocation.id] = stats
+        return stats
+
+    def _build_slot_stats(allocation, day, start, duration):
+        if not allocation or not day or not start or not duration:
+            return None
+
+        workhour_values = [hour[0] for hour in WORKHOURS]
+        if start not in workhour_values:
+            return None
+
+        start_index = workhour_values.index(start)
+        slot_hours = workhour_values[start_index : start_index + duration]
+        if len(slot_hours) != duration:
+            return None
+
+        from friprosveta import models as friprosveta_models
+
+        realization = allocation.activityRealization
+        n_students = realization.size
+
+        students = friprosveta_models.Student.objects.filter(
+            groups__realizations=realization
+        ).distinct()
+
+        busy_cache = {}
+        overlap_count = 0
+        for student in students:
+            cache_key = (student.id, allocation.timetable_id)
+            busy_hours = busy_cache.get(cache_key)
+            if busy_hours is None:
+                busy_hours = student.busy_hours(allocation.timetable)
+                busy_cache[cache_key] = busy_hours
+
+            has_overlap = False
+            for hour in slot_hours:
+                allocations_in_slot = busy_hours.get((day, hour), [])
+                if any(slot_alloc.id != allocation.id for slot_alloc in allocations_in_slot):
+                    has_overlap = True
+                    break
+
+            if has_overlap:
+                overlap_count += 1
+
+        return {
+            "n_students": n_students,
+            "total_overlaps": overlap_count,
+        }
+
+    for match in pending_matches:
+        match.request_1.offered_student_stats = _build_student_stats(
+            match.request_1.offered_allocation
+        )
+        match.request_2.offered_student_stats = _build_student_stats(
+            match.request_2.offered_allocation
+        )
+
+    for req in pending_requests:
+        req.offered_student_stats = _build_student_stats(req.offered_allocation)
+        req.desired_student_stats = _build_student_stats(req.desired_allocation)
+        if not req.desired_allocation and req.desired_day and req.desired_start_time:
+            effective_duration = req.desired_duration or req.offered_allocation.duration
+            req.desired_slot_stats = _build_slot_stats(
+                req.offered_allocation,
+                req.desired_day,
+                req.desired_start_time,
+                effective_duration,
+            )
     
     return render(request, 'timetable/trade_requests/approval_queue.html', {
         'pending_matches': pending_matches,

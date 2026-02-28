@@ -101,6 +101,16 @@ urlpatterns = [
         name="create_trade_request",
     ),
     re_path(
+        r"^timetable/(?P<timetable_slug>[\w-]+)/trades/overlaps/$",
+        timetable_views.trade_request_allocation_stats,
+        name="trade_request_allocation_stats",
+    ),
+    re_path(
+        r"^timetable/(?P<timetable_slug>[\w-]+)/trades/overlaps/free-slot/$",
+        timetable_views.trade_request_free_slot_stats,
+        name="trade_request_free_slot_stats",
+    ),
+    re_path(
         r"^timetable/(?P<timetable_slug>[\w-]+)/trades/(?P<pk>\d+)/$",
         timetable_views.trade_request_detail,
         name="trade_request_detail",

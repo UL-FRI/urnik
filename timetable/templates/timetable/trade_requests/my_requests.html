@@ -794,7 +794,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="trade-action-buttons">
                                     <form method="POST" action="{% url 'respond_to_trade_request' timetable_slug request.pk %}" style="margin: 0;">
                                         {% csrf_token %}
-                                        <button type="submit" class="btn-accept-trade btn-block" onclick="return confirm('{% trans "Create a counter-request to trade your time slot for theirs?" %}');">
+                                        <button type="submit" class="btn-accept-trade btn-block">
                                             <i class="fas fa-handshake"></i> {% trans "Accept Trade" %}
                                         </button>
                                     </form>
@@ -891,7 +891,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="trade-action-buttons">
                                     <form method="POST" action="{% url 'respond_to_trade_request' timetable_slug request.pk %}" style="margin: 0;">
                                         {% csrf_token %}
-                                        <button type="submit" class="btn-accept-trade btn-block" onclick="return confirm('{% trans "Create a counter-request to trade your time slot for theirs?" %}');">
+                                        <button type="submit" class="btn-accept-trade btn-block">
                                             <i class="fas fa-handshake"></i> {% trans "Accept Trade" %}
                                         </button>
                                     </form>
