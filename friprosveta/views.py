@@ -465,23 +465,6 @@ def _realization_set(param_ids, filtered_realizations, allow_unfiltered=False):
 
 
 def _allocation_set(param_ids, filtered_allocations, is_staff=False):
-    allparams = set(
-        [
-            "teacher",
-            "classroom",
-            "group",
-            "activity",
-            "type",
-            "student",
-            "realization",
-            "subject",
-        ]
-    )
-
-    # Do not allow unfiltered queries
-    not_filtered = all([param not in param_ids for param in allparams])
-    if not_filtered:
-        return Allocation.objects.none()
     if "timetable_slug" in param_ids:
         filtered_allocations = filtered_allocations.filter(
             Q(timetable__slug__in=param_ids["timetable_slug"])
@@ -562,8 +545,16 @@ def allocations_json(request, timetable_slug=None):
     # just in case you need to debug something?
     # logger.debug("Got filtered allocations")
     # logger.debug("{}".format(filtered_allocations))
-    filtered_allocations = _allocation_set(
-        param_ids, tt.allocations, request.user.is_staff
+    filtered_allocations = (
+        _allocation_set(
+            param_ids, tt.allocations, request.user.is_staff
+        )
+        # Add selects and prefetches to avoid N+1 queries
+        .select_related('activityRealization', 'activityRealization__activity', 'classroom',)
+        .prefetch_related(
+            'activityRealization__teachers',
+            'activityRealization__teachers__user',
+        )
     )
 
     # returns more information about allocations
@@ -607,7 +598,7 @@ def allocations_json(request, timetable_slug=None):
     # logger.debug("Returning json data")
     # logger.debug("{}".format(json_data))
     # logger.info("Exiting allocations_json")
-    return HttpResponse(json_data)
+    return HttpResponse(json_data, content_type="application/json")
 
 
 def authenticated_allocations(request, timetable_slug=None):
@@ -680,8 +671,18 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
     context_links, param_ids = _allocation_context_links(request)
     tt = get_object_or_404(timetable.models.Timetable, slug=timetable_slug)
     param_ids = _allocation_context_links(request)[1]
-    filtered_allocations = _allocation_set(
-        param_ids, tt.allocations, request.user.is_staff
+    
+    filtered_allocations = (
+        _allocation_set(
+            param_ids, tt.allocations, request.user.is_staff
+        )
+        # Add selects and prefetches to avoid N+1 queries
+        .select_related('activityRealization', 'activityRealization__activity', 'activityRealization__activity__activity__subject', 'classroom',)
+        .prefetch_related(
+            'activityRealization__teachers',
+            'activityRealization__teachers__user',
+            'activityRealization__groups',
+        )
     )
     
     # Add trade-related context for authenticated teachers
@@ -724,9 +725,7 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
     allocation_subjects = dict()
     for a in filtered_allocations:
         try:
-            subject = friprosveta.models.Activity.from_timetable_activity(
-                a.activityRealization.activity
-            ).subject
+            subject = a.activityRealization.activity.subject
         except:
             subject = None
         allocation_subjects[a] = subject
@@ -827,8 +826,16 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
 def allocations_ical(request, timetable_slug):
     tt = get_object_or_404(timetable.models.Timetable, slug=timetable_slug)
     param_ids = _allocation_context_links(request)[1]
-    filtered_allocations = _allocation_set(
-        param_ids, tt.allocations, request.user.is_staff
+    filtered_allocations = (
+        _allocation_set(
+            param_ids, tt.allocations, request.user.is_staff
+        )
+        # Add selects and prefetches to avoid N+1 queries
+        .select_related('activityRealization', 'activityRealization__activity', 'classroom',)
+        .prefetch_related(
+            'activityRealization__teachers',
+            'activityRealization__teachers__user',
+        )
     )
 
     calendar = icalendar.Calendar()
@@ -837,9 +844,7 @@ def allocations_ical(request, timetable_slug):
 
     for a in filtered_allocations:
         try:
-            subject = friprosveta.models.Activity.from_timetable_activity(
-                a.activityRealization.activity
-            ).subject
+            subject = a.activityRealization.activity.subject
         except:
             subject = None
 
