@@ -44,7 +44,8 @@
 </li>
 <li>
 <div>Q: Kakšen javni API ponuja urnik? Rad bi spisal svoj program za pregledovanje...</div>
-<div>A: Urnik nima javnega API. Lahko pa si pomagate z API rezervacij, v katere se urnik uvaža. Najdete jih na http://rezervacije.fri.uni-lj.si</div>
+<div>A: Urnik ima za interno uporabo več različnih formatov izvoza, ki pa jih ne smatramo kot stabilen API (lahko se spremeni kadarkoli). V URLju urnika lahko končnico<code>/allocations</code> zamenjate z <code>/allocations_ical</code> za podatke v <a href="https://en.wikipedia.org/wiki/ICalendar">iCal</a> formatu, na voljo pa sta tudi dve različici izvoza v JSON: <code>/allocations.json</code> (stari format) in <code>/allocations.json?mode=ext</code> (novi format). Na vseh treh so na voljo enaki filtri kot na navadnem izrisu urnika. <br>
+Določeni podatki so na voljo tudi na APIju <a href="https://rezervacije.fri.uni-lj.si">rezervacij</a>, v katerega se urnik uvaža.</div>
 </li>
 </ul>
 <h2>Vprašanja zaposlenih</h2>
