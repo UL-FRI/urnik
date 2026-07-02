@@ -4,9 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - type: bind
-        source: .
-        target: /workspace
+      - .:/workspace:Z
     links:
       - db
     environment:
