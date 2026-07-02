@@ -36,6 +36,7 @@ RUN apt update \
   gettext \
   vim \
   nano \
+  curl \
   && rm -rf /var/lib/apt/lists/*
 
 
