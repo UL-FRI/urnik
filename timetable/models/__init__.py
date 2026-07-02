@@ -8,6 +8,7 @@ from .constants import *
 # Import core models
 from .core import (
     Resource,
+    ResourceIncompatibility,
     ResourceGroup,
     Teacher,
     Location,
@@ -86,6 +87,7 @@ __all__ = [
     
     # Core models
     'Resource',
+    'ResourceIncompatibility',
     'ResourceGroup',
     'Teacher',
     'Location',

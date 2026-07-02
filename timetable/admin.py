@@ -106,8 +106,8 @@ class TimetableSetAdmin(ImportExportActionModelAdmin):
 
 
 class TimetableAdmin(ImportExportActionModelAdmin):
-    list_display = ('name', 'slug', 'public', 'trading_enabled', 'start', 'end')
-    list_editable = ('public', 'trading_enabled')
+    list_display = ('name', 'slug', 'public', 'trading_enabled', 'min_physical_cycle_percentage', 'start', 'end')
+    list_editable = ('public', 'trading_enabled', 'min_physical_cycle_percentage')
     list_filter = ('public', 'trading_enabled', 'start', 'end')
 
 
@@ -448,8 +448,15 @@ class ResourceAdmin(admin.ModelAdmin):
     ordering = ('group__order', 'group__name', 'order', 'name')
 
 
+class ResourceIncompatibilityAdmin(admin.ModelAdmin):
+    list_display = ('resource_a', 'resource_b')
+    list_filter = ('resource_a__group', 'resource_b__group')
+    search_fields = ('resource_a__name', 'resource_b__name')
+
+
 admin.site.register(ResourceGroup, ResourceGroupAdmin)
 admin.site.register(Resource, ResourceAdmin)
+admin.site.register(ResourceIncompatibility, ResourceIncompatibilityAdmin)
 admin.site.register(NRequirementsPerStudent)
 
 # admin.site.register(Activity, ActivityAutocompleteAdmin)

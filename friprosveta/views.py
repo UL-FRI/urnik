@@ -1364,10 +1364,22 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
             request.POST, prefix="pref-"
         )
         own_act_formset = friprosveta.forms.ActivityMinimalFormset(
-            request.POST, request.FILES, prefix="ownact-"
+            request.POST,
+            request.FILES,
+            queryset=own_activities,
+            prefix="ownact-",
+            form_kwargs={
+                "min_physical_cycle_percentage": tt.min_physical_cycle_percentage
+            },
         )
         others_act_formset = friprosveta.forms.ActivityMinimalFormset(
-            request.POST, request.FILES, prefix="act-"
+            request.POST,
+            request.FILES,
+            queryset=others_activities,
+            prefix="act-",
+            form_kwargs={
+                "min_physical_cycle_percentage": tt.min_physical_cycle_percentage
+            },
         )
         preference_form.full_clean()
         own_act_formset.full_clean()
@@ -1442,10 +1454,18 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
                 activity.cycles_on_site = int(round(all_cycles))
                 activity.save(update_fields=["cycles_on_site"])
         own_act_formset = friprosveta.forms.ActivityMinimalFormset(
-            queryset=own_activities, prefix="ownact-"
+            queryset=own_activities,
+            prefix="ownact-",
+            form_kwargs={
+                "min_physical_cycle_percentage": tt.min_physical_cycle_percentage
+            },
         )
         others_act_formset = friprosveta.forms.ActivityMinimalFormset(
-            queryset=others_activities, prefix="act-"
+            queryset=others_activities,
+            prefix="act-",
+            form_kwargs={
+                "min_physical_cycle_percentage": tt.min_physical_cycle_percentage
+            },
         )
         preference_form = timetable.forms.TeacherPreferenceForm(
             teacher=teacher, preferenceset=pset, prefix="pref-"

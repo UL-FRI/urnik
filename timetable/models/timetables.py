@@ -5,6 +5,7 @@ import datetime
 
 from django.contrib.sites.models import Site
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.validators import MaxValueValidator
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
@@ -144,6 +145,13 @@ class Timetable(models.Model):
     start = models.DateField(default=datetime.date.today)
     end = models.DateField(default=datetime.date.today)
     preference_deadline = models.DateField(default=datetime.date.today)
+    min_physical_cycle_percentage = models.PositiveSmallIntegerField(
+        default=100,
+        validators=[MaxValueValidator(100)],
+        help_text=_(
+            "Minimum percentage of an activity's cycles that teachers must request on site."
+        ),
+    )
     trading_enabled = models.BooleanField(default=True, help_text="Allow teachers to create and manage trade requests")
 
     @property

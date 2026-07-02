@@ -2,6 +2,7 @@
 Core models: Resource, ResourceGroup, Teacher, Location, and LocationDistance.
 """
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.db import models
 
 
@@ -49,6 +50,49 @@ class Resource(models.Model):
 
     class Meta:
         ordering = ['group__order', 'group__name', 'order', 'name']
+
+
+class ResourceIncompatibility(models.Model):
+    """A pair of resources that cannot be selected together."""
+
+    resource_a = models.ForeignKey(
+        Resource,
+        related_name="incompatibilities_as_a",
+        on_delete=models.CASCADE,
+    )
+    resource_b = models.ForeignKey(
+        Resource,
+        related_name="incompatibilities_as_b",
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        verbose_name_plural = "resource incompatibilities"
+        constraints = [
+            models.CheckConstraint(
+                check=~models.Q(resource_a=models.F("resource_b")),
+                name="resource_incompatibility_distinct_resources",
+            ),
+            models.UniqueConstraint(
+                fields=["resource_a", "resource_b"],
+                name="unique_resource_incompatibility",
+            ),
+        ]
+
+    def __str__(self):
+        return "{} / {}".format(self.resource_a, self.resource_b)
+
+    def clean(self):
+        if self.resource_a_id == self.resource_b_id:
+            raise ValidationError("A resource cannot be incompatible with itself.")
+        reverse_exists = ResourceIncompatibility.objects.filter(
+            resource_a=self.resource_b,
+            resource_b=self.resource_a,
+        )
+        if self.pk:
+            reverse_exists = reverse_exists.exclude(pk=self.pk)
+        if reverse_exists.exists():
+            raise ValidationError("This resource incompatibility already exists.")
 
 class Teacher(models.Model):
     def __str__(self):
