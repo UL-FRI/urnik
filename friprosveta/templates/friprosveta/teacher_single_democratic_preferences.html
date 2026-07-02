@@ -378,7 +378,7 @@
     {% blocktrans %}
     <h2>Zahteve predmetov</h2>
     <p>
-        Izberite opremo, ki jo potrebujete za izvajanje predmetov. 
+        Izberite vso opremo, ki jo potrebujete za izvajanje predmetov. Izbrane zahteve se upoštevajo skupaj, zato učilnica ustreza samo, če podpira vse izbrane zahteve.
         Zahteve so organizirane po skupinah - <strong>skupine označene z rdečo zvezdico (*) so obvezne</strong>:
     </p>
     <ul>
@@ -387,6 +387,9 @@
     </ul>
     <p>
         Če vaše opreme še ni na seznamu, to <a href="mailto:urnik@fri.uni-lj.si">sporočite urničarjema</a>
+    </p>
+    <p>
+        Pri vsakem predmetu lahko v polje <strong>Cikli na FRI</strong> vpišete, koliko ciklov bi želeli izvajati na fakulteti. Vnos je omejen z največjim dovoljenim deležem ciklov na daljavo za izbran urnik.
     </p>
     {% endblocktrans %}
     {{own_activity_formset.management_form}}
