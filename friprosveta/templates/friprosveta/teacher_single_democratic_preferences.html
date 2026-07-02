@@ -306,6 +306,94 @@
         border-color: #007bff;
         box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
     }
+
+    .cycle-preference {
+        background: linear-gradient(135deg, #eef7ff 0%, #f8fbff 100%);
+        border: 1px solid #b8daff;
+        border-radius: 8px;
+        padding: 16px 18px;
+        margin: 14px 0 18px;
+        max-width: 620px;
+    }
+
+    .cycle-preference label {
+        display: block;
+        color: #1f4e79;
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .cycle-preference p {
+        color: #495057;
+        line-height: 1.5;
+        margin: 0 0 12px;
+    }
+
+    .cycle-preference input[type="number"] {
+        border: 2px solid #9fcdff;
+        border-radius: 6px;
+        font-size: 18px;
+        font-weight: 600;
+        padding: 8px 10px;
+        text-align: center;
+        width: 90px;
+    }
+
+    .cycle-preference .helptext {
+        color: #0c5460;
+        display: block;
+        font-size: 13px;
+        margin-top: 8px;
+    }
+
+    .cycle-preference .errorlist {
+        color: #721c24;
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 4px;
+        list-style: none;
+        margin: 0 0 10px;
+        padding: 8px 10px;
+    }
+
+    .lecture-split-preference {
+        background: linear-gradient(135deg, #fff8e6 0%, #fffdf7 100%);
+        border: 1px solid #ffd966;
+        border-radius: 8px;
+        padding: 16px 18px;
+        margin: 14px 0 18px;
+        max-width: 620px;
+    }
+
+    .lecture-split-preference label {
+        display: block;
+        color: #6f5200;
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .lecture-split-preference p {
+        color: #495057;
+        line-height: 1.5;
+        margin: 0 0 12px;
+    }
+
+    .lecture-split-preference select {
+        border: 2px solid #ffd966;
+        border-radius: 6px;
+        font-size: 15px;
+        padding: 8px 10px;
+        min-width: 180px;
+    }
+
+    .lecture-split-preference .helptext {
+        color: #856404;
+        display: block;
+        font-size: 13px;
+        margin-top: 8px;
+    }
 </style>
 
 {% blocktrans %}
@@ -401,7 +489,27 @@
         <strong>{%trans Zahteve %}</strong>
         <div class="requirements">
             {% for f in activity %}
-                {% if f.name == 'requirements' %}
+                {% if f.name == 'lecture_split' and not f.is_hidden %}
+                    <div class="lecture-split-preference">
+                        {{ f.errors }}
+                        <label for="{{ f.id_for_label }}">{{ f.label }}</label>
+                        <p>
+                            Predavanja so običajno razpisana kot tri ure skupaj. Če vam bolj ustreza razdelitev, izberite 2 + 1 ali 1 + 1 + 1.
+                        </p>
+                        {{ f }}
+                        {% if f.help_text %}<span class="helptext">{{ f.help_text }}</span>{% endif %}
+                    </div>
+                {% elif f.name == 'site_cycles' %}
+                    <div class="cycle-preference">
+                        {{ f.errors }}
+                        <label for="{{ f.id_for_label }}">{{ f.label }}</label>
+                        <p>
+                            Vpišite, koliko ciklov želite izvesti fizično na FRI. Preostali cikli se štejejo kot izvedba na daljavo.
+                        </p>
+                        {{ f }}
+                        {% if f.help_text %}<span class="helptext">{{ f.help_text }}</span>{% endif %}
+                    </div>
+                {% elif f.name == 'requirements' %}
                     {% render_resource_groups f activity.instance.id %}
                 {% else %}
                     {{f}}
@@ -420,7 +528,27 @@
         <strong>{%trans Zahteve %}</strong>:
         <div class="requirements">
             {% for f in activity %}
-                {% if f.name == 'requirements' %}
+                {% if f.name == 'lecture_split' and not f.is_hidden %}
+                    <div class="lecture-split-preference">
+                        {{ f.errors }}
+                        <label for="{{ f.id_for_label }}">{{ f.label }}</label>
+                        <p>
+                            Predavanja so običajno razpisana kot tri ure skupaj. Če vam bolj ustreza razdelitev, izberite 2 + 1 ali 1 + 1 + 1.
+                        </p>
+                        {{ f }}
+                        {% if f.help_text %}<span class="helptext">{{ f.help_text }}</span>{% endif %}
+                    </div>
+                {% elif f.name == 'site_cycles' %}
+                    <div class="cycle-preference">
+                        {{ f.errors }}
+                        <label for="{{ f.id_for_label }}">{{ f.label }}</label>
+                        <p>
+                            Vpišite, koliko ciklov želite izvesti fizično na FRI. Preostali cikli se štejejo kot izvedba na daljavo.
+                        </p>
+                        {{ f }}
+                        {% if f.help_text %}<span class="helptext">{{ f.help_text }}</span>{% endif %}
+                    </div>
+                {% elif f.name == 'requirements' %}
                     {% render_resource_groups f activity.instance.id %}
                 {% else %}
                     {{f}}
