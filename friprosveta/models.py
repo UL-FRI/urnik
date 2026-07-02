@@ -16,6 +16,13 @@ from timetable.models import Group
 
 logger = logging.getLogger(__name__)
 
+LECTURE_SPLIT_CHOICES = [
+    ("", "Brez posebne želje"),
+    ("3", "3 ure skupaj"),
+    ("2-1", "2 + 1"),
+    ("1-1-1", "1 + 1 + 1"),
+]
+
 # Create your models here.
 REALIZATIONSIZES = [
     ("MAJHNE", "izvajanje v majhnih skupinah"),
@@ -242,6 +249,15 @@ class Activity(timetable.models.Activity):
         null=True,
         blank=True,
         default=None,
+    )
+
+    lecture_split = models.CharField(
+        "Razdelitev predavanj",
+        max_length=16,
+        choices=LECTURE_SPLIT_CHOICES,
+        blank=True,
+        default="",
+        help_text="Želena razdelitev triurnih predavanj.",
     )
 
     #: is the activity ready for scheduling

@@ -119,6 +119,14 @@ class ActivityMinimalForm(forms.ModelForm):
         # Set up the requirements field but don't make it globally required
         # We'll validate per resource group instead
         self.fields['requirements'].required = False
+        if "lecture_split" in self.fields:
+            if self.instance.type == "P" and self.instance.duration == 3:
+                self.fields["lecture_split"].required = False
+                self.fields["lecture_split"].help_text = (
+                    "Če vam tri ure skupaj ne ustrezajo, izberite želeno razdelitev."
+                )
+            else:
+                self.fields["lecture_split"].widget = forms.HiddenInput()
         all_cycles = getattr(self.instance, "all_cycles", None)
         if all_cycles is None:
             all_cycles = self._all_cycles()
