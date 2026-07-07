@@ -31,6 +31,8 @@ def render_resource_groups(form_field, activity_id):
     for group in resource_groups:
         resources = []
         for resource in group.resources.all():
+            if resource.archived:
+                continue
             resources.append({
                 'id': resource.id,
                 'name': resource.name,
@@ -44,7 +46,7 @@ def render_resource_groups(form_field, activity_id):
             })
     
     # Get ungrouped resources
-    for choice in form_field.field.queryset.filter(group__isnull=True):
+    for choice in form_field.field.queryset.filter(group__isnull=True, archived=False):
         ungrouped_resources.append({
             'id': choice.id,
             'name': choice.name,

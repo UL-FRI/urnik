@@ -119,6 +119,9 @@ class ActivityMinimalForm(forms.ModelForm):
         # Set up the requirements field but don't make it globally required
         # We'll validate per resource group instead
         self.fields['requirements'].required = False
+        self.fields['requirements'].queryset = self.fields['requirements'].queryset.filter(
+            archived=False
+        )
         if "lecture_split" in self.fields:
             if self.instance.type == "P" and self.instance.duration == 3:
                 self.fields["lecture_split"].required = False
@@ -163,14 +166,18 @@ class ActivityMinimalForm(forms.ModelForm):
             selected_resources = []
         
         # Get all resource groups with constraints
-        required_groups = timetable.models.ResourceGroup.objects.filter(required=True)
-        exactly_one_groups = timetable.models.ResourceGroup.objects.filter(exactly_one=True)
+        required_groups = timetable.models.ResourceGroup.objects.filter(
+            required=True, resources__archived=False
+        ).distinct()
+        exactly_one_groups = timetable.models.ResourceGroup.objects.filter(
+            exactly_one=True, resources__archived=False
+        ).distinct()
         
         errors = []
         
         # Check required groups (at least one)
         for group in required_groups:
-            group_resources = group.resources.all()
+            group_resources = group.resources.filter(archived=False)
             selected_count = sum(1 for resource in selected_resources if resource in group_resources)
             
             if selected_count == 0:
@@ -178,7 +185,7 @@ class ActivityMinimalForm(forms.ModelForm):
         
         # Check exactly_one groups (exactly one)
         for group in exactly_one_groups:
-            group_resources = group.resources.all()
+            group_resources = group.resources.filter(archived=False)
             selected_count = sum(1 for resource in selected_resources if resource in group_resources)
             
             if selected_count == 0:

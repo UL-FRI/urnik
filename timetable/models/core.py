@@ -47,6 +47,10 @@ class Resource(models.Model):
         default=0,
         help_text="Display order within the group (lower numbers appear first)"
     )
+    archived = models.BooleanField(
+        default=False,
+        help_text="Archived resources are hidden from requirement selection"
+    )
 
     class Meta:
         ordering = ['group__order', 'group__name', 'order', 'name']
