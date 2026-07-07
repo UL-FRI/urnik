@@ -742,6 +742,10 @@ class ActivityLongRequirementsForm(forms.ModelForm):
             empty_permitted,
             instance,
         )
+        if "requirements" in self.fields:
+            self.fields["requirements"].queryset = self.fields[
+                "requirements"
+            ].queryset.filter(archived=False)
 
 
 class ActivityLongRequirementRealizationForm(forms.ModelForm):

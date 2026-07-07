@@ -424,7 +424,7 @@ class TradeMatchAdmin(ImportExportActionModelAdmin):
 class ResourceInline(admin.TabularInline):
     model = Resource
     extra = 1
-    fields = ('name', 'order')
+    fields = ('name', 'order', 'archived')
     ordering = ('order', 'name')
 
 
@@ -436,16 +436,25 @@ class ResourceGroupAdmin(admin.ModelAdmin):
     inlines = [ResourceInline]
     
     def resource_count(self, obj):
-        return obj.resources.count()
+        return obj.resources.filter(archived=False).count()
     resource_count.short_description = 'Number of Resources'
 
 
 class ResourceAdmin(admin.ModelAdmin):
-    list_display = ('name', 'group', 'order')
-    list_editable = ('order',)
-    list_filter = ('group',)
+    list_display = ('name', 'group', 'order', 'archived')
+    list_editable = ('order', 'archived')
+    list_filter = ('group', 'archived')
     search_fields = ('name',)
     ordering = ('group__order', 'group__name', 'order', 'name')
+    actions = ('archive_resources', 'unarchive_resources')
+
+    def archive_resources(self, request, queryset):
+        queryset.update(archived=True)
+    archive_resources.short_description = 'Archive selected resources'
+
+    def unarchive_resources(self, request, queryset):
+        queryset.update(archived=False)
+    unarchive_resources.short_description = 'Unarchive selected resources'
 
 
 class ResourceIncompatibilityAdmin(admin.ModelAdmin):
