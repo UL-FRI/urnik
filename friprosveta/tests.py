@@ -7,6 +7,7 @@ from django.test.client import RequestFactory
 from model_mommy import mommy
 
 import friprosveta
+from friprosveta.auth import oidc_username_from_claims
 from friprosveta.management.commands.fill_groups import Command as fgc
 from friprosveta.management.commands.import_studis_students import get_parents
 from friprosveta.models import GroupSizeHint
@@ -26,6 +27,31 @@ class MyTestCase(TestCase):
         Has an iterable a given length?
         """
         self.assertEqual(len(obj), length, msg)
+
+
+class OIDCUsernameTest(unittest.TestCase):
+    def test_username_accepts_mozilla_django_oidc_signature(self):
+        claims = {
+            "email": "user@example.com",
+            "upn": "user@example.org",
+            "preferred_username": "user",
+            "sub": "subject-id",
+        }
+
+        self.assertEqual(
+            oidc_username_from_claims("user@example.com", claims), "user@example.com"
+        )
+
+    def test_username_falls_back_to_alternate_claims(self):
+        self.assertEqual(
+            oidc_username_from_claims(None, {"upn": "user@example.org"}),
+            "user@example.org",
+        )
+
+    def test_username_accepts_claims_dict_for_direct_calls(self):
+        self.assertEqual(
+            oidc_username_from_claims({"preferred_username": "user"}), "user"
+        )
 
 
 # class Test(TestCase):

@@ -3,9 +3,17 @@ from django.db.models import Q
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 
 
-def oidc_username_from_claims(claims):
+def oidc_username_from_claims(email, claims=None):
+    if claims is None and isinstance(email, dict):
+        claims = email
+        email = claims.get("email")
+
+    if claims is None:
+        claims = {}
+
     return (
-        claims.get("email")
+        email
+        or claims.get("email")
         or claims.get("upn")
         or claims.get("preferred_username")
         or claims.get("sub")
