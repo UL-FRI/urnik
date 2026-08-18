@@ -30,6 +30,10 @@ class TimetableViewSet(BaseViewSet):
     serializer_class = TimetableSerializer
     lookup_field = 'slug'
 
+class TimetableSiteViewSet(BaseViewSet):
+    queryset = TimetableSite.objects.all()
+    serializer_class = TimetableSiteSerializer    
+
 class AllocationViewSet(BaseNestedViewSet):
     queryset = Allocation.objects.all()
     serializer_class = AllocationSerializer
@@ -68,19 +72,3 @@ class ActivityViewSet(BaseNestedViewSet):
     serializer_class = ActivitySerializer
     parent_lookup_field = 'activityset__slug'
     parent_lookup_kwarg = 'activityset_slug'
-
-class DailyAllocationsView(viewsets.ViewSet):
-    queryset = Allocation.objects.all()
-    serializer_class = DailyAllocationsSerializer
-    parent_lookup_field = 'timetable__slug'
-    parent_lookup_kwarg = 'timetable_slug'
-    filterset_fields = ["date"]
-    
-    def list(self, request, timetable_slug):
-        tt = get_object_or_404(Timetable, slug=timetable_slug)
-        allocations = Allocation.objects.filter(timetable=tt)
-        DailyAllocationsVM = namedtuple("DailyAllocations", ["allocations"])
-        return Response(DailyAllocationsVM(
-            allocations=allocations
-        ))
-        

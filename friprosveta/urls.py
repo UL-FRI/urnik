@@ -292,10 +292,10 @@ urlpatterns = [
 ]
 
 router = routers.DefaultRouter()
+router.register(r'site', restapi.TimetableSiteViewSet)
 router.register(r'timetable', restapi.TimetableViewSet)
 timetable_router = routers.NestedDefaultRouter(router, r'timetable', lookup='timetable')
 timetable_router.register(r'allocation', restapi.AllocationViewSet)
-timetable_router.register(r'daily_allocations', restapi.DailyAllocationsView, basename="daily_allocations")
 router.register(r'teacher', restapi.TeacherViewSet)
 router.register(r'subject', restapi.SubjectViewSet)
 router.register(r'location', restapi.LocationViewSet)
