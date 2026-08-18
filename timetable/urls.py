@@ -1,6 +1,6 @@
 from django.conf.urls import *
 
-from . import views
+from . import views, restapi
 
 urlpatterns = [
     url(r"^$", views.index, "index"),
@@ -21,4 +21,9 @@ urlpatterns = [
     url(r"^trades/(?P<pk>\d+)/respond/$", views.respond_to_trade_request, name="respond_to_trade_request"),
     url(r"^trades/(?P<pk>\d+)/reject/$", views.reject_trade_request, name="reject_trade_request"),
     url(r"^trades/queue/$", views.trade_match_queue, name="trade_match_queue"),
+
+    # REST API
+    url(r"^api/timetables/$", restapi.TimetableView.as_view(), name="api_timetable_list"),
+    url(r"^api/classrooms/$", restapi.ClassroomView.as_view(), name="api_classroom_list"),
+    url(r"^api/activities/$", restapi.ActivityView.as_view(), name="api_activity_list"),
 ]

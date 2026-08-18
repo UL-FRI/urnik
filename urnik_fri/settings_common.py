@@ -135,7 +135,9 @@ INSTALLED_APPS = [
     "unitime",
     "exchange",
     "django.contrib.admin",
-    # 'rest_framework',
+    'rest_framework',
+    'drf_spectacular',
+    'django_filters',
     "impersonate",
     "import_export",
     # 'djcelery_email',
@@ -153,7 +155,7 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly",
     ),
     "DEFAULT_FILTER_BACKENDS": (
-        # 'rest_framework.filters.DjangoFilterBackend',
+        'rest_framework.filters.DjangoFilterBackend',
     ),
 }
 # OIDC Configuration

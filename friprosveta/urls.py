@@ -1,13 +1,14 @@
-from django.urls import re_path
+from django.urls import include, path, re_path
 from django.views.generic import TemplateView
 from django.views.generic.list import ListView
+
+from rest_framework_nested import routers
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 from timetable.models import TimetableSet
 from timetable import views as timetable_views
 
-from . import views
-
-# from .restapi import SubjectDetailsView, SubjectsView
+from . import views, restapi
 
 urlpatterns = [
     re_path(r"^$", views.default_timetable_redirect, name="default_timetable"),
@@ -135,7 +136,7 @@ urlpatterns = [
         timetable_views.trade_match_queue,
         name="trade_match_queue",
     ),
-    
+
     re_path(
         r"^timetable/(?P<timetable_slug>[\w-]+)/?", views.results, {}, name="results"
     ),
@@ -283,11 +284,35 @@ urlpatterns = [
         {},
         name="faq",
     ),
-    # re_path(r'^api/subject/?$', SubjectsView.as_view()),
-    # re_path(r'^api/subject/(?P<code>[0-9]+[A-B]?)/?$', SubjectDetailsView.as_view()),
     re_path(
         r"^cookies/?$",
         TemplateView.as_view(template_name="friprosveta/cookies.html"),
         name="cookies",
     ),
+]
+
+router = routers.DefaultRouter()
+router.register(r'timetable', restapi.TimetableViewSet)
+timetable_router = routers.NestedDefaultRouter(router, r'timetable', lookup='timetable')
+timetable_router.register(r'allocation', restapi.AllocationViewSet)
+timetable_router.register(r'daily_allocations', restapi.DailyAllocationsView, basename="daily_allocations")
+router.register(r'teacher', restapi.TeacherViewSet)
+router.register(r'subject', restapi.SubjectViewSet)
+router.register(r'location', restapi.LocationViewSet)
+location_router = routers.NestedDefaultRouter(router, r'location', lookup='location')
+location_router.register(r'classroom', restapi.ClassroomViewSet)
+router.register(r'classroom_set', restapi.ClassroomSetViewSet)
+router.register(r'activityset', restapi.ActivitySetViewSet)
+activityset_router = routers.NestedDefaultRouter(router, r'activityset', lookup='activityset')
+activityset_router.register(r'activity', restapi.ActivityViewSet)
+
+urlpatterns += [
+    path("api/", include(router.urls)),
+    path("api/", include(timetable_router.urls)),
+    path("api/", include(location_router.urls)),
+    path("api/", include(activityset_router.urls)),
+
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
