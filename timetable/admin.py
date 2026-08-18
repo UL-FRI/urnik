@@ -43,7 +43,8 @@ class ClassroomNResourcesInline(admin.TabularInline):
 
 class ClassroomAdmin(ImportExportActionModelAdmin):
     #filter_horizontal = ("resources",)
-    list_filter = ("classroomset",)
+    list_display = ("name", "short_name", "location", "capacity",)
+    list_filter = ("classroomset", "location")
     inlines = [
         ClassroomNResourcesInline,
     ]
