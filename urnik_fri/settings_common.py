@@ -109,6 +109,8 @@ TEMPLATES = [
 ]
 
 MIDDLEWARE = (
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
+    'urnik_fri.nonhtml_debug_middleware.NonHtmlDebugToolbarMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -122,6 +124,7 @@ MIDDLEWARE = (
 INSTALLED_APPS = [
     #'dal',
     #'dal_select2',
+    "debug_toolbar",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -183,3 +186,7 @@ OIDC_RP_SCOPES = "openid email profile"
 
 # Optional: Session refresh
 OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS = 3600
+
+INTERNAL_IPS = [
+    "127.0.0.1"
+]
