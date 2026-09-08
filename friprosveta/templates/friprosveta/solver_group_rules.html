@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "TIMETABLE" %} - {% trans "Student / group rules" %}{% endblock %}
+{% block body %}
+<h1>{% trans "Student / group rules" %}: {{ timetable.name }}</h1>
+<p><a href="{% url "solver_dashboard" timetable_slug=timetable_slug %}">{% trans "Back to solver dashboard" %}</a></p>
+
+<h2>{% trans "Native group no-overlap" %}</h2>
+<p>{% trans "The OR-Tools solver already enforces that realizations sharing the same group do not overlap in time. You do not need to add a constraint for this; it is built into the solver." %}</p>
+
+<h2>{% trans "Cross-section no-overlap threshold" %}</h2>
+<p>{% trans "When the run option cross_section_razor is set, the solver adds hard no-overlap pairs for realizations that share more students than the configured threshold. This is controlled on the run command preview page, not per-constraint." %}</p>
+<p><a href="{% url "solver_run_preview" timetable_slug=timetable_slug %}">{% trans "Configure cross_section_razor on the run preview page" %}</a></p>
+
+<h2>{% trans "Group workload / movement limits" %}</h2>
+<p>{% trans "To limit how many days per week, hours per day, continuous hours, or minimum building-change gap a group must respect, create a workload / movement constraint scoped to that group." %}</p>
+<p><a href="{% url "solver_constraint_create" timetable_slug=timetable_slug %}?category=workload">{% trans "Create a group workload / movement rule" %}</a></p>
+
+<h2>{% trans "Group preferences (existing pages)" %}</h2>
+<p>{% trans "Group time preferences with level CANT or HATE are treated by the solver as hard unavailability: the group cannot be scheduled in those slots. Group time preferences with level WANT are soft objective terms: the solver prefers but does not force those slots. Group value preferences (e.g. MAXDAYSWEEK, MAXHOURSDAY) are enforced as hard limits regardless of the preference level. All of these are configured on the existing group preference pages." %}</p>
+<ul>
+  <li><a href="{% url "group_preference_list" timetable_slug=timetable_slug %}">{% trans "Group preferences list" %}</a></li>
+  <li><a href="{% url "tag_preference_list" timetable_slug=timetable_slug %}">{% trans "Tag preferences (including group-tagged preferences)" %}</a></li>
+</ul>
+
+<h2>{% trans "What is NOT supported" %}</h2>
+<p>{% trans "Arbitrary pair-of-groups constraints (e.g. 'group A and group B must not overlap') are not supported by the current solver. Overlap is enforced per realization based on shared students/groups, not by naming group pairs. Do not model group-pair rules as solver constraints; they will be ignored." %}</p>
+{% endblock %}

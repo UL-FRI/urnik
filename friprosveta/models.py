@@ -12,7 +12,15 @@ import frinajave
 import friprosveta
 import timetable.models
 from friprosveta.studis import Studenti
-from timetable.models import Group
+from timetable.models import ACTIVITYTYPES, AFTERHOURS, WEEKDAYS, WORKHOURS, Group
+
+from .scheduling_windows import (
+    ActivityRealizationSchedulingWindow,
+    ActivityTypeSchedulingRestriction,
+    ActivityTypeSchedulingWindow,
+    SCHEDULING_WINDOW_END_CHOICES,
+    TeacherSchedulingWindow,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +32,75 @@ LECTURE_SPLIT_CHOICES = [
 ]
 
 # Create your models here.
+
+
+class SolverWeightSettings(models.Model):
+    """Per-timetable weights for automatic OR-Tools objective terms."""
+
+    timetable = models.OneToOneField(
+        timetable.models.Timetable,
+        related_name="solver_weight_settings",
+        on_delete=models.CASCADE,
+    )
+    scheduling_window_weight = models.PositiveIntegerField(default=10000)
+    lecture_grid_alignment_weight = models.PositiveIntegerField(default=8)
+    consecutive_teacher_room_weight = models.PositiveIntegerField(default=10)
+    room_adjacency_weight = models.PositiveIntegerField(default=2)
+    lecture_back_to_back_penalty = models.PositiveIntegerField(default=10)
+
+
+class ManualActivity(models.Model):
+    """An operator-managed activity that must survive generated workflows."""
+
+    timetable = models.ForeignKey(
+        timetable.models.Timetable,
+        related_name="manual_activities",
+        on_delete=models.CASCADE,
+    )
+    subject = models.ForeignKey("Subject", on_delete=models.CASCADE)
+    lecture_type = models.ForeignKey("LectureType", on_delete=models.CASCADE)
+    name = models.CharField(max_length=200, blank=True)
+    duration = models.PositiveSmallIntegerField()
+    enabled = models.BooleanField(default=True)
+    teachers = models.ManyToManyField("timetable.Teacher", blank=True)
+    groups = models.ManyToManyField("timetable.Group", blank=True)
+    locations = models.ManyToManyField("timetable.Location")
+    requirements = models.ManyToManyField("timetable.Resource", blank=True)
+    required_rooms = models.ManyToManyField("timetable.Classroom", blank=True)
+    fixed_day = models.CharField(max_length=3, choices=WEEKDAYS, blank=True)
+    fixed_start = models.CharField(max_length=5, choices=WORKHOURS, blank=True)
+    fixed_room = models.ForeignKey(
+        "timetable.Classroom",
+        null=True,
+        blank=True,
+        related_name="manual_activity_placements",
+        on_delete=models.SET_NULL,
+    )
+    solver_constraint = models.OneToOneField(
+        "timetable.SolverConstraint",
+        null=True,
+        blank=True,
+        related_name="manual_activity",
+        on_delete=models.SET_NULL,
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("timetable", "subject", "lecture_type"),
+                name="unique_manual_activity_per_timetable_subject_type",
+            )
+        ]
+        ordering = ("subject__code", "lecture_type__short_name")
+
+    def __str__(self):
+        return "{} {} ({})".format(
+            self.subject.code,
+            self.lecture_type.short_name,
+            self.timetable.slug,
+        )
+
+
 REALIZATIONSIZES = [
     ("MAJHNE", "izvajanje v majhnih skupinah"),
     ("ASISTENTA", "izvajanje v velikih skupinah z asistentoma"),
@@ -163,6 +240,13 @@ class GroupSizeHint(models.Model):
         GroupSizeHint.objects.filter(group=group, method=method).delete()
         GroupSizeHint(group=group, size=size, method=method).save()
         logger.info("Size hint calculated")
+
+    @staticmethod
+    def size_from_old_group_size(group, groupset):
+        method = "group from {0} from size".format(groupset)
+        old_group = groupset.groups.get(short_name=group.short_name)
+        GroupSizeHint.objects.filter(group=group, method=method).delete()
+        GroupSizeHint(group=group, size=old_group.size, method=method).save()
 
     @staticmethod
     def size_from_enrollments(

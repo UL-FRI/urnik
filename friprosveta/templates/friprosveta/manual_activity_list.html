@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "TIMETABLE" %} - {% trans "Manual activities" %}{% endblock %}
+{% block body %}
+<style>
+  .manual-actions { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
+  .manual-table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+  .manual-table th, .manual-table td { border-bottom: 1px solid #d4d9df; padding: .65rem; text-align: left; vertical-align: top; }
+  .manual-table form { display: inline; }
+</style>
+<h1>{% trans "Manual activities" %}: {{ timetable.name }}</h1>
+<p><a href="{% url "solver_dashboard" timetable_slug=timetable_slug %}">{% trans "Back to solver dashboard" %}</a></p>
+<p>Manual entries are applied when saved and after OR-Tools group preparation. They are intended for externally managed activities and fixed exceptions.</p>
+<p><a href="{% url "manual_activity_create" timetable_slug=timetable_slug %}">{% trans "Create manual activity" %}</a></p>
+{% if entries %}
+<table class="manual-table">
+  <thead><tr><th>{% trans "Activity" %}</th><th>{% trans "Teachers" %}</th><th>{% trans "Rooms" %}</th><th>{% trans "Fixed allocation" %}</th><th>{% trans "Status" %}</th><th>{% trans "Actions" %}</th></tr></thead>
+  <tbody>
+  {% for entry in entries %}
+    <tr>
+      <td>{{ entry.subject.code }} {{ entry.subject.name }} ({{ entry.lecture_type.short_name }}, {{ entry.duration }}h)</td>
+      <td>{% for teacher in entry.teachers.all %}{{ teacher }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}</td>
+      <td>{% for room in entry.required_rooms.all %}{{ room.short_name }}{% if not forloop.last %}, {% endif %}{% empty %}{% trans "Resource matched" %}{% endfor %}</td>
+      <td>{% if entry.fixed_room %}{{ entry.get_fixed_day_display }} {{ entry.fixed_start }}, {{ entry.fixed_room.short_name }}{% else %}-{% endif %}</td>
+      <td>{% if entry.enabled %}{% trans "Active" %}{% else %}{% trans "Disabled" %}{% endif %}</td>
+      <td class="manual-actions"><a href="{% url "manual_activity_edit" timetable_slug=timetable_slug pk=entry.pk %}">{% trans "Edit" %}</a><form method="post">{% csrf_token %}<input type="hidden" name="entry" value="{{ entry.pk }}"><button type="submit">{% trans "Remove" %}</button></form></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}<p>{% trans "No manual activities are configured." %}</p>{% endif %}
+{% endblock %}

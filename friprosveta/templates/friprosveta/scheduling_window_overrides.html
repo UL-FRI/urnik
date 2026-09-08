@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Realization scheduling overrides" %}{% endblock %}
+{% block body %}
+<h1>{% trans "Scheduling window overrides" %}: {{ timetable.name }}</h1>
+<p><a href="{% url "scheduling_windows" timetable_slug=timetable_slug %}">{% trans "Back to activity type windows" %}</a></p>
+<style>
+  .window-grid { border-collapse: collapse; margin: 1rem 0; }
+  .window-grid th, .window-grid td { border: 1px solid #d4d9df; padding: 0; text-align: center; }
+  .window-grid th { background: #f2f4f7; padding: .45rem .7rem; }
+  .window-cell { display: block; min-width: 5.5rem; padding: .55rem .35rem; cursor: pointer; background: #fbe1e1; color: #7a1d1d; }
+  .window-cell input { position: absolute; opacity: 0; pointer-events: none; }
+  .window-cell:has(input:checked) { background: #dff2df; color: #1e5d2b; }
+  .window-cell::after { content: "Disabled"; font-size: .85rem; }
+  .window-cell:has(input:checked)::after { content: "Enabled"; }
+</style>
+<p>{% trans "Teacher overrides take precedence over activity type windows. Realization overrides take precedence over teacher overrides. A weight of 100 is hard; lower weights are soft preferences." %}</p>
+<h2>{% trans "Teacher override" %}</h2>
+<form method="get"><label>{% trans "Teacher" %} <select name="teacher"><option value="">{% trans "Select a teacher" %}</option>{% for teacher in teachers %}<option value="{{ teacher.id }}"{% if selected_teacher.id == teacher.id %} selected{% endif %}>{{ teacher }}</option>{% endfor %}</select></label> <button type="submit">{% trans "Show time grid" %}</button></form>
+{% if selected_teacher %}
+<p>{% trans "Checked slots define this teacher's window. At weight 100, unchecked slots are unavailable; otherwise they are less preferred. Each day must remain contiguous." %}</p>
+<form method="post">{% csrf_token %}<input type="hidden" name="form_type" value="teacher"><input type="hidden" name="teacher" value="{{ selected_teacher.id }}">{{ teacher_form.non_field_errors }}
+<table class="window-grid"><thead><tr><th>{% trans "Time" %}</th>{% for day, day_label in weekdays %}<th>{{ day_label }}</th>{% endfor %}</tr></thead><tbody>{% for row in teacher_form.rows %}<tr><th>{{ row.hour }}</th>{% for cell in row.cells %}<td><label class="window-cell">{{ cell.field }}</label></td>{% endfor %}</tr>{% endfor %}<tr><th>{% trans "Weight" %}</th>{% for cell in teacher_form.weight_cells %}<td>{{ cell.field }}</td>{% endfor %}</tr></tbody></table>
+<p><button type="submit">{% trans "Save teacher window" %}</button></p></form>
+{% endif %}
+{% if teacher_overrides %}<h2>{% trans "Current teacher overrides" %}</h2><table><thead><tr><th>{% trans "Teacher" %}</th><th>{% trans "Day" %}</th><th>{% trans "Window" %}</th><th>{% trans "Weight" %}</th></tr></thead><tbody>{% for override in teacher_overrides %}<tr><td>{{ override.teacher }}</td><td>{{ override.get_day_display }}</td><td>{% if override.unrestricted %}{% trans "Unrestricted" %}{% elif override.unavailable %}{% trans "Unavailable" %}{% else %}{{ override.start }}–{{ override.end }}{% endif %}</td><td>{{ override.weight }}</td></tr>{% endfor %}</tbody></table>{% endif %}
+<h2>{% trans "Realization override" %}</h2>
+<p>{% trans "Use this only for an exception to a teacher override." %}</p>
+<form method="post">{% csrf_token %}<input type="hidden" name="form_type" value="realization">{{ form.as_p }}<p><button type="submit">{% trans "Save realization override" %}</button></p></form>
+{% if overrides %}<h2>{% trans "Current overrides" %}</h2><table><thead><tr><th>{% trans "Realization" %}</th><th>{% trans "Day" %}</th><th>{% trans "Window" %}</th><th>{% trans "Weight" %}</th></tr></thead><tbody>{% for override in overrides %}<tr><td>{{ override.realization }}</td><td>{{ override.get_day_display }}</td><td>{% if override.unrestricted %}{% trans "Unrestricted" %}{% else %}{{ override.start }}–{{ override.end }}{% endif %}</td><td>{{ override.weight }}</td></tr>{% endfor %}</tbody></table>{% endif %}
+{% endblock %}

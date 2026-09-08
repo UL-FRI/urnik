@@ -37,6 +37,16 @@ class ClassroomNResourcesInline(admin.TabularInline):
     model = ClassroomNResources
 
 
+class ClassroomActivityTypeInline(admin.TabularInline):
+    model = ClassroomActivityType
+    extra = 0
+
+
+class ClassroomActivityStartTimeInline(admin.TabularInline):
+    model = ClassroomActivityStartTime
+    extra = 0
+
+
 # class ResourcesInline(admin.TabularInline):
 #    model = Resource
 
@@ -44,14 +54,23 @@ class ClassroomNResourcesInline(admin.TabularInline):
 class ClassroomAdmin(ImportExportActionModelAdmin):
     #filter_horizontal = ("resources",)
     list_display = ("name", "short_name", "location", "capacity",)
-    list_filter = ("classroomset", "location")
+    list_filter = ("classroomset", "allow_overlaps", "is_virtual", "location")
     inlines = [
         ClassroomNResourcesInline,
+        ClassroomActivityTypeInline,
+        ClassroomActivityStartTimeInline,
     ]
 
 
 class ClassroomSetAdmin(ImportExportActionModelAdmin):
     filter_horizontal = ("classrooms",)
+
+
+class StudyModuleAdmin(ImportExportActionModelAdmin):
+    list_display = ("name", "timetable", "active")
+    list_filter = ("timetable", "active")
+    search_fields = ("name",)
+    filter_horizontal = ("activities", "non_overlapping_with")
 
 
 class GroupAdmin(ImportExportActionModelAdmin):
@@ -154,6 +173,19 @@ class TagValuePreferenceAdmin(ImportExportActionModelAdmin):
 
 class TagDescriptivePreferenceAdmin(ImportExportActionModelAdmin):
     list_filter = ("preferenceset",)
+
+
+class SolverConstraintAdmin(ImportExportActionModelAdmin):
+    list_display = ("name", "timetable", "constraint_type", "active", "hard", "value")
+    list_filter = ("timetable", "constraint_type", "active", "hard")
+    search_fields = ("name", "timetable__name")
+    filter_horizontal = (
+        "activities",
+        "realizations",
+        "teachers",
+        "groups",
+        "classrooms",
+    )
 
 
 class TradeRequestAdminForm(forms.ModelForm):
@@ -478,6 +510,7 @@ admin.site.register(PreferenceSet)
 admin.site.register(ClassroomSet, ClassroomSetAdmin)
 admin.site.register(Classroom, ClassroomAdmin)
 admin.site.register(ClassroomNResources)
+admin.site.register(StudyModule, StudyModuleAdmin)
 
 admin.site.register(Allocation, AllocationAdmin)
 admin.site.register(Group, GroupAdmin)
@@ -503,6 +536,7 @@ admin.site.register(TagPreference, TagPreferenceAdmin)
 admin.site.register(TagTimePreference, TagTimePreferenceAdmin)
 admin.site.register(TagValuePreference, TagValuePreferenceAdmin)
 admin.site.register(TagDescriptivePreference, TagDescriptivePreferenceAdmin)
+admin.site.register(SolverConstraint, SolverConstraintAdmin)
 
 # Register the new trade-related models
 admin.site.register(TradeRequest, TradeRequestAdmin)

@@ -464,27 +464,57 @@ def _realization_set(param_ids, filtered_realizations, allow_unfiltered=False):
     return filtered_realizations
 
 
-def _allocation_set(param_ids, filtered_allocations, is_staff=False):
+def _allocation_set(
+    param_ids,
+    filtered_allocations,
+    is_staff=False,
+    include_private_respected=False,
+):
+    respected_timetable_ids = set()
     if "timetable_slug" in param_ids:
+        selected_timetables = Timetable.objects.filter(slug__in=param_ids["timetable_slug"])
+        respected_timetables = Timetable.objects.filter(
+            pk__in=selected_timetables.values("respects")
+        )
+        selected_timetable_ids = set(selected_timetables.values_list("id", flat=True))
+        respected_timetable_ids.update(
+            respected_timetables.values_list("id", flat=True)
+        )
         filtered_allocations = filtered_allocations.filter(
-            Q(timetable__slug__in=param_ids["timetable_slug"])
-            | Q(timetable__respects__slug__in=param_ids["timetable_slug"])
+            timetable__id__in=selected_timetable_ids | respected_timetable_ids
         )
     if "timetable" in param_ids:
+        selected_timetables = Timetable.objects.filter(id__in=param_ids["timetable"])
+        respected_timetables = Timetable.objects.filter(
+            pk__in=selected_timetables.values("respects")
+        )
+        selected_timetable_ids = set(selected_timetables.values_list("id", flat=True))
+        respected_timetable_ids.update(
+            respected_timetables.values_list("id", flat=True)
+        )
         filtered_allocations = filtered_allocations.filter(
-            Q(timetable__id__in=param_ids["timetable"])
-            | Q(timetable__respects__id__in=param_ids["timetable"])
+            timetable__id__in=selected_timetable_ids | respected_timetable_ids
         )
     if not is_staff:
-        filtered_allocations = filtered_allocations.filter(timetable__public=True)
+        visibility = Q(timetable__public=True)
+        if include_private_respected:
+            visibility |= Q(timetable__id__in=respected_timetable_ids)
+        filtered_allocations = filtered_allocations.filter(visibility)
     if "day" in param_ids:
         filtered_allocations = filtered_allocations.filter(day__in=param_ids["day"])
     if "classroom" in param_ids:
         filtered_allocations = filtered_allocations.filter(
             classroom_id__in=param_ids["classroom"]
         )
+    realization_param_ids = dict(param_ids)
+    # Allocations have already been restricted to the selected timetable and
+    # its respected timetables above. Reapplying that scope to realizations
+    # would discard respected allocations whose activities live in a separate
+    # activity set (for example FKKT availability blocks).
+    realization_param_ids.pop("timetable_slug", None)
+    realization_param_ids.pop("timetable", None)
     realizations = _realization_set(
-        param_ids, ActivityRealization.objects.all(), allow_unfiltered=True
+        realization_param_ids, ActivityRealization.objects.all(), allow_unfiltered=True
     )
     filtered_allocations = filtered_allocations.filter(
         activityRealization__in=realizations
@@ -538,11 +568,12 @@ def _titles(param_ids):
 def allocations_json(request, timetable_slug=None):
     tt = get_object_or_404(timetable.models.Timetable, slug=timetable_slug)
     param_ids = _allocation_context_links(request)[1]
+    param_ids.setdefault("timetable_slug", [timetable_slug])
     # param_ids['timetable_slug'] = [timetable_slug]
 
     filtered_allocations = (
         _allocation_set(
-            param_ids, tt.allocations, request.user.is_staff
+            param_ids, Allocation.objects.all(), request.user.is_staff
         )
         # Add selects and prefetches to avoid N+1 queries
         .select_related('activityRealization', 'activityRealization__activity', 'classroom',)
@@ -596,7 +627,10 @@ def allocations_json_ext(request, filtered_allocations):
 
 def authenticated_allocations(request, timetable_slug=None):
     return _allocations(
-        request, timetable_slug, is_teacher=__is_teacher_or_staff(request.user)
+        request,
+        timetable_slug,
+        is_teacher=__is_teacher_or_staff(request.user),
+        include_private_respected=request.user.is_authenticated,
     )
 
 
@@ -660,14 +694,23 @@ def allocations(request, timetable_slug=None):
     return _allocations(request, timetable_slug, is_teacher=False)
 
 
-def _allocations(request, timetable_slug=None, is_teacher=False):
+def _allocations(
+    request,
+    timetable_slug=None,
+    is_teacher=False,
+    include_private_respected=False,
+):
     context_links, param_ids = _allocation_context_links(request)
     tt = get_object_or_404(timetable.models.Timetable, slug=timetable_slug)
     param_ids = _allocation_context_links(request)[1]
+    param_ids.setdefault("timetable_slug", [timetable_slug])
     
     filtered_allocations = (
         _allocation_set(
-            param_ids, tt.allocations, request.user.is_staff
+            param_ids,
+            Allocation.objects.all(),
+            request.user.is_staff,
+            include_private_respected=include_private_respected,
         )
         # Add selects and prefetches to avoid N+1 queries
         .select_related('activityRealization', 'activityRealization__activity', 'activityRealization__activity__activity__subject', 'classroom',)
@@ -819,9 +862,10 @@ def _allocations(request, timetable_slug=None, is_teacher=False):
 def allocations_ical(request, timetable_slug):
     tt = get_object_or_404(timetable.models.Timetable, slug=timetable_slug)
     param_ids = _allocation_context_links(request)[1]
+    param_ids.setdefault("timetable_slug", [timetable_slug])
     filtered_allocations = (
         _allocation_set(
-            param_ids, tt.allocations, request.user.is_staff
+            param_ids, Allocation.objects.all(), request.user.is_staff
         )
         # Add selects and prefetches to avoid N+1 queries
         .select_related('activityRealization', 'activityRealization__activity', 'classroom',)
@@ -1362,7 +1406,9 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
             queryset=own_activities,
             prefix="ownact-",
             form_kwargs={
-                "min_physical_cycle_percentage": tt.min_physical_cycle_percentage
+                "min_physical_cycle_percentage": tt.min_physical_cycle_percentage,
+                "teacher": teacher,
+                "timetable": tt,
             },
         )
         others_act_formset = friprosveta.forms.ActivityMinimalFormset(
@@ -1371,7 +1417,9 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
             queryset=others_activities,
             prefix="act-",
             form_kwargs={
-                "min_physical_cycle_percentage": tt.min_physical_cycle_percentage
+                "min_physical_cycle_percentage": tt.min_physical_cycle_percentage,
+                "teacher": teacher,
+                "timetable": tt,
             },
         )
         preference_form.full_clean()
@@ -1429,35 +1477,22 @@ def teacher_single_preferences(request, timetable_slug, teacher_id=None):
         else:
             got_post_msg = problem_msg
     if not problems:
-        # Fill cycles_on_site with the number of cycles for each activity.
-        # This is the default for the cycles on site.
-        for activity in own_activities:
-            activity.refresh_from_db()
-            timetable_set_ids = activity.activityset.timetable_set.values_list(
-                "timetable_sets", flat=True
-            )
-            all_cycles = frinajave.models.TeacherSubjectCycles.objects.filter(
-                subject_code=activity.subject.code,
-                timetable_set_id__in=timetable_set_ids,
-                lecture_type=activity.lecture_type_id,
-            ).aggregate(suma=Coalesce(Sum("cycles"), Decimal(0)))["suma"]
-            all_cycles = int(round(all_cycles))
-            activity.all_cycles = all_cycles
-            if activity.cycles_on_site is None:
-                activity.cycles_on_site = int(round(all_cycles))
-                activity.save(update_fields=["cycles_on_site"])
         own_act_formset = friprosveta.forms.ActivityMinimalFormset(
             queryset=own_activities,
             prefix="ownact-",
             form_kwargs={
-                "min_physical_cycle_percentage": tt.min_physical_cycle_percentage
+                "min_physical_cycle_percentage": tt.min_physical_cycle_percentage,
+                "teacher": teacher,
+                "timetable": tt,
             },
         )
         others_act_formset = friprosveta.forms.ActivityMinimalFormset(
             queryset=others_activities,
             prefix="act-",
             form_kwargs={
-                "min_physical_cycle_percentage": tt.min_physical_cycle_percentage
+                "min_physical_cycle_percentage": tt.min_physical_cycle_percentage,
+                "teacher": teacher,
+                "timetable": tt,
             },
         )
         preference_form = timetable.forms.TeacherPreferenceForm(

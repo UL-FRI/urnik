@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "TIMETABLE" %} - {% trans "Manual activity" %}{% endblock %}
+{% block body %}
+<style>
+  .manual-form { max-width: 54rem; border-top: 4px solid #2b4f89; padding-top: .8rem; }
+  .manual-form p { margin: 1rem 0; }
+  .manual-form label { display: block; color: #2b4f89; font-weight: bold; margin-bottom: .25rem; }
+  .manual-form input, .manual-form select { box-sizing: border-box; max-width: 100%; padding: .4rem; }
+  .manual-form select[multiple] { min-width: min(100%, 32rem); }
+  .manual-form button { background: #2b4f89; border: 0; color: #fff; cursor: pointer; padding: .6rem 1rem; }
+  .manual-form .helptext { color: #58636f; display: block; font-size: .9rem; margin-top: .25rem; }
+</style>
+<h1>{% if is_create %}{% trans "Create manual activity" %}{% else %}{% trans "Edit manual activity" %}{% endif %}: {{ timetable.name }}</h1>
+<p><a href="{% url "manual_activity_list" timetable_slug=timetable_slug %}">{% trans "Back to manual activities" %}</a></p>
+<p>Leave fixed weekday, start time, and room blank to let the solver schedule the activity. Set all three to create an immediate fixed allocation.</p>
+<form method="post" class="manual-form">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <p><button type="submit">{% if is_create %}{% trans "Create and apply" %}{% else %}{% trans "Save and apply" %}{% endif %}</button></p>
+</form>
+{% endblock %}

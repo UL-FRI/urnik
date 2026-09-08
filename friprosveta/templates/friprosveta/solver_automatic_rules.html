@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Automatic solver rules" %}{% endblock %}
+{% block body %}
+<h1>{% trans "Automatic rules and weights" %}: {{ timetable.name }}</h1>
+<p><a href="{% url "solver_dashboard" timetable_slug=timetable_slug %}">{% trans "Back to solver dashboard" %}</a></p>
+<p>{% trans "Hard rules cannot be relaxed here. Soft-rule weights are objective points: higher values make that rule more important relative to the other soft rules; 0 disables it." %}</p>
+
+<h2>{% trans "Built-in hard constraints" %}</h2>
+<table>
+  <thead><tr><th>{% trans "Rule" %}</th><th>{% trans "Effect" %}</th><th>{% trans "Configuration" %}</th></tr></thead>
+  <tbody>
+    <tr><td>{% trans "One placement" %}</td><td>{% trans "Every scheduled realization receives exactly one valid weekday, time, and room." %}</td><td>{% trans "Automatic" %}</td></tr>
+    <tr><td>{% trans "Availability" %}</td><td>{% trans "Teacher, group, tag, room, respected-timetable, and hard scheduling-window unavailability are excluded." %}</td><td>{% trans "Preferences and time restriction pages" %}</td></tr>
+    <tr><td>{% trans "Eligible rooms" %}</td><td>{% trans "Room capacity, resource requirements, supported activity types, fixed rooms, and hard room start grids are enforced." %}</td><td>{% trans "Rooms and custom constraints" %}</td></tr>
+    <tr><td>{% trans "No overlap" %}</td><td>{% trans "Teachers, groups, parent/child groups, enrolled students, and normal rooms cannot be double-booked." %}</td><td>{% trans "Automatic" %}</td></tr>
+    <tr><td>{% trans "Activity and tag relations" %}</td><td>{% trans "Configured no-overlap, order, same-start/day, consecutive, end-of-day, minimum-gap, and maximum-room rules are enforced." %}</td><td>{% trans "Activities, tags, and custom constraints" %}</td></tr>
+    <tr><td>{% trans "Workload and movement limits" %}</td><td>{% trans "Configured daily/weekly hours, days, span, building changes, and change gaps are hard limits." %}</td><td>{% trans "Preferences and custom constraints" %}</td></tr>
+    <tr><td>{% trans "Special scheduling rules" %}</td><td>{% trans "LV/AV sibling separation, study modules, and optional cross-section exclusion are enforced when configured." %}</td><td>{% trans "Activity data, modules, and run options" %}</td></tr>
+  </tbody>
+</table>
+
+<h2>{% trans "Automatic soft-rule weights" %}</h2>
+<form method="post">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  <table>
+    <thead><tr><th>{% trans "Rule" %}</th><th>{% trans "Weight" %}</th><th>{% trans "Effect" %}</th></tr></thead>
+    <tbody>
+      {% for field in form %}
+      <tr><td>{{ field.label_tag }}</td><td>{{ field.errors }}{{ field }}</td><td>{{ field.help_text }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p><button type="submit">{% trans "Save weights" %}</button></p>
+</form>
+
+<h2>{% trans "Other soft preferences" %}</h2>
+<p>{% trans "Teacher, group, and tag WANT time preferences use the weights configured on their preference pages. The generation page also has run-specific weights for retaining an existing allocation's time and room." %}</p>
+{% endblock %}

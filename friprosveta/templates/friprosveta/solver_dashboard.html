@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "TIMETABLE" %} - {% trans "Solver setup" %}{% endblock %}
+{% block body %}
+<style>
+  .solver-actions { display: flex; flex-wrap: wrap; gap: .65rem; margin: 1.2rem 0; }
+  .solver-actions a { background: #2B4F89; color: #fff; padding: .55rem .8rem; text-decoration: none; }
+  .solver-actions a:hover { background: #1d3864; color: #fff; }
+  .solver-card-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); margin: 1rem 0 1.5rem; }
+  .solver-card { border: 1px solid #d4d9df; border-top: 4px solid #2B4F89; }
+  .solver-card:hover { border-color: #2B4F89; box-shadow: 0 .2rem .7rem rgba(43, 79, 137, .14); }
+  .solver-card-link { color: inherit; display: block; height: 100%; padding: .9rem 1rem; text-decoration: none; }
+  .solver-card-link:hover { color: inherit; }
+  .solver-card h3 { margin: 0 0 .4rem; }
+  .solver-count { color: #2B4F89; font-size: 1.6rem; font-weight: bold; margin: .5rem 0; }
+.solver-generation-status { background: #e9f2ff; border: 1px solid #9ab8e4; border-left: 4px solid #2B4F89; border-radius: 4px; padding: .8rem .9rem; margin: .9rem 0; }
+.solver-generation-status strong { display: block; margin-bottom: .3rem; }
+.solver-studis-workflow-status { background: #f1f5ff; border: 1px solid #b3c9ea; border-left: 4px solid #2B4F89; border-radius: 4px; padding: .8rem .9rem; margin: .9rem 0; }
+.solver-studis-workflow-status strong { display: block; margin-bottom: .3rem; }
+</style>
+<h1>{% trans "Solver setup" %}: {{ timetable.name }}</h1>
+
+<p>{% trans "This page shows rules already generated from timetable data as well as optional custom solver constraints. You should not need to recreate tags, preferences, activity relations, or resource protection by hand." %}</p>
+
+{% if generation_status and generation_status.is_running %}
+  <div class="solver-generation-status">
+    <strong>{% trans "Solver generation is currently running." %}</strong>
+    {% if generation_status.started_by %}{% trans "Started by" %}: {{ generation_status.started_by }}{% endif %}
+    {% if generation_status.started_at %}{% trans "Started at" %}: {{ generation_status.started_at }}{% endif %}
+    {% if generation_status.mode %}{% trans "Mode" %}: {{ generation_status.mode }}{% endif %}
+  </div>
+{% endif %}
+
+{% if studis_workflow_status and studis_workflow_status.is_running %}
+  <div class="solver-studis-workflow-status">
+    <strong>{% trans "Studis workflow is currently running." %}</strong>
+    {% if studis_workflow_status.started_by %}{% trans "Started by" %}: {{ studis_workflow_status.started_by }}{% endif %}
+    {% if studis_workflow_status.started_at %}{% trans "Started at" %}: {{ studis_workflow_status.started_at }}{% endif %}
+    {% if studis_workflow_status.workflow %}{% trans "Workflow" %}: {{ studis_workflow_status.workflow }}{% endif %}
+  </div>
+{% endif %}
+
+<h2>{% trans "Active rule sources" %}</h2>
+<div class="podatkiTwo">
+  <table>
+    <thead><tr><th>{% trans "Source" %}</th><th>{% trans "Configured" %}</th><th>{% trans "Solver effect" %}</th></tr></thead>
+    <tbody>
+      {% for label, count, description in automatic_rule_sources %}
+      <tr><td>{{ label }}</td><td>{{ count }}</td><td>{{ description }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h2>{% trans "Custom constraints" %}</h2>
+<div class="solver-card-grid">
+  <section class="solver-card"><a class="solver-card-link" href="{% url "solver_constraint_create" timetable_slug=timetable_slug %}?category=relation"><h3>{% trans "Activity relations" %}</h3><p>{% trans "Keep selected activities together, apart, or ordered." %}</p><p class="solver-count">{{ counts.relation }}</p><strong>{% trans "Add relation" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "activity_before_relations" timetable_slug=timetable_slug %}"><h3>{% trans "Before / after" %}</h3><p>{% trans "Require every realization of one activity to finish before selected later activities begin." %}</p><p class="solver-count">{{ before_relation_count }}</p><strong>{% trans "Manage directed order" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "solver_constraint_create" timetable_slug=timetable_slug %}?category=ends_day"><h3>{% trans "End students' day" %}</h3><p>{% trans "Make a realization the last activity for its students." %}</p><p class="solver-count">{{ counts.ends_day }}</p><strong>{% trans "Add end-of-day rule" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "solver_constraint_create" timetable_slug=timetable_slug %}?category=workload"><h3>{% trans "Workload and movement" %}</h3><p>{% trans "Set daily, weekly, continuous-hour, and movement limits." %}</p><p class="solver-count">{{ counts.workload }}</p><strong>{% trans "Add workload rule" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "solver_constraint_create" timetable_slug=timetable_slug %}?category=workload&amp;constraint_type=MAXSPANDAY"><h3>{% trans "Maximum daily span" %}</h3><p>{% trans "Limit the time from a teacher's or group's first to last activity each day." %}</p><strong>{% trans "Add span limit" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "solver_constraint_create" timetable_slug=timetable_slug %}?category=relation&amp;constraint_type=SAMEROOM"><h3>{% trans "Same room" %}</h3><p>{% trans "Require selected realizations to use one room. Adjacent teacher sessions already prefer this automatically." %}</p><strong>{% trans "Add hard same-room rule" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "solver_constraint_create" timetable_slug=timetable_slug %}?category=lecture_group"><h3>{% trans "Lecture hours per group" %}</h3><p>{% trans "Limit P hours per day for a top-level group and its descendants." %}</p><p class="solver-count">{{ counts.lecture_group }}</p><strong>{% trans "Add lecture limit" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "solver_constraint_create" timetable_slug=timetable_slug %}?category=room"><h3>{% trans "Fixed room assignment" %}</h3><p>{% trans "Require selected activities or realizations to use one specific room." %}</p><p class="solver-count">{{ counts.room }}</p><strong>{% trans "Add fixed room" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "solver_constraint_create" timetable_slug=timetable_slug %}?category=placement"><h3>{% trans "Exact placement" %}</h3><p>{% trans "Require one realization to use a specific weekday, time, and room." %}</p><p class="solver-count">{{ counts.placement }}</p><strong>{% trans "Add placement" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "solver_constraint_create" timetable_slug=timetable_slug %}?category=time"><h3>{% trans "Exact time" %}</h3><p>{% trans "Require one realization to start at a specific weekday and time, in any suitable room." %}</p><p class="solver-count">{{ counts.time }}</p><strong>{% trans "Add exact time" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "study_module_list" timetable_slug=timetable_slug %}"><h3>{% trans "Study modules" %}</h3><p>{% trans "Keep activities in a module, and linked modules, from overlapping." %}</p><p class="solver-count">{{ study_module_count }}</p><strong>{% trans "Manage modules" %}</strong></a></section>
+</div>
+
+<p><strong>{{ custom_constraint_count }}</strong> {% trans "optional custom constraint(s) configured for this timetable." %}</p>
+
+<h2>{% trans "Constraint configuration" %}</h2>
+<div class="solver-card-grid">
+  <section class="solver-card"><a class="solver-card-link" href="{% url "solver_constraint_list" timetable_slug=timetable_slug %}"><h3>{% trans "All constraints" %}</h3><p>{% trans "Review and edit every configured solver constraint." %}</p><strong>{% trans "Manage constraints" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "solver_group_rules" timetable_slug=timetable_slug %}"><h3>{% trans "Student and group rules" %}</h3><p>{% trans "Review native overlap and group-related solver rules." %}</p><strong>{% trans "Open rules" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "solver_automatic_rules" timetable_slug=timetable_slug %}"><h3>{% trans "Automatic rules and weights" %}</h3><p>{% trans "Review built-in constraints and tune automatic soft-rule weights." %}</p><strong>{% trans "Review rules" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "solver_scheduling_scope" timetable_slug=timetable_slug %}"><h3>{% trans "Scheduling scope" %}</h3><p>{% trans "Choose which activities receive solver allocations." %}</p><strong>{% trans "Select activities" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "manual_activity_list" timetable_slug=timetable_slug %}"><h3>{% trans "Manual activities" %}</h3><p>{% trans "Create external activities and optional fixed room/time allocations." %}</p><strong>{{ manual_activity_count }} {% trans "active" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "scheduling_windows" timetable_slug=timetable_slug %}"><h3>{% trans "Activity time restrictions" %}</h3><p>{% trans "Set soft or hard weekday-hour bounds by activity type." %}</p><strong>{% trans "Edit restrictions" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "scheduling_window_overrides" timetable_slug=timetable_slug %}"><h3>{% trans "Teacher exceptions" %}</h3><p>{% trans "Set teacher-wide and realization-specific scheduling windows." %}</p><strong>{% trans "Edit exceptions" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "group_preference_list" timetable_slug=timetable_slug %}"><h3>{% trans "Group preferences" %}</h3><p>{% trans "Manage existing group time and workload preferences." %}</p><strong>{% trans "Open preferences" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "copy_group_time_preferences" timetable_slug=timetable_slug %}"><h3>{% trans "Copy prior group time preferences" %}</h3><p>{% trans "Copy matching groups' time preferences from a previous timetable." %}</p><strong>{% trans "Copy preferences" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "tag_preference_list" timetable_slug=timetable_slug %}"><h3>{% trans "Tag preferences" %}</h3><p>{% trans "Manage tag time, workload, and relationship preferences." %}</p><strong>{% trans "Open preferences" %}</strong></a></section>
+</div>
+
+<h2>{% trans "Solver tools" %}</h2>
+<div class="solver-card-grid">
+  <section class="solver-card"><a class="solver-card-link" href="{% url "solver_run_preview" timetable_slug=timetable_slug %}"><h3>{% trans "Generate timetable" %}</h3><p>{% trans "Preview the whole-timetable generation command." %}</p><strong>{% trans "Generate" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "solver_repair_preview" timetable_slug=timetable_slug %}"><h3>{% trans "Repair allocations" %}</h3><p>{% trans "Reschedule selected realizations while preserving the rest." %}</p><strong>{% trans "Repair" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "studis_workflow_preview" timetable_slug=timetable_slug %}"><h3>{% trans "Studis workflow" %}</h3><p>{% trans "Preview and run command-based Studis sync/import operations for subjects, activities, and students." %}</p><strong>{% trans "Run Studis workflow" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "preparation_preview" timetable_slug=timetable_slug %}"><h3>{% trans "Prepare groups" %}</h3><p>{% trans "Preview Studis group and realization preparation." %}</p><strong>{% trans "Prepare" %}</strong></a></section>
+  <section class="solver-card"><a class="solver-card-link" href="{% url "allocations" timetable_slug=timetable_slug %}"><h3>{% trans "Inspect allocations" %}</h3><p>{% trans "View the generated timetable without editing it." %}</p><strong>{% trans "View allocations" %}</strong></a></section>
+</div>
+{% endblock %}
