@@ -5,12 +5,134 @@ from django.views.generic.list import ListView
 from timetable.models import TimetableSet
 from timetable import views as timetable_views
 
-from . import views
+from . import (
+    preparation_run_views,
+    solver_run_views,
+    solver_views,
+    studis_workflow_views,
+    views,
+)
 
 # from .restapi import SubjectDetailsView, SubjectsView
 
 urlpatterns = [
     re_path(r"^$", views.default_timetable_redirect, name="default_timetable"),
+    # Staff-only OR-Tools Solver Setup UI.
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/?$",
+        solver_views.solver_dashboard,
+        name="solver_dashboard",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/constraints/?$",
+        solver_views.solver_constraint_list,
+        name="solver_constraint_list",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/before-relations/?$",
+        solver_views.activity_before_relations,
+        name="activity_before_relations",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/modules/?$",
+        solver_views.study_module_list,
+        name="study_module_list",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/modules/new/?$",
+        solver_views.study_module_create,
+        name="study_module_create",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/modules/(?P<pk>\d+)/edit/?$",
+        solver_views.study_module_edit,
+        name="study_module_edit",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/modules/(?P<pk>\d+)/delete/?$",
+        solver_views.study_module_delete,
+        name="study_module_delete",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/constraints/new/?$",
+        solver_views.solver_constraint_create,
+        name="solver_constraint_create",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/constraints/(?P<pk>\d+)/edit/?$",
+        solver_views.solver_constraint_edit,
+        name="solver_constraint_edit",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/constraints/(?P<pk>\d+)/delete/?$",
+        solver_views.solver_constraint_delete,
+        name="solver_constraint_delete",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/run/?$",
+        solver_run_views.solver_run_preview,
+        name="solver_run_preview",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/repair/?$",
+        solver_run_views.solver_repair_preview,
+        name="solver_repair_preview",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/groups/?$",
+        solver_views.solver_group_rules,
+        name="solver_group_rules",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/automatic-rules/?$",
+        solver_views.solver_automatic_rules,
+        name="solver_automatic_rules",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/copy-group-time-preferences/?$",
+        solver_views.copy_group_time_preferences,
+        name="copy_group_time_preferences",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/activities/?$",
+        solver_views.solver_scheduling_scope,
+        name="solver_scheduling_scope",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/manual-activities/?$",
+        solver_views.manual_activity_list,
+        name="manual_activity_list",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/manual-activities/new/?$",
+        solver_views.manual_activity_edit,
+        name="manual_activity_create",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/manual-activities/(?P<pk>\d+)/edit/?$",
+        solver_views.manual_activity_edit,
+        name="manual_activity_edit",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/windows/?$",
+        solver_views.scheduling_windows,
+        name="scheduling_windows",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/windows/overrides/?$",
+        solver_views.scheduling_window_overrides,
+        name="scheduling_window_overrides",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/prepare/?$",
+        preparation_run_views.preparation_preview,
+        name="preparation_preview",
+    ),
+    re_path(
+        r"^solver/(?P<timetable_slug>[\w-]+)/studis-workflow/?$",
+        studis_workflow_views.studis_workflow_preview,
+        name="studis_workflow_preview",
+    ),
     re_path(
         r"^timetable/(?P<timetable_slug>[\w-]+)/allocations.json",
         views.allocations_json,

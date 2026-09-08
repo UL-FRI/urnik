@@ -11,3 +11,5 @@ test_fixtures/
 .vscode/
 .pytest_cache/
 .sql
+.omo
+.prod

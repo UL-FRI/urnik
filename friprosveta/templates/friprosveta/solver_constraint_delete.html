@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "TIMETABLE" %} - {% trans "Delete constraint" %}{% endblock %}
+{% block body %}
+<h1>{% trans "Delete solver constraint" %}: {{ constraint.name }}</h1>
+<p><a href="{% url "solver_constraint_list" timetable_slug=timetable_slug %}">{% trans "Back to constraints" %}</a></p>
+<p>{% blocktrans with name=constraint.name type=constraint.constraint_type %}Delete constraint "{{ name }}" ({{ type }})? This cannot be undone.{% endblocktrans %}</p>
+<form method="post">
+  {% csrf_token %}
+  <p><button type="submit">{% trans "Delete" %}</button></p>
+</form>
+{% endblock %}

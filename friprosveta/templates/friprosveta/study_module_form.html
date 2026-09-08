@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "TIMETABLE" %} - {% trans "Study module" %}{% endblock %}
+{% block body %}
+<h1>{% if is_create %}{% trans "Add study module" %}{% else %}{% trans "Edit study module" %}{% endif %}: {{ timetable.name }}</h1>
+<p>{% trans "Selected activities cannot overlap within the module. Link modules that students may take together." %}</p>
+<form method="post">{% csrf_token %}{{ form.non_field_errors }}<table>{{ form.as_table }}</table><button type="submit">{% trans "Save" %}</button> <a href="{% url "study_module_list" timetable_slug=timetable_slug %}">{% trans "Cancel" %}</a></form>
+{% endblock %}

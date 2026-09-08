@@ -14,7 +14,7 @@ RUN groupadd -r timetable \
   && useradd -r -g timetable -m -d /home/timetable timetable \
   && mkdir -p /home/timetable \
   && chown -R timetable:timetable /home/timetable
-    
+
 ENV LANG sl_SI.UTF-8
 ENV LC_ALL sl_SI.UTF-8 
 

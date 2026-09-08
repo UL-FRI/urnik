@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "TIMETABLE" %} - {% trans "Solver constraint" %}{% endblock %}
+{% block body %}
+<style>
+  .solver-form { max-width: 54rem; border-top: 4px solid #2B4F89; padding-top: .8rem; }
+  .solver-form p { margin: 1rem 0; }
+  .solver-form label { display: block; color: #2B4F89; font-weight: bold; margin-bottom: .25rem; }
+  .solver-form input, .solver-form select { box-sizing: border-box; max-width: 100%; padding: .4rem; }
+  .solver-form select[multiple] { min-width: min(100%, 30rem); min-height: 12rem; }
+  .solver-form button { background: #2B4F89; border: 0; color: #fff; cursor: pointer; padding: .6rem 1rem; }
+  .solver-form .selector-search { display: block; margin: .35rem 0; width: min(100%, 30rem); }
+  .solver-form .helptext { color: #58636f; display: block; font-size: .9rem; margin-top: .25rem; }
+</style>
+<h1>
+  {% if is_create %}{% trans "New solver constraint" %}{% else %}{% trans "Edit solver constraint" %}{% endif %}: {{ timetable.name }}
+</h1>
+<p><a href="{% url "solver_constraint_list" timetable_slug=timetable_slug %}">{% trans "Back to constraints" %}</a></p>
+
+{% if category == "relation" %}
+<p>{% trans "Relation constraints require at least two activities and/or realizations from this timetable. Use SAMEROOM to keep selected realizations in one room. MAXROOMSREALIZATIONS also requires a positive value (maximum number of different rooms)." %}</p>
+{% elif category == "ends_day" %}
+<p>{% trans "ENDSSTUDENTSDAY requires at least one activity or realization. The tagged realization must be the last activity of the day for the students it shares with other realizations." %}</p>
+{% elif category == "workload" %}
+<p>{% trans "Workload / movement constraints require a positive integer value and at least one teacher or group from this timetable. Activities and realizations are not used by this category." %}</p>
+{% elif category == "lecture_group" %}
+<p>{% trans "Set a hard maximum number of lecture (P) hours per day for each selected top-level group. Descendant exercise groups are included automatically." %}</p>
+{% elif category == "room" %}
+<p>{% trans "Select activities and/or realizations plus exactly one room. All selected realizations must be scheduled in that room." %}</p>
+{% elif category == "placement" %}
+<p>{% trans "Select exactly one realization, weekday, start time, and room. The solver will schedule it only at that exact placement." %}</p>
+{% elif category == "time" %}
+<p>{% trans "Select exactly one realization, weekday, and start time. The solver may choose any suitable room." %}</p>
+{% endif %}
+
+<form method="post" class="solver-form">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <p><button type="submit">{% if is_create %}{% trans "Create" %}{% else %}{% trans "Save" %}{% endif %}</button></p>
+</form>
+<script>
+  document.querySelectorAll('.solver-form select[multiple]').forEach((select) => {
+    const search = document.createElement('input');
+    search.type = 'search';
+    search.className = 'selector-search';
+    search.placeholder = 'Filter choices...';
+    search.setAttribute('aria-label', `Filter ${select.name} choices`);
+    select.parentNode.insertBefore(search, select);
+    search.addEventListener('input', () => {
+      const term = search.value.trim().toLowerCase();
+      for (const option of select.options) {
+        option.hidden = Boolean(term) && !option.text.toLowerCase().includes(term);
+      }
+    });
+  });
+</script>
+{% endblock %}

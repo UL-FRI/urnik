@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "TIMETABLE" %} - {% trans "Solver constraints" %}{% endblock %}
+{% block body %}
+<style>
+  .solver-toolbar { display: flex; flex-wrap: wrap; gap: .7rem; margin: 1rem 0; }
+  .solver-toolbar a { background: #2B4F89; color: #fff; padding: .55rem .8rem; text-decoration: none; }
+  .solver-toolbar a:hover { background: #1d3864; color: #fff; }
+  .solver-status { font-weight: bold; }
+  .solver-filter { box-sizing: border-box; margin: .4rem 0 1rem; max-width: 28rem; padding: .5rem; width: 100%; }
+  .solver-type { background: #e8effa; border-radius: 1rem; color: #1d3864; display: inline-block; font-size: .85rem; font-weight: bold; padding: .2rem .55rem; }
+  .solver-scope { color: #58636f; font-size: .9rem; margin-top: .25rem; }
+  .solver-placement { color: #1d3864; font-weight: bold; }
+</style>
+<h1>{% trans "Solver constraints" %}: {{ timetable.name }}</h1>
+
+<p><a href="{% url "solver_dashboard" timetable_slug=timetable_slug %}">{% trans "Back to solver dashboard" %}</a></p>
+<div class="solver-toolbar"><a href="{% url "solver_constraint_create" timetable_slug=timetable_slug %}">{% trans "Add constraint" %}</a><a href="{% url "activity_before_relations" timetable_slug=timetable_slug %}">{% trans "Manage before / after" %}</a><a href="{% url "solver_run_preview" timetable_slug=timetable_slug %}">{% trans "Generate timetable" %}</a></div>
+<input class="solver-filter" type="search" placeholder="Filter constraints by name or type" aria-label="Filter constraints">
+
+{% if constraints %}
+<div class="podatkiTwo">
+  <table>
+    <thead>
+      <tr>
+        <th>{% trans "Name" %}</th>
+        <th>{% trans "Type" %}</th>
+        <th>{% trans "Scope" %}</th>
+        <th>{% trans "Active" %}</th>
+        <th>{% trans "Actions" %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in constraints %}
+      <tr id="{{ c.constraint_type }}">
+        <td><strong>{{ c.name }}</strong></td>
+        <td><span class="solver-type">{{ c.get_constraint_type_display }}</span></td>
+        <td>
+          {% if c.constraint_type == "FIXEDPLACEMENT" %}<span class="solver-placement">{{ c.get_day_display }} {{ c.start }}</span> in {% for room in c.classrooms.all %}{{ room.short_name }}{% if not forloop.last %}, {% endif %}{% endfor %}<br>{% endif %}
+          {{ c.activities.count }} activities, {{ c.realizations.count }} realizations{% if c.value %}; {{ c.value }}{% endif %}
+        </td>
+        <td class="solver-status">{% if c.active %}{% trans "active" %}{% else %}{% trans "inactive" %}{% endif %}</td>
+        <td>
+          <a href="{% url "solver_constraint_edit" timetable_slug=timetable_slug pk=c.id %}">{% trans "Edit" %}</a>
+          | <a href="{% url "solver_constraint_delete" timetable_slug=timetable_slug pk=c.id %}">{% trans "Delete" %}</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p>{% trans "No solver constraints configured yet." %}</p>
+{% endif %}
+<script>
+  const filter = document.querySelector('.solver-filter');
+  if (filter) {
+    filter.addEventListener('input', () => {
+      const term = filter.value.trim().toLowerCase();
+      document.querySelectorAll('.podatkiTwo tbody tr').forEach((row) => {
+        row.hidden = Boolean(term) && !row.textContent.toLowerCase().includes(term);
+      });
+    });
+  }
+</script>
+
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "TIMETABLE" %} - {% trans "Choose constraint category" %}{% endblock %}
+{% block body %}
+<style>
+  .category-page { max-width: 58rem; }
+  .category-page .category-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: .75rem; list-style: none; margin: 1.25rem 0; padding: 0; }
+  .category-page .category-option { border: 1px solid #d4d9df; border-left: 4px solid #2B4F89; padding: .7rem; }
+  .category-page .category-option label { display: flex; gap: .5rem; align-items: center; font-weight: bold; cursor: pointer; }
+  .category-page .category-option input[type="radio"] { margin-right: .5rem; }
+  .category-page button { background: #2B4F89; border: 0; color: #fff; cursor: pointer; padding: .6rem 1rem; }
+</style>
+<main class="category-page">
+<h1>{% trans "New solver constraint" %}: {{ timetable.name }}</h1>
+<p><a href="{% url "solver_constraint_list" timetable_slug=timetable_slug %}">{% trans "Back to constraints" %}</a></p>
+<p>{% trans "Choose the category of constraint to create. Each category has its own validation matching what the OR-Tools solver enforces." %}</p>
+<form method="post" action="{% url "solver_constraint_create" timetable_slug=timetable_slug %}">
+  {% csrf_token %}
+  <div class="category-options">
+    {% for value, label in form.fields.category.choices %}
+    <div class="category-option">
+      <label>
+        <input type="radio" name="category" value="{{ value }}" {% if form.initial.category == value %}checked{% endif %}>
+        {{ label }}
+      </label>
+    </div>
+    {% endfor %}
+  </div>
+  <p><button type="submit">{% trans "Continue" %}</button></p>
+</form>
+</main>
+{% endblock %}

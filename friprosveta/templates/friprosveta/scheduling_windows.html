@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "TIMETABLE" %} - {% trans "Scheduling windows" %}{% endblock %}
+{% block body %}
+<style>
+  .window-grid-wrap { overflow-x: auto; margin: 1rem 0 2rem; }
+  .window-grid { border-collapse: separate; border-spacing: 0; margin: 0; min-width: 42rem; width: 100%; max-width: 75rem; }
+  .window-grid th, .window-grid td { border: 1px solid #e9ecef; padding: 0; text-align: center; }
+  .window-grid th { background: #f8f9fa; color: #495057; font-size: 1rem; padding: .7rem .85rem; }
+  .window-cell { cursor: pointer; min-width: 6.5rem; padding: .85rem .5rem; transition: box-shadow .15s ease; }
+  .window-cell:hover { box-shadow: inset 0 0 0 2px #007bff; }
+  .window-cell.available { background: #fff; }
+  .window-cell.soft { background: #fff3cd; border-color: #ffc107; }
+  .window-cell.hard { background: #f8d7da; border-color: #dc3545; }
+  .window-cell input { box-sizing: border-box; width: 4.5rem; font-size: 1.1rem; padding: .3rem; text-align: center; }
+</style>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    function setState(cell) {
+      var input = cell.querySelector("input");
+      var weight = Number(input.value) || 0;
+      cell.classList.remove("available", "soft", "hard");
+      cell.classList.add(weight >= 100 ? "hard" : weight > 0 ? "soft" : "available");
+      cell.title = weight >= 100 ? "Hard unavailable" : weight > 0 ? "Soft unavailable (weight " + weight + ")" : "Available";
+    }
+
+    document.querySelectorAll("[data-window-cell]").forEach(function (cell) {
+      var input = cell.querySelector("input");
+      setState(cell);
+      input.addEventListener("input", function () { setState(cell); });
+      input.addEventListener("click", function (event) { event.stopPropagation(); });
+      cell.addEventListener("click", function () {
+        var weight = Number(input.value) || 0;
+        input.value = weight >= 100 ? 0 : weight > 0 ? 100 : 50;
+        setState(cell);
+      });
+    });
+  });
+</script>
+<h1>{% trans "Activity type scheduling windows" %}: {{ timetable.name }}</h1>
+
+<p><a href="{% url "solver_dashboard" timetable_slug=timetable_slug %}">{% trans "Back to solver dashboard" %}</a></p>
+
+<p>{% trans "Click a cell to cycle Available, Soft (50), and Hard (100). You can type any 1-99 soft weight directly. This permits overlapping rules, such as 50 after 17:00 and 100 after 18:00." %}</p>
+<p><a href="{% url "scheduling_window_overrides" timetable_slug=timetable_slug %}">{% trans "Teacher and realization overrides" %}</a></p>
+
+{% if form.non_field_errors %}
+<div class="podatkiTwo">
+  <ul>
+    {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<form method="post">
+  {% csrf_token %}
+  {% for grid in form.grids %}
+  <h2>{{ grid.type_label }}</h2>
+  <div class="window-grid-wrap"><table class="window-grid">
+    <thead><tr><th>{% trans "Time" %}</th>{% for day, day_label in weekdays %}<th>{{ day_label }}</th>{% endfor %}</tr></thead>
+    <tbody>{% for row in grid.rows %}<tr><th>{{ row.hour }}</th>{% for cell in row.cells %}<td class="window-cell" data-window-cell>{{ cell.field }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+  </table></div>
+  {% endfor %}
+  <p><button type="submit">{% trans "Save windows" %}</button></p>
+</form>
+
+<p>{{ window_count }} {% trans "configured window(s) for this timetable." %}</p>
+{% endblock %}

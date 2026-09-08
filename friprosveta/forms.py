@@ -3,8 +3,6 @@ from decimal import Decimal
 from django import forms
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.db.models import Q
-from django.db.models import Sum
-from django.db.models.functions import Coalesce
 from django.forms.utils import ErrorList
 
 import frinajave
@@ -63,11 +61,19 @@ class AssignmentForm(forms.ModelForm):
 class NajavePercentageForm(forms.ModelForm):
     class Meta:
         model = frinajave.models.TeacherSubjectCycles
-        # fields = ('cycles', 'percentage', 'instruction_type', 'comment')
-        fields = ("cycles", "instruction_type", "comment")
+        fields = ("cycles", "cycles_on_site", "instruction_type", "comment")
         widgets = {
             "comment": forms.Textarea(attrs={"rows": 1, "cols": 20}),
         }
+
+    def clean_cycles_on_site(self):
+        cycles_on_site = self.cleaned_data.get("cycles_on_site")
+        cycles = self.cleaned_data.get("cycles")
+        if cycles_on_site is None:
+            return cycles
+        if cycles is not None and cycles_on_site > cycles:
+            raise forms.ValidationError("On-site cycles cannot exceed this teacher's cycles.")
+        return cycles_on_site
 
 
 class ActivityLongRequirementsForm(forms.ModelForm):
@@ -104,14 +110,17 @@ class ActivityLongRequirementsForm(forms.ModelForm):
 
 
 class ActivityMinimalForm(forms.ModelForm):
-    site_cycles = forms.IntegerField(
+    site_cycles = forms.DecimalField(
         label="Cikli na FRI",
         min_value=0,
+        decimal_places=3,
         required=False,
         help_text="Koliko ciklov želite izvajati na FRI.",
     )
 
     def __init__(self, *args, **kwargs):
+        self.teacher = kwargs.pop("teacher", None)
+        self.timetable = kwargs.pop("timetable", None)
         self.min_physical_cycle_percentage = kwargs.pop(
             "min_physical_cycle_percentage", 100
         )
@@ -130,34 +139,38 @@ class ActivityMinimalForm(forms.ModelForm):
                 )
             else:
                 self.fields["lecture_split"].widget = forms.HiddenInput()
-        all_cycles = getattr(self.instance, "all_cycles", None)
-        if all_cycles is None:
-            all_cycles = self._all_cycles()
-            self.instance.all_cycles = all_cycles
+        self.teacher_cycle_entries = self._teacher_cycle_entries()
+        all_cycles = sum(entry.cycles for entry in self.teacher_cycle_entries)
+        self.instance.all_cycles = all_cycles
         if all_cycles is not None:
-            cycles_on_site = self.instance.cycles_on_site
-            if cycles_on_site is None:
-                cycles_on_site = all_cycles
+            cycles_on_site = sum(
+                entry.cycles if entry.cycles_on_site is None else entry.cycles_on_site
+                for entry in self.teacher_cycle_entries
+            )
             self.fields["site_cycles"].initial = cycles_on_site
-            min_site_cycles = int(all_cycles * self.min_physical_cycle_percentage / 100)
+            min_site_cycles = all_cycles * self.min_physical_cycle_percentage / 100
             self.fields["site_cycles"].help_text = (
                 "Koliko ciklov želite izvajati na FRI. Najmanj: {} od {}."
             ).format(min_site_cycles, all_cycles)
 
-    def _all_cycles(self):
-        if not self.instance or not self.instance.pk:
-            return None
-        if not hasattr(self.instance, "subject") or not self.instance.subject_id:
-            return None
-        timetable_set_ids = self.instance.activityset.timetable_set.values_list(
-            "timetable_sets", flat=True
+    def _teacher_cycle_entries(self):
+        if (
+            self.teacher is None
+            or self.timetable is None
+            or not self.instance
+            or not self.instance.pk
+            or not hasattr(self.instance, "subject")
+        ):
+            return []
+        return list(
+            frinajave.models.TeacherSubjectCycles.objects.filter(
+                teacher_code=self.teacher.code,
+                subject_code=self.instance.subject.code,
+                timetable_set__timetables=self.timetable,
+                lecture_type=self.instance.lecture_type_id,
+                cycles__gt=0,
+            ).order_by("id")
         )
-        all_cycles = frinajave.models.TeacherSubjectCycles.objects.filter(
-            subject_code=self.instance.subject.code,
-            timetable_set_id__in=timetable_set_ids,
-            lecture_type=self.instance.lecture_type_id,
-        ).aggregate(suma=Coalesce(Sum("cycles"), Decimal(0)))["suma"]
-        return int(round(all_cycles))
     
     def clean_requirements(self):
         """Validate that at least one resource is selected from each required group."""
@@ -217,7 +230,7 @@ class ActivityMinimalForm(forms.ModelForm):
             site_cycles = all_cycles or 0
         if all_cycles is None:
             return site_cycles
-        min_site_cycles = int(all_cycles * self.min_physical_cycle_percentage / 100)
+        min_site_cycles = all_cycles * self.min_physical_cycle_percentage / 100
         if site_cycles < min_site_cycles:
             raise forms.ValidationError(
                 "Na FRI morate izbrati vsaj {} od {} ciklov.".format(
@@ -233,12 +246,14 @@ class ActivityMinimalForm(forms.ModelForm):
 
     def save(self, commit=True):
         instance = super().save(commit=False)
-        all_cycles = getattr(self.instance, "all_cycles", None)
-        if all_cycles is not None:
-            instance.cycles_on_site = self.cleaned_data.get("site_cycles") or 0
         if commit:
             instance.save()
             self.save_m2m()
+            remaining = Decimal(self.cleaned_data.get("site_cycles") or 0)
+            for entry in self.teacher_cycle_entries:
+                entry.cycles_on_site = min(entry.cycles, remaining)
+                remaining -= entry.cycles_on_site
+                entry.save(update_fields=("cycles_on_site",))
         return instance
 
     class Meta(ActivityLongRequirementsForm.Meta):

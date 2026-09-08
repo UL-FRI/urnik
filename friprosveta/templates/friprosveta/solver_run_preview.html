@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "TIMETABLE" %} - {% if is_repair %}{% trans "Repair selected realizations" %}{% else %}{% trans "Generate entire timetable" %}{% endif %}{% endblock %}
+{% block body %}
+<h1>{% if is_repair %}{% trans "Repair selected realizations" %}{% else %}{% trans "Generate entire timetable" %}{% endif %}: {{ timetable.name }}</h1>
+<p><a href="{% url "solver_dashboard" timetable_slug=timetable_slug %}">{% trans "Back to solver dashboard" %}</a></p>
+
+{% if is_repair %}
+<p>{% trans "Only use this advanced workflow when you want to preserve existing allocations and move selected realizations." %}</p>
+{% else %}
+<p>{% trans "This generates the whole timetable. Do not select individual realizations here." %}</p>
+{% endif %}
+
+{% if generation_status and generation_status.is_running %}
+  <div style="padding: 15px; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; margin-bottom: 20px;">
+    <strong>{% trans "Solver generation is running." %}</strong>
+    {% if generation_status.started_by %}{% trans "Started by" %}: {{ generation_status.started_by }}{% endif %}
+    {% if generation_status.started_at %}{% trans "Started at" %}: {{ generation_status.started_at }}{% endif %}
+    {% if generation_status.mode %}{% trans "Mode" %}: {{ generation_status.mode }}{% endif %}
+  </div>
+{% elif generation_status and not generation_status.is_running and generation_status.status %}
+  <div style="padding: 15px; background-color: #e9ecef; border: 1px solid #c4c9ce; border-radius: 4px; margin-bottom: 20px;">
+    <strong>{% trans "Last generation status" %}:</strong> {{ generation_status.status }}
+  </div>
+{% endif %}
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+<p>
+  <button type="submit" name="action" value="preview">{% trans "Preview command" %}</button>
+  <button type="submit" name="action" value="run" {% if generation_status and generation_status.is_running %}disabled{% endif %}>{% trans "Run now" %}</button>
+</p>
+</form>
+
+{% if command %}
+<h2>{% trans "Command preview" %}</h2>
+<p><code>{{ command }}</code></p>
+{% endif %}
+{% if output %}
+<h2>{% if succeeded %}{% trans "Command output" %}{% else %}{% trans "Command failed" %}{% endif %}</h2>
+<pre style="max-height: 32rem; overflow: auto; white-space: pre-wrap;">{{ output }}</pre>
+{% endif %}
+{% endblock %}
