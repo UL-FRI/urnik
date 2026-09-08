@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Copy group time preferences" %}{% endblock %}
+{% block body %}
+<h1>{% trans "Copy prior group time preferences" %}: {{ timetable.name }}</h1>
+<p><a href="{% url "solver_dashboard" timetable_slug=timetable_slug %}">{% trans "Back to solver dashboard" %}</a></p>
+<p>{% trans "Groups are matched by short name. Copying replaces time preferences only for matching target groups; teacher, tag, and value preferences are unchanged." %}</p>
+
+{% if messages %}
+<ul>
+  {% for message in messages %}<li>{{ message }}</li>{% endfor %}
+</ul>
+{% endif %}
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  <p>{{ form.source_timetable.label_tag }} {{ form.source_timetable }} {{ form.source_timetable.errors }}</p>
+  <p><button type="submit">{% trans "Copy group time preferences" %}</button></p>
+</form>
+
+{% endblock %}

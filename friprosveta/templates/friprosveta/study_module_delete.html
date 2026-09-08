@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block body %}
+<h1>{% trans "Delete study module" %}</h1>
+<p>{% blocktrans with name=module.name %}Delete {{ name }}? Its no-overlap links will also be removed.{% endblocktrans %}</p>
+<form method="post">{% csrf_token %}<button type="submit">{% trans "Delete" %}</button> <a href="{% url "study_module_list" timetable_slug=timetable_slug %}">{% trans "Cancel" %}</a></form>
+{% endblock %}

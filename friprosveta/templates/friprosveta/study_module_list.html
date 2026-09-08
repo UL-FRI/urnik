@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "TIMETABLE" %} - {% trans "Study modules" %}{% endblock %}
+{% block body %}
+<style>
+  .module-actions { display: flex; flex-wrap: wrap; gap: .6rem; margin: 1rem 0; }
+  .module-actions a { background: #2B4F89; color: #fff; padding: .5rem .75rem; text-decoration: none; }
+  .module-tags { display: flex; flex-wrap: wrap; gap: .3rem; }
+  .module-tag { background: #e8effa; border-radius: 1rem; color: #1d3864; padding: .15rem .5rem; }
+</style>
+<h1>{% trans "Study modules" %}: {{ timetable.name }}</h1>
+<p>{% trans "Activities in each module cannot overlap. Linked modules also cannot overlap with each other." %}</p>
+<div class="module-actions"><a href="{% url "solver_dashboard" timetable_slug=timetable_slug %}">{% trans "Back to solver dashboard" %}</a><a href="{% url "study_module_create" timetable_slug=timetable_slug %}">{% trans "Add study module" %}</a></div>
+{% if modules %}
+<div class="podatkiTwo"><table><thead><tr><th>{% trans "Module" %}</th><th>{% trans "Activities" %}</th><th>{% trans "Cannot overlap with" %}</th><th>{% trans "Status" %}</th><th>{% trans "Actions" %}</th></tr></thead><tbody>
+{% for module in modules %}<tr><td><strong>{{ module.name }}</strong></td><td><div class="module-tags">{% for activity in module.activities.all %}<span class="module-tag">{{ activity.short_name }}</span>{% endfor %}</div></td><td>{% for related in module.non_overlapping_with.all %}{{ related.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</td><td>{% if module.active %}{% trans "active" %}{% else %}{% trans "inactive" %}{% endif %}</td><td><a href="{% url "study_module_edit" timetable_slug=timetable_slug pk=module.id %}">{% trans "Edit" %}</a> | <a href="{% url "study_module_delete" timetable_slug=timetable_slug pk=module.id %}">{% trans "Delete" %}</a></td></tr>{% endfor %}
+</tbody></table></div>
+{% else %}<p>{% trans "No study modules configured yet." %}</p>{% endif %}
+{% endblock %}

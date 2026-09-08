@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "TIMETABLE" %} - {% trans "Before relations" %}{% endblock %}
+{% block body %}
+<style>
+  .before-form { max-width: 54rem; border-top: 4px solid #2B4F89; padding-top: .8rem; }
+  .before-form p { margin: 1rem 0; }
+  .before-form label { display: block; color: #2B4F89; font-weight: bold; margin-bottom: .25rem; }
+  .before-form select { box-sizing: border-box; max-width: 100%; min-width: min(100%, 34rem); padding: .4rem; }
+  .before-form button, .remove-relation button { background: #2B4F89; border: 0; color: #fff; cursor: pointer; padding: .55rem .8rem; }
+  .selector-search { box-sizing: border-box; display: block; margin: .35rem 0; max-width: 34rem; padding: .5rem; width: 100%; }
+  .helptext { color: #58636f; display: block; font-size: .9rem; margin-top: .25rem; }
+</style>
+<h1>{% trans "Before / after activity relations" %}: {{ timetable.name }}</h1>
+<p><a href="{% url "solver_dashboard" timetable_slug=timetable_slug %}">{% trans "Back to solver dashboard" %}</a></p>
+<p>{% trans "This is a hard directed rule. Every realization of the earlier activity must finish before every realization of each later activity starts." %}</p>
+
+<form method="post" class="before-form">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="add">
+  {{ form.as_p }}
+  <p><button type="submit">{% trans "Add before relation" %}</button></p>
+</form>
+
+<h2>{% trans "Current before relations" %}</h2>
+{% if relations %}
+<div class="podatkiTwo">
+  <table>
+    <thead><tr><th>{% trans "Earlier activity" %}</th><th>{% trans "Later activity" %}</th><th>{% trans "Action" %}</th></tr></thead>
+    <tbody>
+      {% for before_activity, after_activity in relations %}
+      <tr>
+        <td>{{ before_activity }}</td>
+        <td>{{ after_activity }}</td>
+        <td>
+          <form method="post" class="remove-relation">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="remove">
+            <input type="hidden" name="before_activity" value="{{ before_activity.id }}">
+            <input type="hidden" name="after_activity" value="{{ after_activity.id }}">
+            <button type="submit">{% trans "Remove" %}</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p>{% trans "No before relations configured yet." %}</p>
+{% endif %}
+
+<script>
+  document.querySelectorAll('.before-form select').forEach((select) => {
+    const search = document.createElement('input');
+    search.type = 'search';
+    search.className = 'selector-search';
+    search.placeholder = 'Filter activities...';
+    search.setAttribute('aria-label', `Filter ${select.name}`);
+    select.parentNode.insertBefore(search, select);
+    search.addEventListener('input', () => {
+      const term = search.value.trim().toLowerCase();
+      Array.from(select.options).forEach((option) => {
+        option.hidden = Boolean(term) && !option.text.toLowerCase().includes(term);
+      });
+    });
+  });
+</script>
+{% endblock %}

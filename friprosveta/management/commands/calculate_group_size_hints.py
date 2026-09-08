@@ -43,7 +43,7 @@ class Command(BaseCommand):
 
         for a in tt.activities.filter(type="P"):
             enrollment_types = [4, 26]
-            for group in a.groups.all().exclude(shortName__contains="PAD"):
+            for group in a.groups.all().exclude(short_name__contains="PAD"):
                 if (
                     GroupSizeHint.objects.filter(
                         group=group, method=method_name
@@ -60,7 +60,7 @@ class Command(BaseCommand):
                 [e[0] for e in ENROLMENTTYPES if e[0] not in [4, 26]]
             )
             try:
-                group = a.groups.get(shortName__contains="PAD")
+                group = a.groups.get(short_name__contains="PAD")
                 if (
                     GroupSizeHint.objects.filter(
                         group=group, method=method_name

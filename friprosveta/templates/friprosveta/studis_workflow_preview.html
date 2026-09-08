@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "TIMETABLE" %} - {% trans "Studis workflow" %}{% endblock %}
+{% block body %}
+<style>
+  .studis-workflow-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+  .studis-workflow-panel { border: 1px solid #d4d9df; border-top: 4px solid #2b4f89; padding: .85rem 1rem 1rem; }
+  .studis-workflow-panel form { margin-top: .5rem; }
+  .studis-workflow-panel h3 { margin: 0 0 .45rem; }
+  .studis-workflow-panel p { margin: .4rem 0; }
+  .studis-workflow-status { background: #eef5ff; border: 1px solid #9ab8e4; border-left: 4px solid #2b4f89; border-radius: 4px; padding: .8rem .9rem; margin: .9rem 0; }
+  .studis-workflow-status strong { display: block; margin-bottom: .3rem; }
+</style>
+
+<h1>{% trans "Studis workflow" %}: {{ timetable.name }}</h1>
+<p><a href="{% url "solver_dashboard" timetable_slug=timetable_slug %}">{% trans "Back to solver dashboard" %}</a></p>
+
+<p>{% trans "These actions import data from Studis and rebuild local objects before solver preparation. Preview each command first, then run it." %}</p>
+
+{% if studis_workflow_status and studis_workflow_status.is_running %}
+  <div class="studis-workflow-status">
+    <strong>{% trans "Studis workflow is currently running." %}</strong>
+    {% if studis_workflow_status.started_by %}{% trans "Started by" %}: {{ studis_workflow_status.started_by }}{% endif %}
+    {% if studis_workflow_status.started_at %}{% trans "Started at" %}: {{ studis_workflow_status.started_at }}{% endif %}
+    {% if studis_workflow_status.workflow %}{% trans "Workflow" %}: {{ studis_workflow_status.workflow }}{% endif %}
+  </div>
+{% elif studis_workflow_status and studis_workflow_status.status %}
+  <div class="studis-workflow-status">
+    <strong>{% trans "Last Studis workflow status:" %} {{ studis_workflow_status.status }}</strong>
+    {% if studis_workflow_status.started_by %}{% trans "Started by" %}: {{ studis_workflow_status.started_by }}{% endif %}
+    {% if studis_workflow_status.started_at %}{% trans "Started at" %}: {{ studis_workflow_status.started_at }}{% endif %}
+    {% if studis_workflow_status.finished_at %}{% trans "Finished at" %}: {{ studis_workflow_status.finished_at }}{% endif %}
+    {% if studis_workflow_status.command %}<br>{% trans "Command" %}: <code>{{ studis_workflow_status.command }}</code>{% endif %}
+  </div>
+{% endif %}
+
+<div class="studis-workflow-grid">
+  <section class="studis-workflow-panel">
+    <h3>{% trans "Sync subjects" %}</h3>
+    <p>{% trans "Synchronize subject metadata from Studis and update local subject names." %}</p>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="workflow" value="sync_subjects">
+      <p><button type="submit" name="action" value="preview">{% trans "Preview command" %}</button> <button type="submit" name="action" value="run" {% if studis_workflow_status and studis_workflow_status.is_running %}disabled{% endif %}>{% trans "Run now" %}</button></p>
+    </form>
+  </section>
+
+  <section class="studis-workflow-panel">
+    <h3>{% trans "Import najave" %}</h3>
+    <p>{% trans "Refresh teaching announcements (izvajanja) for one semester or a single subject." %}</p>
+    <form method="post">
+      {% csrf_token %}
+      {{ import_najave_form.as_p }}
+      <input type="hidden" name="workflow" value="import_studis_najave">
+      <p><button type="submit" name="action" value="preview">{% trans "Preview command" %}</button> <button type="submit" name="action" value="run" {% if studis_workflow_status and studis_workflow_status.is_running %}disabled{% endif %}>{% trans "Run now" %}</button></p>
+    </form>
+  </section>
+
+  <section class="studis-workflow-panel">
+    <h3>{% trans "Create activities" %}</h3>
+    <p>{% trans "Create timetable activities from Studis najave for the selected year and semester." %}</p>
+    <form method="post">
+      {% csrf_token %}
+      {{ create_activities_form.as_p }}
+      <input type="hidden" name="workflow" value="create_activities">
+      <p><button type="submit" name="action" value="preview">{% trans "Preview command" %}</button> <button type="submit" name="action" value="run" {% if studis_workflow_status and studis_workflow_status.is_running %}disabled{% endif %}>{% trans "Run now" %}</button></p>
+    </form>
+  </section>
+
+  <section class="studis-workflow-panel">
+    <h3>{% trans "Import students" %}</h3>
+    <p>{% trans "Load student enrollments for the given date and optional flags." %}</p>
+    <form method="post">
+      {% csrf_token %}
+      {{ import_students_form.as_p }}
+      <input type="hidden" name="workflow" value="import_studis_students">
+      <p><button type="submit" name="action" value="preview">{% trans "Preview command" %}</button> <button type="submit" name="action" value="run" {% if studis_workflow_status and studis_workflow_status.is_running %}disabled{% endif %}>{% trans "Run now" %}</button></p>
+    </form>
+  </section>
+
+  <section class="studis-workflow-panel">
+    <h3>{% trans "Create top-level groups" %}</h3>
+    <p>{% trans "Build top-level Studis groups for the selected year and semester." %}</p>
+    <form method="post">
+      {% csrf_token %}
+      {{ create_top_level_groups_form.as_p }}
+      <input type="hidden" name="workflow" value="create_top_level_groups">
+      <p><button type="submit" name="action" value="preview">{% trans "Preview command" %}</button> <button type="submit" name="action" value="run" {% if studis_workflow_status and studis_workflow_status.is_running %}disabled{% endif %}>{% trans "Run now" %}</button></p>
+    </form>
+  </section>
+
+  <section class="studis-workflow-panel">
+    <h3>{% trans "Create realizations" %}</h3>
+    <p>{% trans "Create activity realizations for the selected timetable set." %}</p>
+    <form method="post">
+      {% csrf_token %}
+      {{ create_realizations_form.as_p }}
+      <input type="hidden" name="workflow" value="create_realizations">
+      <p><button type="submit" name="action" value="preview">{% trans "Preview command" %}</button> <button type="submit" name="action" value="run" {% if studis_workflow_status and studis_workflow_status.is_running %}disabled{% endif %}>{% trans "Run now" %}</button></p>
+    </form>
+  </section>
+
+  <section class="studis-workflow-panel">
+    <h3>{% trans "Check durations" %}</h3>
+    <p>{% trans "Report realized P, LV, and AV activities whose duration is not the expected 3, 2, or 2 hours." %}</p>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="workflow" value="check_durations">
+      <p><button type="submit" name="action" value="preview">{% trans "Preview command" %}</button> <button type="submit" name="action" value="run" {% if studis_workflow_status and studis_workflow_status.is_running %}disabled{% endif %}>{% trans "Run now" %}</button></p>
+    </form>
+  </section>
+
+  <section class="studis-workflow-panel">
+    <h3>{% trans "Check missing teachers" %}</h3>
+    <p>{% trans "Report teacher codes in imported najave that are missing from local teacher records." %}</p>
+    <form method="post">
+      {% csrf_token %}
+      {{ find_missing_teachers_form.as_p }}
+      <input type="hidden" name="workflow" value="find_missing_teachers">
+      <p><button type="submit" name="action" value="preview">{% trans "Preview command" %}</button> <button type="submit" name="action" value="run" {% if studis_workflow_status and studis_workflow_status.is_running %}disabled{% endif %}>{% trans "Run now" %}</button></p>
+    </form>
+  </section>
+
+  <section class="studis-workflow-panel">
+    <h3>{% trans "Set visible groups" %}</h3>
+    <p>{% trans "Show regular top-level groups in navigation and hide synthetic groups." %}</p>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="workflow" value="set_visible_groups">
+      <p><button type="submit" name="action" value="preview">{% trans "Preview command" %}</button> <button type="submit" name="action" value="run" {% if studis_workflow_status and studis_workflow_status.is_running %}disabled{% endif %}>{% trans "Run now" %}</button></p>
+    </form>
+  </section>
+
+  <section class="studis-workflow-panel">
+    <h3>{% trans "Remove PAD groups from lectures" %}</h3>
+    <p>{% trans "Remove synthetic PAD groups from lecture realizations. Preview-only mode is selected by default." %}</p>
+    <form method="post">
+      {% csrf_token %}
+      {{ remove_pad_groups_form.as_p }}
+      <input type="hidden" name="workflow" value="remove_pad_groups">
+      <p><button type="submit" name="action" value="preview">{% trans "Preview command" %}</button> <button type="submit" name="action" value="run" {% if studis_workflow_status and studis_workflow_status.is_running %}disabled{% endif %}>{% trans "Run now" %}</button></p>
+    </form>
+  </section>
+</div>
+
+{% if command %}
+  <h2>{% trans "Command preview" %}</h2>
+  <p><code>{{ command }}</code></p>
+{% endif %}
+{% if output %}
+  <h2>{% if succeeded %}{% trans "Command output" %}{% else %}{% trans "Command failed" %}{% endif %}</h2>
+  <pre style="max-height: 32rem; overflow: auto; white-space: pre-wrap;">{{ output }}</pre>
+{% endif %}
+
+{% if studis_workflow_status and studis_workflow_status.output %}
+  <h2>{% if studis_workflow_status.succeeded %}{% trans "Last workflow output" %}{% else %}{% trans "Last workflow failed" %}{% endif %}</h2>
+  <pre style="max-height: 32rem; overflow: auto; white-space: pre-wrap;">{{ studis_workflow_status.output }}</pre>
+{% endif %}
+
+{% endblock %}

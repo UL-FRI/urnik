@@ -29,6 +29,7 @@
                       <li class="leaf"><a href={% url "teacher_preference_list" timetable_slug=timetable_slug %}>{% trans "Others settings" %}</a></li>
                       <li class="leaf"><a href={% url "group_preference_list" timetable_slug=timetable_slug %}>{% trans "Group settings" %}</a></li>
                       <li class="leaf"><a href={% url "tag_preference_list" timetable_slug=timetable_slug %}>{% trans "Tags" %}</a></li>
+                      <li class="leaf"><a href={% url "solver_dashboard" timetable_slug=timetable_slug %}>{% trans "Solver setup" %}</a></li>
                       <li class="leaf"><a href={% url "trade_match_queue" timetable_slug=timetable_slug %}>{% trans "Trade Approvals" %}</a></li>
                           {% endif %}
                         {% endif %}

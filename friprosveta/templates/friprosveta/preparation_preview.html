@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "TIMETABLE" %} - {% trans "Prepare OR-Tools groups" %}{% endblock %}
+{% block body %}
+<h1>{% trans "Prepare OR-Tools groups" %}: {{ timetable.name }}</h1>
+<p><a href="{% url "solver_dashboard" timetable_slug=timetable_slug %}">{% trans "Back to solver dashboard" %}</a></p>
+
+<p>{% trans "This synchronizes Studis groups and assigns them to realizations before OR-Tools generation. Preview the command first, then run it when the options are correct." %}</p>
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <p><button type="submit" name="action" value="preview">{% trans "Preview command" %}</button> <button type="submit" name="action" value="run">{% trans "Run now" %}</button></p>
+</form>
+
+{% if command %}
+<h2>{% trans "Command preview" %}</h2>
+<p><code>{{ command }}</code></p>
+{% endif %}
+{% if output %}
+<h2>{% if succeeded %}{% trans "Command output" %}{% else %}{% trans "Command failed" %}{% endif %}</h2>
+<pre style="max-height: 32rem; overflow: auto; white-space: pre-wrap;">{{ output }}</pre>
+{% endif %}
+{% endblock %}

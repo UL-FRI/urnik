@@ -53,6 +53,13 @@ class TeacherSubjectCycles(models.Model):
     instruction_type = models.IntegerField(choices=INSTRUCTION_STYLE, null=True)
     lecture_type = models.IntegerField()
     cycles = models.DecimalField(max_digits=18, decimal_places=3, default=0.000)
+    cycles_on_site = models.DecimalField(
+        max_digits=18,
+        decimal_places=3,
+        null=True,
+        blank=True,
+        help_text="Cycles this teacher performs physically on site.",
+    )
     comment = models.TextField(blank=True)
 
     @property

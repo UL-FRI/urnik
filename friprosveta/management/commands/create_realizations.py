@@ -1,9 +1,9 @@
 import heapq
 
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 
 from friprosveta.models import REALIZATIONSIZES, ActivityRealization, Timetable
-from timetable.models import TimetableSet
+from timetable.models import Allocation, TimetableSet
 
 
 class Command(BaseCommand):
@@ -11,16 +11,57 @@ class Command(BaseCommand):
     Create realizations for a given timetable and timetableset.
     """
 
+    def add_arguments(self, parser):
+        parser.add_argument("timetable_slug")
+        parser.add_argument("timetable_set_slug")
+        parser.add_argument(
+            "--force",
+            action="store_true",
+            default=False,
+            help="Delete existing realizations before creating new ones.",
+        )
+
     def handle(self, *args, **options):
-        if len(args) != 2:
+        force = options.get("force", False)
+        timetable_slug = options.get("timetable_slug")
+        timetable_set_slug = options.get("timetable_set_slug")
+
+        if args:
+            if len(args) == 2:
+                timetable_slug, timetable_set_slug = args
+            else:
+                print("Usage: create_realizations timetable_slug timetable_set_slug")
+                return
+
+        if not timetable_slug or not timetable_set_slug:
             print("Usage: create_realizations timetable_slug timetable_set_slug")
             return
 
-        tt = Timetable.objects.get(slug=args[0])
-        timetable_set = TimetableSet.objects.get(slug=args[1])
+        tt = Timetable.objects.get(slug=timetable_slug)
+        timetable_set = TimetableSet.objects.get(slug=timetable_set_slug)
+        if force:
+            foreign_allocations = Allocation.objects.filter(
+                activityRealization__activity__activityset=tt.activityset
+            ).exclude(timetable=tt)
+            foreign_timetable_slugs = list(
+                foreign_allocations.order_by("timetable__slug")
+                .values_list("timetable__slug", flat=True)
+                .distinct()
+            )
+            if foreign_timetable_slugs:
+                raise CommandError(
+                    "Refusing to recreate realizations because they have allocations "
+                    "owned by other timetables: {}. Deleting a realization would "
+                    "cascade-delete those allocations.".format(
+                        ", ".join(foreign_timetable_slugs)
+                    )
+                )
         for activity in tt.activities.all():
             self.create_realizations_for_activity(
-                activity.activity, tt, timetable_set, True
+                activity.activity,
+                tt,
+                timetable_set,
+                force,
             )
 
     def create_realizations_for_activity(
@@ -30,17 +71,14 @@ class Command(BaseCommand):
         Create realizations for activity.
         If force flag is enabled, old activities are erased.
         """
-        print("Creating realizations for {0}".format(activity).encode("utf-8"))
+        print("Creating realizations for {0}".format(activity))
         if force:
             for realization in activity.realizations.all():
                 realization.delete()
         elif activity.realizations.count() > 0:
             print(
-                "Activity {0} already has realizations and force flag is disabled. Aborting.".format(
-                    activity
-                ).encode(
-                    "utf-8"
-                )
+                "Activity {0} already has realizations and force flag is disabled. "
+                "Skipping.".format(activity)
             )
             return
         if activity.type == "P":
@@ -107,13 +145,7 @@ class Command(BaseCommand):
                 flat_teachers += cycles * [[teacher]]
         current_groups, current_groups_size = [], 0
 
-        def _cmp(g1, g2):
-            if g1.size != g2.size:
-                return g2.size - g1.size
-            else:
-                return g1.short_name < g2.short_name
-
-        group_list = sorted(activity.groups.all(), cmp=_cmp)
+        group_list = sorted(activity.groups.all(), key=lambda g: (-g.size, g.short_name))
         try:
             for group in group_list:
                 if group.size + current_groups_size > max_size:
@@ -148,7 +180,7 @@ class Command(BaseCommand):
                 heapq.heappush(teachers_cycles, (n2, t2))
         if len(teachers_cycles) > 0:
             cycles, teacher = heapq.heappop(teachers_cycles)
-            for i in xrange(-cycles):
+            for i in range(-cycles):
                 cycles_l.append([teacher])
         assert len(teachers_cycles) == 0, "NAPAKA - odvecni cikli!"
         return cycles_l

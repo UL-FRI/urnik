@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% block title %}{% trans "Scheduling scope" %}{% endblock %}
+{% block body %}
+<h1>{% trans "Scheduling scope" %}: {{ timetable.name }}</h1>
+<p><a href="{% url "solver_dashboard" timetable_slug=timetable_slug %}">{% trans "Back to solver dashboard" %}</a></p>
+<p>{% trans "Exclude only activities that are managed outside the timetable solver, such as Sportna vzgoja." %}</p>
+<p><strong>{{ ready_count }}</strong> {% trans "of" %} <strong>{{ activity_count }}</strong> {% trans "activities are selected for scheduling." %}</p>
+<p>{% trans "Use the 'Ready to schedule only' option on the generation page to apply this selection." %}</p>
+
+<form method="post">
+  {% csrf_token %}
+  <p><button type="submit" name="action" value="schedule_all">{% trans "Schedule all activities" %}</button> <button type="submit" name="action" value="exclude_doctoral">{% trans "Exclude doctoral studies" %}</button></p>
+</form>
+
+<form method="post">
+  {% csrf_token %}
+  {{ formset.management_form }}
+  <table>
+    <thead>
+      <tr><th>{% trans "Subject" %}</th><th>{% trans "Type" %}</th><th>{% trans "Activity" %}</th><th>{% trans "Exclude" %}</th></tr>
+    </thead>
+    <tbody>
+      {% for form in formset %}
+      <tr>
+        <td>{{ form.instance.subject.code }}</td>
+        <td>{{ form.instance.type }}</td>
+        <td>{{ form.instance.name }}</td>
+        <td>{{ form.activity_ptr }}{{ form.exclude_from_solver }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p><button type="submit">{% trans "Save scheduling scope" %}</button></p>
+</form>
+{% endblock %}

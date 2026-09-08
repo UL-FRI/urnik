@@ -32,6 +32,8 @@ from .activities import (
 # Import classroom models
 from .classrooms import (
     Classroom,
+    ClassroomActivityType,
+    ClassroomActivityStartTime,
     ClassroomSet,
     ClassroomNResources,
 )
@@ -72,6 +74,12 @@ from .preferences import (
     TagDescriptivePreference,
 )
 
+# Import solver constraint models
+from .solver_constraints import (
+    SolverConstraint,
+    StudyModule,
+)
+
 # Make sure all models are available at the package level
 __all__ = [
     # Constants
@@ -105,6 +113,8 @@ __all__ = [
     
     # Classroom models
     'Classroom',
+    'ClassroomActivityType',
+    'ClassroomActivityStartTime',
     'ClassroomSet',
     'ClassroomNResources',
     
@@ -137,4 +147,6 @@ __all__ = [
     'TagValuePreference',
     'TagTimePreference',
     'TagDescriptivePreference',
+    'SolverConstraint',
+    'StudyModule',
 ]

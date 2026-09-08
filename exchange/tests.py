@@ -1,6 +1,9 @@
 import itertools
+import os
 import sys
+import unittest
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import List
 
 from django.conf import settings
@@ -164,13 +167,42 @@ class BaseTestCase(TestCase):
             # logic from django.TestCase.setUpClass
             for db_name in cls._databases_names(include_mirrors=False):
                 print("Inserting into {}...".format(db_name))
+
+                fixture = os.path.expanduser(
+                    os.getenv("EXCHANGE_PERSISTENT_FIXTURE", cls.PERSISTENT_FIXTURE)
+                )
+                fixture_path = Path(fixture)
+                if fixture_path.is_absolute():
+                    if not fixture_path.is_file():
+                        raise unittest.SkipTest(
+                            "Exchange tests require fixture {}. "
+                            "Set EXCHANGE_PERSISTENT_FIXTURE to a valid path "
+                            "or place the file in exchange/test_fixtures.".format(fixture_path)
+                        )
+                else:
+                    candidate_fixture_paths = [
+                        fixture_path,
+                        Path(__file__).resolve().parent / fixture_path,
+                        Path(__file__).resolve().parent.parent / fixture_path,
+                    ]
+                    fixture_path = next(
+                        (path for path in candidate_fixture_paths if path.is_file()),
+                        None,
+                    )
+                    if fixture_path is None:
+                        raise unittest.SkipTest(
+                            "Exchange tests require fixture {}. "
+                            "Set EXCHANGE_PERSISTENT_FIXTURE to a valid path "
+                            "or place the file in exchange/test_fixtures."
+                            .format(fixture)
+                        )
+
                 try:
                     call_command(
                         "loaddata",
-                        cls.PERSISTENT_FIXTURE,
+                        str(fixture_path),
                         **{
                             "verbosity": 0,
-                            "commit": False,
                             "database": db_name,
                         }
                     )
