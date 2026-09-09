@@ -566,16 +566,11 @@ def _titles(param_ids):
 
 
 def allocations_json(request, timetable_slug=None):
-    # logger.info("Entering allocations_json")
     tt = get_object_or_404(timetable.models.Timetable, slug=timetable_slug)
     param_ids = _allocation_context_links(request)[1]
     param_ids.setdefault("timetable_slug", [timetable_slug])
     # param_ids['timetable_slug'] = [timetable_slug]
-    # This fetches all the allocations before filtering.
-    # Why would you increase the server load on each request
-    # just in case you need to debug something?
-    # logger.debug("Got filtered allocations")
-    # logger.debug("{}".format(filtered_allocations))
+
     filtered_allocations = (
         _allocation_set(
             param_ids, Allocation.objects.all(), request.user.is_staff
@@ -589,47 +584,45 @@ def allocations_json(request, timetable_slug=None):
     )
 
     # returns more information about allocations
-    request_r = request.GET
-    if "mode" in request_r:
-        mode_l = request_r["mode"]
-        if mode_l == "ext":
-            weekday_mapping = {wd[0]: i for i, wd in enumerate(WEEKDAYS)}
-            hour_mapping = {wh[0]: i for i, wh in enumerate(WORKHOURS)}
-            for allocation in filtered_allocations:
-                allocation.day_index = weekday_mapping[allocation.day]
-                allocation.hour_index = hour_mapping[allocation.start]
-            allocation_vms = sorted(filtered_allocations, key=lambda avm: avm.day_index)
-            allocations_by_day = [
-                (day, list(avm_grouper))
-                for day, avm_grouper in itertools.groupby(
-                    allocation_vms, lambda avm: avm.day
-                )
-            ]
-            allocations_ext = dict()
-            for day, allocations in allocations_by_day:
-                allocations_day = []
-                for allocation in allocations:
-                    teachers = [str(i) for i in allocation.teachers.all()]
-                    allocation_single = {
-                        "name": allocation.activityRealization.activity.name,
-                        "tag": allocation.activityRealization.activity.short_name,
-                        "classroom": str(allocation.classroom),
-                        "durration": allocation.duration,
-                        "start": allocation.start,
-                        "type": allocation.activityRealization.activity.type,
-                        "teachers": teachers,
-                    }
-                    allocations_day.append(allocation_single)
-                allocations_ext[day] = allocations_day
-            return JsonResponse(allocations_ext)
+    if request.GET.get("mode") == "ext":
+        json_data = allocations_json_ext(request, filtered_allocations)
+        return JsonResponse(json_data)
 
-    # logger.debug("Filtered allocations after _allocation_set")
-    # logger.debug("{}".format(filtered_allocations))
     json_data = serializers.serialize("json", filtered_allocations)
-    # logger.debug("Returning json data")
-    # logger.debug("{}".format(json_data))
-    # logger.info("Exiting allocations_json")
     return HttpResponse(json_data, content_type="application/json")
+
+
+def allocations_json_ext(request, filtered_allocations):
+    weekday_mapping = {wd[0]: i for i, wd in enumerate(WEEKDAYS)}
+    hour_mapping = {wh[0]: i for i, wh in enumerate(WORKHOURS)}
+    for allocation in filtered_allocations:
+        allocation.day_index = weekday_mapping[allocation.day]
+        allocation.hour_index = hour_mapping[allocation.start]
+    allocation_vms = sorted(filtered_allocations, key=lambda avm: avm.day_index)
+    allocations_by_day = [
+        (day, list(avm_grouper))
+        for day, avm_grouper in itertools.groupby(
+            allocation_vms, lambda avm: avm.day
+        )
+    ]
+    allocations_ext = dict()
+    for day, allocations in allocations_by_day:
+        allocations_day = []
+        for allocation in allocations:
+            teachers = [str(i) for i in allocation.teachers.all()]
+            allocation_single = {
+                "id": allocation.id,
+                "name": allocation.activityRealization.activity.name,
+                "tag": allocation.activityRealization.activity.short_name,
+                "classroom": str(allocation.classroom),
+                "durration": allocation.duration,
+                "start": allocation.start,
+                "type": allocation.activityRealization.activity.type,
+                "teachers": teachers,
+            }
+            allocations_day.append(allocation_single)
+        allocations_ext[day] = allocations_day
+    return allocations_ext
 
 
 def authenticated_allocations(request, timetable_slug=None):
