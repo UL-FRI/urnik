@@ -16,6 +16,9 @@ services:
       - UWSGI_PIDFILE=/tmp/project-master.pid
       - UWSGI_VACUUM=True
       - UWSGI_MAX_REQUESTS=5000
+      # Allow long OIDC callback URLs through both the HTTP router and uWSGI.
+      - UWSGI_BUFFER_SIZE=16384
+      - UWSGI_HTTP_BUFFER_SIZE=16384
       - UWSGI_UID=timetable
       - UWSGI_GID=timetable
       - UWSGI_HTTP_SOCKET=:8080
