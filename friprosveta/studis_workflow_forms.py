@@ -138,6 +138,41 @@ class ImportStudentsForm(forms.Form):
         return command
 
 
+class FillGroupsForm(forms.Form):
+    dry_run = forms.BooleanField(
+        required=False,
+        initial=True,
+        label="Preview only (do not save group memberships)",
+    )
+    subject_code = forms.CharField(
+        required=False,
+        label="Subject code",
+        help_text="Optional: fill groups for a single subject.",
+    )
+
+    def command(self, timetable_slug):
+        command = "python3 manage.py fill_groups {}".format(timetable_slug)
+        if not self.cleaned_data["dry_run"]:
+            command += " True"
+        if self.cleaned_data["subject_code"]:
+            command += " --subject={}".format(self.cleaned_data["subject_code"])
+        return command
+
+
+class AuditStudentTimetableForm(forms.Form):
+    student_id = forms.RegexField(
+        regex=r"^[0-9]{8}$",
+        max_length=8,
+        label="Student ID",
+        help_text="Compare this student's imported subjects with their scheduled activities.",
+    )
+
+    def command(self, timetable_slug):
+        return "python3 manage.py audit_student_timetable {} {}".format(
+            timetable_slug, self.cleaned_data["student_id"]
+        )
+
+
 class CreateRealizationsForm(forms.Form):
     timetable_set = forms.ModelChoiceField(
         queryset=TimetableSet.objects.all().order_by("slug"),
