@@ -59,6 +59,13 @@ class ManualActivity(models.Model):
     )
     subject = models.ForeignKey("Subject", on_delete=models.CASCADE)
     lecture_type = models.ForeignKey("LectureType", on_delete=models.CASCADE)
+    activity = models.OneToOneField(
+        "Activity",
+        null=True,
+        blank=True,
+        related_name="manual_definition",
+        on_delete=models.SET_NULL,
+    )
     name = models.CharField(max_length=200, blank=True)
     duration = models.PositiveSmallIntegerField()
     enabled = models.BooleanField(default=True)

@@ -13,7 +13,7 @@
 </style>
 <h1>{% if is_create %}{% trans "Create manual activity" %}{% else %}{% trans "Edit manual activity" %}{% endif %}: {{ timetable.name }}</h1>
 <p><a href="{% url "manual_activity_list" timetable_slug=timetable_slug %}">{% trans "Back to manual activities" %}</a></p>
-<p>Leave fixed weekday, start time, and room blank to let the solver schedule the activity. Set all three to create an immediate fixed allocation.</p>
+<p>To add this activity after timetable generation, set weekday, start time, and room to place it immediately without rerunning the solver. Leave all three blank to create an unallocated activity for a later solver run.</p>
 <form method="post" class="manual-form">
   {% csrf_token %}
   {{ form.as_p }}
