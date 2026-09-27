@@ -39,8 +39,16 @@ class URNIKOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         return User.objects.filter(query) if query else User.objects.none()
 
     def update_user(self, user, claims):
-        user.first_name = claims.get("given_name", user.first_name)
-        user.last_name = claims.get("family_name", user.last_name)
-        user.email = claims.get("email", user.email)
-        user.save(update_fields=["first_name", "last_name", "email"])
+        update_fields = []
+        for claim, field in (
+            ("given_name", "first_name"),
+            ("family_name", "last_name"),
+            ("email", "email"),
+        ):
+            value = claims.get(claim)
+            if value:
+                setattr(user, field, value)
+                update_fields.append(field)
+        if update_fields:
+            user.save(update_fields=update_fields)
         return user
