@@ -2,6 +2,35 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 
+def ensure_activity_parent_unique(apps, schema_editor):
+    connection = schema_editor.connection
+    if connection.vendor != "postgresql":
+        return
+
+    Activity = apps.get_model("friprosveta", "Activity")
+    with connection.cursor() as cursor:
+        constraints = connection.introspection.get_constraints(
+            cursor, Activity._meta.db_table
+        )
+    if any(
+        constraint["columns"] == [Activity._meta.pk.column]
+        and (constraint["primary_key"] or constraint["unique"])
+        for constraint in constraints.values()
+    ):
+        return
+
+    # Existing deployments can have a separate id primary key and only a
+    # non-unique index on activity_ptr_id. Keep id and make the parent link
+    # a valid foreign-key target before adding ManualActivity.activity.
+    schema_editor.add_constraint(
+        Activity,
+        models.UniqueConstraint(
+            fields=(Activity._meta.pk.name,),
+            name="friprosveta_activity_activity_ptr_id_unique",
+        ),
+    )
+
+
 def link_existing_manual_activities(apps, schema_editor):
     ManualActivity = apps.get_model("friprosveta", "ManualActivity")
     Activity = apps.get_model("friprosveta", "Activity")
@@ -43,6 +72,7 @@ class Migration(migrations.Migration):
     dependencies = [("friprosveta", "0015_manualactivity")]
 
     operations = [
+        migrations.RunPython(ensure_activity_parent_unique, migrations.RunPython.noop),
         migrations.AddField(
             model_name="manualactivity",
             name="activity",

@@ -158,7 +158,7 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly",
     ),
     "DEFAULT_FILTER_BACKENDS": (
-        'rest_framework.filters.DjangoFilterBackend',
+        'django_filters.rest_framework.DjangoFilterBackend',
     ),
 }
 # OIDC Configuration
