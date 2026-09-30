@@ -362,32 +362,30 @@ def _activity_set(param_ids, filtered_activities):
         )
     realizations = set()
     if "realization" in param_ids:
-        realizations += set(param_ids["realization"])
+        realizations.update(param_ids["realization"])
     if "student" in param_ids:
-        logger.debug("Student in param_ids")
-        sl = friprosveta.models.Student.objects.filter(
-            studentId__in=param_ids["student"]
-        )
-        logger.debug("Students: {}".format(sl))
-        if len(sl) < 1:
-            filtered_activities = Activity.objects.none()
-        for s in sl:
-            if len(s.follows.all()):
-                logger.debug("Follows")
-                realizations.add([ar.id for ar in s.follows.all()])
-            else:
-                logger.debug("Processing student groups")
-                for g in s.groups.all():
-                    logger.debug("Processing {}".format(g))
-                    for r in g.realizations.all():
-                        logger.debug("Processing realization {}".format(r))
-                        realizations.add(r.id)
-                logger.debug("Realizations: {}".format(realizations))
-    if len(realizations):
+        realizations.update(_student_realization_ids(param_ids["student"]))
+    if "realization" in param_ids or "student" in param_ids:
         filtered_activities = filtered_activities.filter(
             realizations__id__in=realizations
         )
     return filtered_activities
+
+
+def _student_realization_ids(student_ids):
+    """Resolve the realizations attended by students, including empty schedules."""
+    realization_ids = set()
+    for student in friprosveta.models.Student.objects.filter(studentId__in=student_ids):
+        followed_ids = set(student.follows.values_list("id", flat=True))
+        if followed_ids:
+            realization_ids.update(followed_ids)
+        else:
+            realization_ids.update(
+                ActivityRealization.objects.filter(groups__students=student).values_list(
+                    "id", flat=True
+                )
+            )
+    return realization_ids
 
 
 def _realization_set(param_ids, filtered_realizations, allow_unfiltered=False):
@@ -437,21 +435,10 @@ def _realization_set(param_ids, filtered_realizations, allow_unfiltered=False):
         )
     realization_ids = set()
     if "realization" in param_ids:
-        realization_ids += set(param_ids["realization"])
+        realization_ids.update(param_ids["realization"])
     if "student" in param_ids:
-        sl = friprosveta.models.Student.objects.filter(
-            studentId__in=param_ids["student"]
-        )
-        if len(sl) < 1:
-            filtered_realizations = ActivityRealization.objects.none()
-        for s in sl:
-            if len(s.follows.all()):
-                realization_ids.add([ar.id for ar in s.follows.all()])
-            else:
-                for g in s.groups.all():
-                    for r in g.realizations.all():
-                        realization_ids.add(r.id)
-    if len(realization_ids):
+        realization_ids.update(_student_realization_ids(param_ids["student"]))
+    if "realization" in param_ids or "student" in param_ids:
         filtered_realizations = filtered_realizations.filter(id__in=realization_ids)
     if "group" in param_ids:
         # contextlink += "&group=" + "&group=".join(l)

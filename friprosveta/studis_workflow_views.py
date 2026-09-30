@@ -17,9 +17,11 @@ from django.views.decorators.http import require_http_methods
 from timetable.models import Timetable
 
 from .studis_workflow_forms import (
+    AuditStudentTimetableForm,
     CreateActivitiesForm,
     CreateRealizationsForm,
     CreateTopLevelGroupsForm,
+    FillGroupsForm,
     FindMissingTeachersForm,
     ImportNajaveForm,
     ImportStudentsForm,
@@ -162,6 +164,8 @@ def _studis_workflow_context(
     import_najave_form,
     create_activities_form,
     import_students_form,
+    fill_groups_form,
+    audit_student_timetable_form,
     create_realizations_form,
     find_missing_teachers_form,
     remove_pad_groups_form,
@@ -179,6 +183,8 @@ def _studis_workflow_context(
         "import_najave_form": import_najave_form,
         "create_activities_form": create_activities_form,
         "import_students_form": import_students_form,
+        "fill_groups_form": fill_groups_form,
+        "audit_student_timetable_form": audit_student_timetable_form,
         "create_realizations_form": create_realizations_form,
         "find_missing_teachers_form": find_missing_teachers_form,
         "remove_pad_groups_form": remove_pad_groups_form,
@@ -218,6 +224,8 @@ def studis_workflow_preview(request, timetable_slug):
             "date": date.today(),
         }
     )
+    fill_groups_form = FillGroupsForm()
+    audit_student_timetable_form = AuditStudentTimetableForm()
     create_realizations_form = CreateRealizationsForm(
         timetable=timetable,
     )
@@ -342,6 +350,54 @@ def studis_workflow_preview(request, timetable_slug):
                             )
                         )
                     _mark_workflow_running_error(import_students_form)
+
+        elif workflow == "fill_groups":
+            fill_groups_form = FillGroupsForm(request.POST)
+            if fill_groups_form.is_valid():
+                command = fill_groups_form.command(timetable_slug)
+                if action == "run":
+                    data = fill_groups_form.cleaned_data
+                    args = [timetable_slug]
+                    if not data["dry_run"]:
+                        args.append("True")
+                    kwargs = {}
+                    if data["subject_code"]:
+                        kwargs["subject_code"] = [data["subject_code"]]
+                    thread = _run_workflow_async(
+                        request,
+                        timetable_slug,
+                        workflow,
+                        command,
+                        "fill_groups",
+                        *args,
+                        **kwargs,
+                    )
+                    if thread is not None:
+                        return HttpResponseRedirect(
+                            reverse(
+                                "solver_dashboard", kwargs={"timetable_slug": timetable_slug}
+                            )
+                        )
+                    _mark_workflow_running_error(fill_groups_form)
+
+        elif workflow == "audit_student_timetable":
+            audit_student_timetable_form = AuditStudentTimetableForm(request.POST)
+            if audit_student_timetable_form.is_valid():
+                command = audit_student_timetable_form.command(timetable_slug)
+                if action == "run":
+                    stream = StringIO()
+                    try:
+                        call_command(
+                            "audit_student_timetable",
+                            timetable_slug,
+                            audit_student_timetable_form.cleaned_data["student_id"],
+                            stdout=stream,
+                        )
+                        succeeded = True
+                    except CommandError as error:
+                        stream.write("ERROR: {}\n".format(error))
+                        succeeded = False
+                    output = stream.getvalue()
 
         elif workflow == "create_top_level_groups":
             create_top_level_groups_form = CreateTopLevelGroupsForm(
@@ -489,6 +545,8 @@ def studis_workflow_preview(request, timetable_slug):
             import_najave_form,
             create_activities_form,
             import_students_form,
+            fill_groups_form,
+            audit_student_timetable_form,
             create_realizations_form,
             find_missing_teachers_form,
             remove_pad_groups_form,

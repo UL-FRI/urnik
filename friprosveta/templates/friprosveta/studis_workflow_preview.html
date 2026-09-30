@@ -101,6 +101,28 @@
   </section>
 
   <section class="studis-workflow-panel">
+    <h3>{% trans "Fill groups" %}</h3>
+    <p>{% trans "After importing students, creating realizations, and running Prepare groups, assign students to existing activity groups. This step cannot create lab subgroups." %} <a href="{% url 'preparation_preview' timetable_slug=timetable_slug %}">{% trans "Prepare groups" %}</a></p>
+    <form method="post">
+      {% csrf_token %}
+      {{ fill_groups_form.as_p }}
+      <input type="hidden" name="workflow" value="fill_groups">
+      <p><button type="submit" name="action" value="preview">{% trans "Preview command" %}</button> <button type="submit" name="action" value="run" {% if studis_workflow_status and studis_workflow_status.is_running %}disabled{% endif %}>{% trans "Run now" %}</button></p>
+    </form>
+  </section>
+
+  <section class="studis-workflow-panel">
+    <h3>{% trans "Audit student timetable" %}</h3>
+    <p>{% trans "Compare imported subject enrollments with group membership and scheduled lectures and labs for one student. This check does not change data." %}</p>
+    <form method="post">
+      {% csrf_token %}
+      {{ audit_student_timetable_form.as_p }}
+      <input type="hidden" name="workflow" value="audit_student_timetable">
+      <p><button type="submit" name="action" value="preview">{% trans "Preview command" %}</button> <button type="submit" name="action" value="run" {% if studis_workflow_status and studis_workflow_status.is_running %}disabled{% endif %}>{% trans "Run now" %}</button></p>
+    </form>
+  </section>
+
+  <section class="studis-workflow-panel">
     <h3>{% trans "Check durations" %}</h3>
     <p>{% trans "Report realized P, LV, and AV activities whose duration is not the expected 3, 2, or 2 hours." %}</p>
     <form method="post">
@@ -133,7 +155,7 @@
 
   <section class="studis-workflow-panel">
     <h3>{% trans "Remove PAD groups from lectures" %}</h3>
-    <p>{% trans "Remove synthetic PAD groups from lecture realizations. Preview-only mode is selected by default." %}</p>
+    <p>{% trans "Remove synthetic PAD groups from lecture realizations. Students assigned only to those groups will no longer see those lectures on their personal timetable. Preview-only mode is selected by default." %}</p>
     <form method="post">
       {% csrf_token %}
       {{ remove_pad_groups_form.as_p }}

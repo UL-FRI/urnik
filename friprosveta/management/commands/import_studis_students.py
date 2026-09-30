@@ -223,18 +223,18 @@ with code {0} in database.".format(
                 groupset=groupset, student=database_student
             ).delete()
             for subject in subjects_to_enroll:
-                classyear = int(classyear)
-                study_short_name = study.short_name
+                enrollment_study = study
+                enrollment_classyear = int(classyear)
                 studis_studies = subject.get_studis_studies(
                     self.year, self.najave, self.studij
                 )
-                student_study = (classyear, study_short_name)
+                student_study = (enrollment_classyear, study.short_name)
                 if (
                     student_study not in studis_studies
                     or studis_enrollment_type_id not in regular_enrollments
                 ):
-                    study = self.padstudy
-                    classyear = 8
+                    enrollment_study = self.padstudy
+                    enrollment_classyear = 8
 
                 se = StudentEnrollment(
                     groupset=groupset,
@@ -242,8 +242,8 @@ with code {0} in database.".format(
                     subject=subject,
                     source=source,
                     enrollment_type=studis_enrollment_type_id,
-                    study=study,
-                    classyear=int(classyear),
+                    study=enrollment_study,
+                    classyear=enrollment_classyear,
                     regular_enrollment=not izredni,
                 )
 

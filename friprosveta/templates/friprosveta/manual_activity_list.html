@@ -10,7 +10,7 @@
 </style>
 <h1>{% trans "Manual activities" %}: {{ timetable.name }}</h1>
 <p><a href="{% url "solver_dashboard" timetable_slug=timetable_slug %}">{% trans "Back to solver dashboard" %}</a></p>
-<p>Manual entries are applied when saved and after OR-Tools group preparation. They are intended for externally managed activities and fixed exceptions.</p>
+<p>Manual entries are applied when saved, including after timetable generation. A fixed weekday, time, and room places the activity immediately; entries without a fixed placement remain unallocated until a solver run. They are also reapplied after OR-Tools group preparation.</p>
 <p><a href="{% url "manual_activity_create" timetable_slug=timetable_slug %}">{% trans "Create manual activity" %}</a></p>
 {% if entries %}
 <table class="manual-table">

@@ -6,40 +6,77 @@ from friprosveta.models import Activity, ActivityRealization, ManualActivity
 from timetable.models import Allocation, SolverConstraint
 
 
+def _managed_activity(timetable, entry):
+    if entry.activity_id:
+        if entry.activity.activityset_id != timetable.activityset_id:
+            raise ValueError("Manual activity belongs to another activity set.")
+        return entry.activity
+
+    # Entries created before the activity link existed used an internal short name.
+    activity = Activity.objects.filter(
+        activityset=timetable.activityset, short_name="MANUAL_{}".format(entry.pk)
+    ).first()
+    if activity is not None:
+        entry.activity = activity
+        entry.save(update_fields=("activity",))
+    return activity
+
+
+@transaction.atomic
+def remove_manual_activity(timetable, entry):
+    constraint = entry.solver_constraint
+    activity = _managed_activity(timetable, entry)
+    if activity is not None:
+        activity.delete()
+    entry.delete()
+    if constraint is not None:
+        constraint.delete()
+
+
 @transaction.atomic
 def apply_manual_activities(timetable):
     """Create or update enabled manual activities and their optional placements."""
     entries = (
         ManualActivity.objects.filter(timetable=timetable)
-        .select_related("subject", "lecture_type", "fixed_room", "solver_constraint")
+        .select_related("activity", "subject", "lecture_type", "fixed_room", "solver_constraint")
         .prefetch_related("teachers", "groups", "locations", "requirements", "required_rooms")
     )
     for entry in entries:
+        activity = _managed_activity(timetable, entry)
         if not entry.enabled:
             if entry.solver_constraint_id:
                 entry.solver_constraint.active = False
                 entry.solver_constraint.save(update_fields=("active",))
+            if activity is not None:
+                activity.delete()
+                entry.activity = None
+                entry.save(update_fields=("activity",))
             continue
-        activity, _ = Activity.objects.get_or_create(
-            activityset=timetable.activityset,
-            subject=entry.subject,
-            lecture_type=entry.lecture_type,
-            defaults={
-                "name": entry.name or entry.subject.name,
-                "short_name": "{}_{}".format(
-                    entry.subject.short_name, entry.lecture_type.short_name
-                ),
-                "type": entry.lecture_type.short_name,
-                "duration": entry.duration,
-            },
-        )
+        short_name = "{}_{}".format(
+            entry.subject.short_name or entry.subject.code,
+            entry.lecture_type.short_name,
+        )[:32]
+        if activity is None:
+            activity = Activity.objects.create(
+                activityset=timetable.activityset,
+                subject=entry.subject,
+                lecture_type=entry.lecture_type,
+                name=entry.name or entry.subject.name,
+                short_name=short_name,
+                type=entry.lecture_type.short_name,
+                duration=entry.duration,
+            )
+            entry.activity = activity
+            entry.save(update_fields=("activity",))
+        activity.subject = entry.subject
+        activity.lecture_type = entry.lecture_type
         activity.name = entry.name or entry.subject.name
-        activity.short_name = "{}_{}".format(
-            entry.subject.short_name, entry.lecture_type.short_name
-        )
+        activity.short_name = short_name
         activity.type = entry.lecture_type.short_name
         activity.duration = entry.duration
-        activity.save(update_fields=("name", "short_name", "type", "duration"))
+        activity.save(
+            update_fields=("subject", "lecture_type", "name", "short_name", "type", "duration")
+        )
         activity.teachers.set(entry.teachers.all())
         activity.groups.set(entry.groups.all())
         activity.locations.set(entry.locations.all())
@@ -96,5 +133,9 @@ def apply_manual_activities(timetable):
             constraint.realizations.set((realization,))
             constraint.classrooms.set((entry.fixed_room,))
         elif entry.solver_constraint_id:
-            entry.solver_constraint.active = False
-            entry.solver_constraint.save(update_fields=("active",))
+            if entry.solver_constraint.active:
+                Allocation.objects.filter(
+                    timetable=timetable, activityRealization=realization
+                ).delete()
+                entry.solver_constraint.active = False
+                entry.solver_constraint.save(update_fields=("active",))

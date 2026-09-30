@@ -248,7 +248,7 @@ Beware: all existing activities (and all its children) WILL BE DELETED.
                 logger.debug("lt {}".format(lecture_type))
                 activities = subject.activities.filter(
                     lecture_type=lecture_type, activityset=timetable.activityset
-                )
+                ).exclude(manual_definition__isnull=False)
                 logger.debug("Got activities {}".format(activities))
                 teacher_codes = get_teacher_codes(cikel, lecture_type_id)
                 logger.debug("Got teacher codes {}".format(teacher_codes))

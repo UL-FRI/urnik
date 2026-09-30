@@ -17,7 +17,10 @@ from model_mommy import mommy
 import friprosveta
 from friprosveta.auth import oidc_username_from_claims
 from friprosveta.management.commands.fill_groups import Command as fgc
-from friprosveta.management.commands.import_studis_students import get_parents
+from friprosveta.management.commands.import_studis_students import (
+    Command as ImportStudentsCommand,
+    get_parents,
+)
 from friprosveta.models import (
     ActivityTypeSchedulingRestriction,
     ActivityTypeSchedulingWindow,
@@ -3415,6 +3418,55 @@ class AllocationsAPIRespectsTest(TestCase):
             {self.main_tt.id, self.respected_tt.id},
         )
 
+    def test_student_without_realizations_does_not_see_everyones_allocations(self):
+        self._create_allocation(self.main_tt, "OTHER", "07:00")
+        friprosveta.models.Student.objects.create(
+            name="New", surname="Student", studentId="63260498"
+        )
+        url = f"/timetable/{self.main_tt.slug}/allocations"
+
+        for student_id in ("63260498", "63200374"):
+            response = self.client.get(
+                url, {"student": student_id}, HTTP_USER_AGENT="test"
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                sum(len(day) for _, day in response.context["allocations_by_day"]), 0
+            )
+            response = self.client.get(f"{url}.json", {"student": student_id})
+            self.assertEqual(response.json(), [])
+
+    def test_student_sees_only_own_allocations(self):
+        own = self._create_allocation(self.main_tt, "OWN", "07:00")
+        self._create_allocation(self.main_tt, "OTHER", "08:00")
+        student = friprosveta.models.Student.objects.create(
+            name="Enrolled", surname="Student", studentId="63260498"
+        )
+        student.groups.add(own.activityRealization.groups.first())
+
+        response = self.client.get(
+            f"/timetable/{self.main_tt.slug}/allocations.json",
+            {"student": student.studentId},
+        )
+
+        self.assertEqual([row["pk"] for row in response.json()], [own.pk])
+
+    def test_followed_realization_takes_precedence_over_group_memberships(self):
+        followed = self._create_allocation(self.main_tt, "FOLLOWED", "07:00")
+        grouped = self._create_allocation(self.main_tt, "GROUPED", "08:00")
+        student = friprosveta.models.Student.objects.create(
+            name="Following", surname="Student", studentId="63260498"
+        )
+        student.follows.add(followed.activityRealization)
+        student.groups.add(grouped.activityRealization.groups.first())
+
+        response = self.client.get(
+            f"/timetable/{self.main_tt.slug}/allocations.json",
+            {"student": student.studentId},
+        )
+
+        self.assertEqual([row["pk"] for row in response.json()], [followed.pk])
+
     def test_authenticated_view_filter_includes_private_respected_timetable(self):
         from friprosveta.views import _allocation_set
 
@@ -4766,6 +4818,135 @@ class StudentOverlapsTest(MyTestCase):
         )
 
 
+class ImportStudentsGroupAssignmentTest(TestCase):
+    @patch("friprosveta.management.commands.import_studis_students.get_study_classyear")
+    @patch("friprosveta.models.Subject.get_studis_studies")
+    def test_pad_subject_does_not_change_later_subjects_study(
+        self, get_studies, get_study_classyear
+    ):
+        get_study_classyear.return_value = ("BUN-RI", 2)
+        study = Study.objects.create(short_name="BUN-RI", name="RI")
+        pad = Study.objects.create(short_name="PAD", name="PAD")
+        groupset = GroupSet.objects.create(
+            slug="import-groups", name="Import Groups", created=datetime.now()
+        )
+        timetable = Timetable.objects.create(
+            slug="import-tt", name="Import TT", groupset=groupset
+        )
+        subjects = [
+            friprosveta.models.Subject.objects.create(code=code, name=code)
+            for code in ("S1", "S2", "S3")
+        ]
+        get_studies.side_effect = [
+            [(2, study.short_name)],
+            [(1, study.short_name)],
+            [(2, study.short_name)],
+        ]
+        command = ImportStudentsCommand()
+        command.year = "2026"
+        command.najave = None
+        command.studij = None
+        command.padstudy = pad
+        command.studijsko_drevo = {}
+        command.izredni_studij_id = 999
+        command.subjects = {
+            i: {"sifra": subject.code} for i, subject in enumerate(subjects)
+        }
+        command.students = [
+            {
+                "id_izvajanje_studija": 1,
+                "id_nacin_studija": 1,
+                "id_tip_vpisa": 4,
+                "vpisna_stevilka": "63260498",
+                "ime": "New",
+                "priimek": "Student",
+                "predmetnik": [
+                    {
+                        "id_predmet": i,
+                        "sifra_predmeta": subject.code,
+                        "opravlja_vaje": True,
+                        "opravlja_predavanja": True,
+                    }
+                    for i, subject in enumerate(subjects)
+                ],
+            }
+        ]
+
+        command.enrol_students(timetable)
+
+        self.assertEqual(
+            list(
+                friprosveta.models.StudentEnrollment.objects.filter(
+                    groupset=groupset
+                )
+                .order_by("subject__code")
+                .values_list("subject__code", "study__short_name", "classyear")
+            ),
+            [("S1", "BUN-RI", 2), ("S2", "PAD", 8), ("S3", "BUN-RI", 2)],
+        )
+
+
+class StudentTimetableAuditTest(TestCase):
+    def test_reports_where_enrolled_lecture_disappears(self):
+        groupset = GroupSet.objects.create(
+            slug="audit-groups", name="Audit Groups", created=datetime.now()
+        )
+        activityset = ActivitySet.objects.create(slug="audit-activities", name="Audit Activities")
+        timetable = Timetable.objects.create(
+            slug="audit-tt", name="Audit TT", groupset=groupset,
+            activityset=activityset, public=True,
+        )
+        study = Study.objects.create(short_name="BUN-RI", name="RI")
+        subject = friprosveta.models.Subject.objects.create(code="AUDIT", name="Audit Subject")
+        student = friprosveta.models.Student.objects.create(
+            studentId="63240308", name="Audit", surname="Student"
+        )
+        friprosveta.models.StudentEnrollment.objects.create(
+            groupset=groupset, student=student, subject=subject,
+            study=study, classyear=3, enrollment_type="4",
+        )
+        lecture_type = friprosveta.models.LectureType.objects.create(
+            name="Audit lecture", short_name="P", duration=1
+        )
+        activity = friprosveta.models.Activity.objects.create(
+            name="Audit Subject_P", short_name="AUDIT_P", type="P",
+            duration=1, subject=subject, lecture_type=lecture_type,
+            activityset=activityset,
+        )
+
+        def audit():
+            output = StringIO()
+            call_command(
+                "audit_student_timetable", timetable.slug, student.studentId,
+                stdout=output,
+            )
+            return output.getvalue()
+
+        self.assertIn("no activity groups", audit())
+        group = Group.objects.create(
+            short_name="3_BUN-RI", name="Third year", size=0, groupset=groupset
+        )
+        activity.groups.add(group)
+        self.assertIn("no positive-size groups", audit())
+        group.size = 1
+        group.save(update_fields=["size"])
+        self.assertIn("not assigned to an activity group", audit())
+        student.groups.add(group)
+        self.assertIn("group not assigned to a realization", audit())
+        realization = ActivityRealization.objects.create(activity=activity)
+        realization.groups.add(group)
+        self.assertIn("realization has no public allocation", audit())
+        location = Location.objects.create(name="Audit Location")
+        classroom = Classroom.objects.create(
+            name="Audit Room", short_name="AUDIT", capacity=1, location=location
+        )
+        Allocation.objects.create(
+            timetable=timetable, activityRealization=realization,
+            classroom=classroom, day="MON", start="08:00",
+        )
+        self.assertIn("scheduled", audit())
+
+
 class FillGroupsTest(TestCase):
     def setUp(self):
         TestCase.setUp(self)
@@ -4807,6 +4988,122 @@ class FillGroupsTest(TestCase):
     def tearDown(self):
         self.a.activityset.timetable_set.first().delete()
         friprosveta.models.Student.objects.all().delete()
+
+    def test_command_dry_run_and_write_mode(self):
+        from contextlib import redirect_stdout
+
+        self.tt.slug = "fill-groups-tt"
+        self.tt.save(update_fields=["slug"])
+        with redirect_stdout(StringIO()):
+            call_command(
+                "fill_groups", self.tt.slug, stdout=StringIO(), stderr=StringIO()
+            )
+        self.assertEqual(self.g1.students.count(), 0)
+
+        with redirect_stdout(StringIO()):
+            call_command(
+                "fill_groups", self.tt.slug, "False", stdout=StringIO(), stderr=StringIO()
+            )
+        self.assertEqual(self.g1.students.count(), 0)
+
+        with redirect_stdout(StringIO()):
+            call_command(
+                "fill_groups", self.tt.slug, "True", stdout=StringIO(), stderr=StringIO()
+            )
+        self.assertEqual(self.g1.students.count(), len(self.students))
+
+        with redirect_stdout(StringIO()):
+            call_command(
+                "fill_groups", self.tt.slug, "True", "True",
+                stdout=StringIO(), stderr=StringIO(),
+            )
+        self.assertEqual(self.g1.students.count(), len(self.students))
+
+    def test_command_reports_missing_lab_groups(self):
+        from contextlib import redirect_stdout
+
+        self.tt.slug = "fill-groups-tt"
+        self.tt.save(update_fields=["slug"])
+        empty_lab = mommy.make(
+            "friprosveta.Activity",
+            type="AV",
+            activityset=self.aset,
+            subject=self.subject,
+        )
+        output = StringIO()
+        with redirect_stdout(StringIO()):
+            call_command(
+                "fill_groups", self.tt.slug, stdout=StringIO(), stderr=output
+            )
+
+        self.assertIn("No usable AV groups", output.getvalue())
+        self.assertIn(str(empty_lab.id), output.getvalue())
+        self.assertIn("17 current enrollments", output.getvalue())
+
+    def test_command_reports_students_exceeding_group_capacity(self):
+        from contextlib import redirect_stdout
+
+        self.tt.slug = "fill-groups-tt"
+        self.tt.save(update_fields=["slug"])
+        self.g1.size = 1
+        self.g1.save(update_fields=["size"])
+        self.g2.size = 1
+        self.g2.save(update_fields=["size"])
+        output = StringIO()
+        with redirect_stdout(StringIO()):
+            call_command(
+                "fill_groups", self.tt.slug, "True", stdout=StringIO(), stderr=output
+            )
+
+        self.assertIn("Unassigned students for", output.getvalue())
+        self.assertIn(self.subject.code, output.getvalue())
+        self.assertIn("15 of 17 new students", output.getvalue())
+
+    def test_exchange_students_are_not_added_to_regular_groups(self):
+        from contextlib import redirect_stdout
+
+        self.tt.slug = "fill-groups-tt"
+        self.tt.save(update_fields=["slug"])
+        exchange_group = mommy.make(
+            "timetable.Group",
+            short_name="EX_VISITORS",
+            size=1,
+            groupset=self.groupset,
+        )
+        exchange_group.students.add(self.students[0])
+        self.a.groups.add(exchange_group)
+        self.g1.students.add(self.students[0])
+
+        with redirect_stdout(StringIO()):
+            call_command(
+                "fill_groups", self.tt.slug, "True", stdout=StringIO(), stderr=StringIO()
+            )
+
+        self.assertFalse(self.g1.students.filter(pk=self.students[0].pk).exists())
+        self.assertFalse(self.g2.students.filter(pk=self.students[0].pk).exists())
+        self.assertEqual(self.g1.students.count(), len(self.students) - 1)
+        self.assertTrue(exchange_group.students.filter(pk=self.students[0].pk).exists())
+
+    def test_dry_run_accounts_for_students_it_would_remove(self):
+        from contextlib import redirect_stdout
+
+        self.tt.slug = "fill-groups-tt"
+        self.tt.save(update_fields=["slug"])
+        self.g1.size = len(self.students)
+        self.g1.save(update_fields=["size"])
+        self.g2.size = 0
+        self.g2.save(update_fields=["size"])
+        former_student = mommy.make("friprosveta.Student")
+        self.g1.students.add(former_student)
+
+        for args in ((), ("False", "True")):
+            errors = StringIO()
+            with redirect_stdout(StringIO()):
+                call_command(
+                    "fill_groups", self.tt.slug, *args, stdout=StringIO(), stderr=errors
+                )
+            self.assertNotIn("Unassigned students", errors.getvalue())
+            self.assertTrue(self.g1.students.filter(pk=former_student.pk).exists())
 
     # Commented out failing test due to model changes
     # def test_simple_enrollment(self):
@@ -5752,6 +6049,68 @@ class StudisWorkflowUITest(TestCase):
             response.context["command"],
             "python3 manage.py import_studis_students studis-ui-tt 2026 2026-05-01 --unconfirmed --unfinished",
         )
+
+    def test_fill_groups_preview_makes_write_mode_explicit(self):
+        self._login_staff()
+        url = "/solver/studis-ui-tt/studis-workflow/"
+        response = self.client.get(url)
+        self.assertContains(response, 'name="workflow" value="fill_groups"')
+        self.assertContains(response, 'name="dry_run"')
+
+        response = self.client.post(
+            url, {"workflow": "fill_groups", "dry_run": "on", "subject_code": "S1"}
+        )
+        self.assertEqual(
+            response.context["command"],
+            "python3 manage.py fill_groups studis-ui-tt --subject=S1",
+        )
+
+        response = self.client.post(url, {"workflow": "fill_groups"})
+        self.assertEqual(
+            response.context["command"], "python3 manage.py fill_groups studis-ui-tt True"
+        )
+
+    @patch("friprosveta.studis_workflow_views._run_workflow_async")
+    def test_run_fill_groups_passes_write_flag_and_subject(self, run_workflow):
+        self._login_staff()
+        response = self.client.post(
+            "/solver/studis-ui-tt/studis-workflow/",
+            {"workflow": "fill_groups", "action": "run", "subject_code": "S1"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            run_workflow.call_args.args[4:], ("fill_groups", "studis-ui-tt", "True")
+        )
+        self.assertEqual(run_workflow.call_args.kwargs, {"subject_code": ["S1"]})
+
+    @patch("friprosveta.studis_workflow_views.call_command")
+    def test_audit_student_timetable_preview_and_run(self, audit_command):
+        self._login_staff()
+        url = "/solver/studis-ui-tt/studis-workflow/"
+        response = self.client.post(
+            url,
+            {"workflow": "audit_student_timetable", "student_id": "63240308"},
+        )
+        self.assertEqual(
+            response.context["command"],
+            "python3 manage.py audit_student_timetable studis-ui-tt 63240308",
+        )
+
+        response = self.client.post(
+            url,
+            {
+                "workflow": "audit_student_timetable",
+                "student_id": "63240308",
+                "action": "run",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            audit_command.call_args.args,
+            ("audit_student_timetable", "studis-ui-tt", "63240308"),
+        )
+        self.assertTrue(response.context["succeeded"])
 
     def test_create_top_level_groups_preview(self):
         self._login_staff()

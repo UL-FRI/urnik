@@ -5,6 +5,16 @@ import friprosveta
 import friprosveta.models as fm
 
 
+def parse_bool(value):
+    if isinstance(value, bool):
+        return value
+    if value.lower() in ("true", "1"):
+        return True
+    if value.lower() in ("false", "0"):
+        return False
+    raise ValueError("Expected True or False")
+
+
 class Command(BaseCommand):
     """
     Put students into groups for a given timetable.
@@ -15,8 +25,8 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
 
     def add_arguments(self, parser):
         parser.add_argument("timetable_slug", nargs=1)
-        parser.add_argument("write_to_db", nargs="?", type=bool, default=False)
-        parser.add_argument("unenroll_first", nargs="?", type=bool, default=False)
+        parser.add_argument("write_to_db", nargs="?", type=parse_bool, default=False)
+        parser.add_argument("unenroll_first", nargs="?", type=parse_bool, default=False)
         parser.add_argument(
             "--subject",
             nargs=1,
@@ -50,8 +60,10 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
 
         def exchange_students_on_activity(a):
             students = set()
-            for g in a.groups.filter(short_name__startswith="EX_"):
-                students.update(g.students.all())
+            for g in a.groups.filter(
+                groupset=tt.groupset, short_name__startswith="EX_"
+            ):
+                students.update(g.students.values_list("id", flat=True))
             return students
 
         # study = fm.Study.objects.get(short_name=group.study)
@@ -112,6 +124,20 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
             subject_enrollments = friprosveta.models.StudentEnrollment.objects.filter(
                 subject=subject, groupset=tt.groupset
             )
+            for activity in subject.activities.filter(
+                activityset=tt.activityset, type__in=["LV", "AV"]
+            ):
+                if not activity.groups.filter(groupset=tt.groupset, size__gt=0).exists():
+                    self.stderr.write(
+                        "No usable {} groups for {} (activity {}, {} current "
+                        "enrollments). fill_groups cannot create lab groups; "
+                        "prepare groups after importing students first.".format(
+                            activity.type,
+                            subject.code,
+                            activity.id,
+                            subject_enrollments.count(),
+                        )
+                    )
             # normal_enrollments = subject_enrollments.filter(enrollment_type__in=normal_enrollment_types)
             normal_enrollments = subject_enrollments.exclude(study__short_name="PAD")
             # extra_enrollments = subject_enrollments.exclude(enrollment_type__in=normal_enrollment_types)
@@ -152,8 +178,8 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
                         current_students = set()
                         for group in groups:
                             if unenroll_first:
-                                former_students = former_students + set(
-                                    group.students.all()
+                                former_students = former_students.union(
+                                    group.students.values_list("id", flat=True)
                                 )
                             else:
                                 g_set = set(group.students.values_list("id", flat=True))
@@ -171,8 +197,9 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
                         new_students = fm.Student.objects.filter(
                             id__in=new_students
                         ).order_by("surname", "name")
+                        former_student_ids = former_students
                         former_students = fm.Student.objects.filter(
-                            id__in=former_students
+                            id__in=former_student_ids
                         ).order_by("surname", "name")
                         # new_students = sorted(new_students, key=lambda x: (x.surname, x.name))
                         print(
@@ -187,14 +214,15 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
                         )
                         for group in groups:
                             group_students = list(group.students.all())
+                            i_g = 0
                             for student in group_students:
-                                if student in former_students:
+                                if student.id in former_student_ids:
                                     if write_to_db:
                                         group.students.remove(student)
-                            i_g = group.students.count()
+                                else:
+                                    i_g += 1
                             while i_g < group.size and i_s < len(new_students):
                                 if write_to_db:
-                                    group.students.add(new_students[i_s])
                                     group.students.add(new_students[i_s])
                                 i_s += 1
                                 i_g += 1
@@ -204,6 +232,20 @@ Example: fill_groups "FRI 2013/2014, zimski semester" True"""
                                 )
                             )
                             check_sum += group.size
+                        if i_s < len(new_students):
+                            self.stderr.write(
+                                "Unassigned students for {} {} {} {}: {} of {} "
+                                "new students do not fit existing groups. "
+                                "Refresh group sizes from current enrollments "
+                                "before filling groups.".format(
+                                    subject.code,
+                                    t,
+                                    classyear,
+                                    study_name,
+                                    len(new_students) - i_s,
+                                    len(new_students),
+                                )
+                            )
                         if len(students) != check_sum:
                             self.stderr.write(
                                 "Wrong group size: {} {} ({}){} {} known:{} expected:{}".format(

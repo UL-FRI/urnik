@@ -57,7 +57,7 @@ from .solver_forms import (
 from .solver_summary import active_rule_sources
 from .solver_run_views import get_solver_generation_status
 from .studis_workflow_views import get_studis_workflow_status
-from .services.manual_activities import apply_manual_activities
+from .services.manual_activities import apply_manual_activities, remove_manual_activity
 
 
 def _require_staff(user):
@@ -145,11 +145,7 @@ def manual_activity_list(request, timetable_slug):
         entry = get_object_or_404(
             ManualActivity, pk=request.POST.get("entry"), timetable=timetable
         )
-        with transaction.atomic():
-            constraint = entry.solver_constraint
-            entry.delete()
-            if constraint is not None:
-                constraint.delete()
+        remove_manual_activity(timetable, entry)
         messages.success(request, "Manual activity configuration removed.")
         return redirect("manual_activity_list", timetable_slug=timetable_slug)
     entries = timetable.manual_activities.select_related(
@@ -172,11 +168,12 @@ def manual_activity_edit(request, timetable_slug, pk=None):
     )
     form = ManualActivityForm(request.POST or None, instance=entry, timetable=timetable)
     if request.method == "POST" and form.is_valid():
-        entry = form.save(commit=False)
-        entry.timetable = timetable
-        entry.save()
-        form.save_m2m()
-        apply_manual_activities(timetable)
+        with transaction.atomic():
+            entry = form.save(commit=False)
+            entry.timetable = timetable
+            entry.save()
+            form.save_m2m()
+            apply_manual_activities(timetable)
         messages.success(request, "Manual activity configuration saved and applied.")
         return redirect("manual_activity_list", timetable_slug=timetable_slug)
     return render(
