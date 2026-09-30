@@ -1,7 +1,10 @@
+from django.conf import settings
 import django.views
 from django.urls import include, re_path
 from django.contrib import admin
 from django.contrib.auth.views import LoginView, LogoutView
+
+from debug_toolbar.toolbar import debug_toolbar_urls
 
 admin.autodiscover()
 
@@ -21,3 +24,6 @@ urlpatterns = [
     re_path(r"^accounts/logout/$", LogoutView.as_view()),
     re_path(r"^exchange/", include("exchange.urls")),
 ]
+
+if settings.DEBUG:
+     urlpatterns += debug_toolbar_urls()

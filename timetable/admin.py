@@ -53,7 +53,8 @@ class ClassroomActivityStartTimeInline(admin.TabularInline):
 
 class ClassroomAdmin(ImportExportActionModelAdmin):
     #filter_horizontal = ("resources",)
-    list_filter = ("classroomset", "allow_overlaps", "is_virtual")
+    list_display = ("name", "short_name", "location", "capacity",)
+    list_filter = ("classroomset", "allow_overlaps", "is_virtual", "location")
     inlines = [
         ClassroomNResourcesInline,
         ClassroomActivityTypeInline,
